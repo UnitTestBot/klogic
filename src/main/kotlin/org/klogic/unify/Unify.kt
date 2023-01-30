@@ -8,7 +8,13 @@ import org.klogic.types.Var
 
 typealias Substitution = Map<Int, Term>
 
-fun occurs(substitution: Substitution, variableIndex: Int, term: Term): Boolean = false
+fun occurs(variableIndex: Int, term: Term): Boolean {
+    return when (term) {
+        is Var -> term.index == variableIndex
+        is Cons -> occurs(variableIndex, term.head) || occurs(variableIndex, term.tail)
+        else -> false
+    }
+}
 
 fun walk(term: Term, substitution: Substitution): Term {
     return when (term) {
@@ -42,7 +48,7 @@ fun unify(substitution: Substitution, left: Term, right: Term): Substitution? {
                     }
                 }
                 else -> {
-                    if (occurs(substitution, left.index, right)) {
+                    if (occurs(left.index, right)) {
                         null
                     } else {
                         result[left.index] = right

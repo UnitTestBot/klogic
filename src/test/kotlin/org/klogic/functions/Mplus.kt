@@ -3,6 +3,7 @@ package org.klogic.functions
 import org.klogic.state.Goal
 import org.klogic.state.State
 import org.klogic.state.conjuction
+import org.klogic.state.delay
 import org.klogic.state.disjunction
 import org.klogic.state.fresh
 import org.klogic.state.unify
@@ -13,6 +14,7 @@ import org.klogic.streams.bind
 import org.klogic.streams.empty
 import org.klogic.streams.mplus
 import org.klogic.streams.take
+import org.klogic.types.Cons
 import org.klogic.types.Nil
 import org.klogic.types.Symbol
 import org.klogic.types.Term
@@ -70,16 +72,46 @@ fun testAppendo() {
             }
     }
 
-//    val goal = appendo(Symbol("a") + Nil, Symbol("b") + Nil, Var(-42))
     val goal = appendo(Var(-1), Var(-2), Symbol("a") + (Symbol("b") + Nil))
     // (Nil + ("a" + "b" + Nil),
     // ("a" + Nil) + ("b" + Nil)),
     // ("a" + "b" + Nil) + Nil,
-//    val goal = appendo(Symbol("a") + Nil, Nil, Var(-42))
-//    val goal = appendo("a".toSymbol() + Nil, "b".toSymbol() + Nil, Symbol("a") + Symbol("b") + Nil)
-    org.klogic.state.run(4, Var(-1) + Var(-2), goal).joinToString("\n").let {
-        println(it)
+    org.klogic.state.run(4, Var(-1) + Var(-2), goal).joinToString("\n").let { println(it)
+}
+}
+
+fun testReverso() {
+    fun appendo(x: Term, y: Term, xy: Term): Goal {
+        return (unify(x, Nil) conjuction unify(y, xy)) disjunction
+            fresh { head ->
+                fresh { tail ->
+                    fresh { tail2 ->
+                        unify(x, head + tail) conjuction unify(xy, head + tail2) conjuction appendo(tail, y, tail2)
+                    }
+                }
+            }
     }
+
+
+    fun reverso(x: Term, reversed: Term): Goal {
+        return (unify(x, Nil) conjuction unify(reversed, Nil)) disjunction
+                fresh { head ->
+                    fresh { tail ->
+                        fresh { rest ->
+                            unify(x, head + tail) conjuction reverso(tail, rest) conjuction appendo(
+                                rest,
+                                head + Nil,
+                                reversed
+                            )
+
+                        }
+                    }
+                }
+        }
+
+//    val goal = reverso("a".toSymbol() + ("b".toSymbol() + Nil), Var(-1))
+    val goal = reverso(Var(-1), "a".toSymbol() + ("b".toSymbol() + Nil), )
+    org.klogic.state.run(1, Var(-1), goal).joinToString("\n").let { println(it) }
 }
 
 fun testWalk(): Term {
@@ -106,7 +138,8 @@ fun main() {
 //    val unify3 = testUnify3()
 //    println(unify3)
 
-    testAppendo()
+//    testAppendo()
+    testReverso()
 
 //    println(testWalk())
 }

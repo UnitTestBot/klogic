@@ -36,7 +36,9 @@ class State(val substitution: Substitution = emptyMap()) {
 
 typealias Goal = (State) -> Stream<State>
 
-fun fresh(f: (Term) -> Goal): Goal = { st: State -> f(st.fresh())(st) }
+fun fresh(f: (Term) -> Goal): Goal = delay {
+    { st: State -> f(st.fresh())(st) }
+}
 
 infix fun Goal.disjunction(second: Goal): Goal = { st: State -> this(st) mplus second(st) }
 infix fun Goal.conjuction(second: Goal): Goal =
@@ -47,7 +49,7 @@ fun delay(f: () -> Goal): Goal = { st: State -> ThunksStream { f()(st) } }
 fun unify(first: Term, second: Term): Goal {
 
     return { st: State ->
-//        println("first - ${walk(first, st.substitution)}, second - ${walk(second, st.substitution)}")
+        println("first - ${walk(first, st.substitution)}, second - ${walk(second, st.substitution)}")
 
         unify(st.substitution, first, second)?.let { single(State(it)) } ?: empty()
     }
