@@ -67,7 +67,7 @@ fun <T> Stream<T>.force(): Stream<T> =
         else -> this
     }
 
-fun <T, R> Stream<T>.bind(f: (T) -> Stream<R>): Stream<R> {
+infix fun <T, R> Stream<T>.bind(f: (T) -> Stream<R>): Stream<R> {
     return when (this) {
         is NilStream<T> -> empty()
         is ConsStream<T> -> {
