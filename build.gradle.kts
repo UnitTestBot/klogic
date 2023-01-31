@@ -8,7 +8,6 @@
 
 plugins {
     kotlin("jvm") version "1.8.0"
-    id("io.gitlab.arturbosch.detekt") version "1.22.0"
 }
 
 repositories{
@@ -24,7 +23,10 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-detekt {
-    buildUponDefaultConfig = true
-    config = files(projectDir.resolve("detekt.yml"))
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs += listOf("-Xjvm-default=all")
+        allWarningsAsErrors = true
+        jvmTarget = "11"
+    }
 }
