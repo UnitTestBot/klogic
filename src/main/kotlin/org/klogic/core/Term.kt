@@ -8,8 +8,8 @@ sealed class Term {
 
     infix fun unify(other: Term): Goal = { st: State ->
         st.unify(this, other)?.let {
-            single(it)
-        } ?: nil()
+            /*single(it)*/CurStream.single(it)
+        } ?: /*nil()*/CurStream.nil()
     }
 
     infix fun `===`(other: Term): Goal = this unify other
