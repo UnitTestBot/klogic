@@ -1,11 +1,10 @@
 package org.klogic.utils
 
 import org.klogic.core.ConsStream
-import org.klogic.core.KanrenStream
-import org.klogic.core.Stream.Companion.lazyStream
+import org.klogic.core.ThunksStream
 
-internal fun <T> repeat(element: T): KanrenStream<T> = lazyStream {
+internal fun <T> repeat(element: T): ThunksStream<T> = ThunksStream {
     ConsStream(element, repeat(element))
 }
 
-internal fun ones(): KanrenStream<Int> = repeat(1)
+internal fun ones(): ThunksStream<Int> = repeat(1)
