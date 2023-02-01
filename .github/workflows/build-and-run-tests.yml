@@ -1,0 +1,40 @@
+name: Build and run simple tests for Kotlin implementation of miniKanren
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    types: [ opened, edited, reopened ]
+    branches:
+      - main
+
+jobs:
+  run_tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: 'corretto'
+          cache: gradle
+
+      - name: Build and run simple tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: |
+            build
+            --no-daemon
+            --continue
+      - name: Upload test reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: klogic-tests-report
+          path: ./**/build/reports/tests/test/
