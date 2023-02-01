@@ -90,7 +90,7 @@ sealed class KanrenStream<T> : Stream<T> {
     operator fun plus(head: T): KanrenStream<T> = ConsStream(head, this)
 }
 
-object NilStream : KanrenStream<Nothing>()
+private object NilStream : KanrenStream<Nothing>()
 
 data class ConsStream<T>(val head: T, val tail: KanrenStream<T>) : KanrenStream<T>()
 
