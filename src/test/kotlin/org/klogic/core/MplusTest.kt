@@ -6,8 +6,8 @@ import org.klogic.utils.ones
 import org.klogic.utils.repeat
 
 class MplusTest {
-    private fun twos(): ThunksStream<Int> = repeat(2)
-    private fun threes(): ThunksStream<Int> = repeat(3)
+    private fun twos(): Stream<Int> = repeat(2)
+    private fun threes(): Stream<Int> = repeat(3)
 
     @Test
     fun testLeftAssociativity() {
