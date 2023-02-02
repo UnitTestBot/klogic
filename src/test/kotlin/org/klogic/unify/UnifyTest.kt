@@ -2,7 +2,7 @@ package org.klogic.unify
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.RecursiveList.Companion.nil
+import org.klogic.core.Nil.nil
 import org.klogic.core.State
 import org.klogic.core.Substitution
 import org.klogic.core.Var

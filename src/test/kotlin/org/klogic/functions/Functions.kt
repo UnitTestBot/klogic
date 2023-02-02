@@ -2,7 +2,7 @@ package org.klogic.functions
 
 import org.klogic.core.`&&&`
 import org.klogic.core.Goal
-import org.klogic.core.RecursiveList.Companion.nil
+import org.klogic.core.Nil.nil
 import org.klogic.core.Term
 import org.klogic.core.fresh
 import org.klogic.core.`|||`

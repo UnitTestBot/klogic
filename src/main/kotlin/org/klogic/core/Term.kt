@@ -23,13 +23,12 @@ data class Symbol(val name: String) : Term() {
     }
 }
 
-sealed class RecursiveList : Term() {
-    companion object {
-        val empty: RecursiveList = Nil
-        val nil: RecursiveList = empty
-    }
-}
+sealed class RecursiveList : Term()
+
 object Nil : RecursiveList() {
+    val empty: RecursiveList = this
+    val nil: RecursiveList = this
+
     override fun toString(): String = "Nil"
 }
 data class Cons(val head: Term, val tail: Term) : RecursiveList() {
