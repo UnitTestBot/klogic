@@ -1,6 +1,7 @@
 package org.klogic.core
 
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.minus
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.toPersistentMap
 
@@ -21,6 +22,7 @@ data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persis
     override fun isEmpty(): Boolean = innerSubstitution.isEmpty()
 
     operator fun plus(pair: Pair<Var, Term>): Substitution = (innerSubstitution + pair).toSubstitution()
+    operator fun minus(other: Substitution): Substitution = (innerSubstitution - other.keys).toSubstitution()
 
     override fun toString(): String = innerSubstitution.toString()
 

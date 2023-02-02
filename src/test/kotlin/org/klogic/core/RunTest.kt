@@ -13,7 +13,7 @@ class RunTest {
 
         val run = run(2, variable, unreachableGoal)
 
-        val expected = emptyList<Term>()
+        val expected = emptyList<Term>().toRunAnswer()
         assertEquals(expected, run)
     }
 }

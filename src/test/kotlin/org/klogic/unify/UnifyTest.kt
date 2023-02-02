@@ -5,14 +5,18 @@ import org.junit.jupiter.api.Test
 import org.klogic.core.Nil.nil
 import org.klogic.core.State
 import org.klogic.core.Substitution
-import org.klogic.core.Var
-import org.klogic.core.toTerm
+import org.klogic.core.Symbol.Companion.toSymbol
+import org.klogic.core.run
+import org.klogic.core.Var.Companion.toVar
+import org.klogic.core.toRunAnswer
+import org.klogic.core.`|||`
+import org.klogic.utils.two
 
 class UnifyTest {
     @Test
     fun testUnifyReflexivity() {
-        val variable = 1.toTerm() as Var
-        val symbol = "2".toTerm()
+        val variable = 1.toVar()
+        val symbol = two
         val unification = unify(variable + symbol, symbol + variable)!!.substitution
 
         val expectedUnification = Substitution(mapOf(variable to symbol))
@@ -21,8 +25,8 @@ class UnifyTest {
 
     @Test
     fun testUnifyVarToVar() {
-        val first = 1.toTerm() as Var
-        val second = 2.toTerm() as Var
+        val first = 1.toVar()
+        val second = 2.toVar()
         val unification = unify(first, second)!!.substitution
 
         val expectedUnification = Substitution(mapOf(first to second))
@@ -31,8 +35,8 @@ class UnifyTest {
 
     @Test
     fun testUnifyVarToList() {
-        val firstVar = 1.toTerm() as Var
-        val secondVar = 2.toTerm() as Var
+        val firstVar = 1.toVar()
+        val secondVar = 2.toVar()
 
         val left = firstVar + secondVar
         val right = secondVar + nil
@@ -44,8 +48,8 @@ class UnifyTest {
 
     @Test
     fun testUnunifiable() {
-        val firstVar = 1.toTerm() as Var
-        val secondVar = 2.toTerm() as Var
+        val firstVar = 1.toVar()
+        val secondVar = 2.toVar()
 
         val left = firstVar + secondVar
         val right = nil
@@ -54,5 +58,19 @@ class UnifyTest {
 
         val failedUnification: State? = null
         assertEquals(failedUnification, unification)
+    }
+    
+    @Test
+    fun testUnion() {
+        val q = 0.toVar()
+
+        val five = "5".toSymbol()
+        val six = "6".toSymbol()
+        val goal = (five `===` q) `|||` (six `===` q)
+
+        val run = run(3, q, goal)
+
+        val expectedAnswer = listOf(five, six).toRunAnswer()
+        assertEquals(expectedAnswer, run)
     }
 }

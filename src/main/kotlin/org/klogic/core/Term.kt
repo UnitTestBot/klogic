@@ -12,7 +12,10 @@ sealed class Term {
         } ?: nil()
     }
 
+    infix fun ineq(other: Term): Goal = { st: State -> single(st.ineq(this, other)) }
+
     infix fun `===`(other: Term): Goal = this unify other
+    infix fun `!==`(other: Term): Goal = this ineq other
 }
 
 data class Symbol(val name: String) : Term() {

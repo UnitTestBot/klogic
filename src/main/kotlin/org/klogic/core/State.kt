@@ -1,11 +1,19 @@
 package org.klogic.core
 
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import org.klogic.unify.occurs
 import org.klogic.unify.walk
 
-class State(val substitution: Substitution, private var lastCreatedVariableIndex: Int = 0) {
-    constructor(map: Map<Var, Term>, lastCreatedVariableIndex: Int = 0) :
-            this(Substitution(map), lastCreatedVariableIndex)
+typealias InequalityConstraints = PersistentList<InequalityConstraint>
+
+data class State(
+    val substitution: Substitution,
+    val inequalityConstraints: InequalityConstraints = persistentListOf(),
+    private var lastCreatedVariableIndex: Int = 0
+) {
+    constructor(map: Map<Var, Term>, inequalityConstraints: InequalityConstraints, lastCreatedVariableIndex: Int = 0) :
+            this(Substitution(map), inequalityConstraints, lastCreatedVariableIndex)
 
     fun fresh(): Var = Var(lastCreatedVariableIndex++)
 
@@ -14,7 +22,7 @@ class State(val substitution: Substitution, private var lastCreatedVariableIndex
             "Variable $variable already exists in substitution $substitution"
         }
 
-        return State(substitution + (variable to term), lastCreatedVariableIndex)
+        return State(substitution + (variable to term), inequalityConstraints, lastCreatedVariableIndex)
     }
 
     @Suppress("NAME_SHADOWING")
@@ -61,27 +69,10 @@ class State(val substitution: Substitution, private var lastCreatedVariableIndex
         }
     }
 
+    fun ineq(left: Term, right: Term): State =
+        copy(inequalityConstraints = inequalityConstraints.add(InequalityConstraint(left, right)))
+
     operator fun plus(pair: Pair<Var, Term>): State = extend(pair.first, pair.second)
-
-    override fun toString(): String = "State(substitution = $substitution, lastIndex = $lastCreatedVariableIndex)"
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as State
-
-        if (substitution != other.substitution) return false
-        if (lastCreatedVariableIndex != other.lastCreatedVariableIndex) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = substitution.hashCode()
-        result = 31 * result + lastCreatedVariableIndex
-        return result
-    }
-
 
     companion object {
         private val EMPTY_STATE: State = State(Substitution.empty)

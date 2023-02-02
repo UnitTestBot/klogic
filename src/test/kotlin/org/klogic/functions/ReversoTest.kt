@@ -6,6 +6,7 @@ import org.klogic.core.Nil.nil
 import org.klogic.core.Symbol.Companion.toSymbol
 import org.klogic.core.Var.Companion.toVar
 import org.klogic.core.run
+import org.klogic.core.toRunAnswer
 
 @Suppress("SpellCheckingInspection")
 class ReversoTest {
@@ -19,7 +20,7 @@ class ReversoTest {
 
         val results = run(2, (-1).toVar(), goal)
 
-        val expected = listOf(b + (a + nil))
+        val expected = listOf(b + (a + nil)).toRunAnswer()
         assertEquals(expected, results)
     }
 
@@ -31,7 +32,7 @@ class ReversoTest {
         // Hangs when count > 1
         val results = run(1, (-1).toVar(), goal)
 
-        val expected = listOf(a + (b + nil))
+        val expected = listOf(a + (b + nil)).toRunAnswer()
         assertEquals(expected, results)
     }
 }

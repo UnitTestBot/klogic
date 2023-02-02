@@ -8,13 +8,12 @@ import org.klogic.core.Symbol
 import org.klogic.core.Term
 import org.klogic.core.Var
 
-internal fun occurs(variable: Var, term: Term): Boolean {
-    return when (term) {
+internal fun occurs(variable: Var, term: Term): Boolean =
+    when (term) {
         is Var -> term.index == variable.index
         is Cons -> occurs(variable, term.head) || occurs(variable, term.tail)
         is Symbol, Nil -> false
     }
-}
 
 internal fun walk(term: Term, substitution: Substitution): Term =
     when (term) {

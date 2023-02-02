@@ -1,12 +1,14 @@
 package org.klogic.core
 
+import kotlinx.collections.immutable.toPersistentList
 import org.klogic.core.Stream.Companion.nil
+import org.klogic.unify.walk
 
-sealed interface Stream<T> {
+sealed interface Stream<out T> {
     infix fun take(n: Int): List<T>
 
     @Suppress("SpellCheckingInspection")
-    infix fun mplus(other: Stream<T>): Stream<T>
+    infix fun mplus(other: Stream<@UnsafeVariance T>): Stream<T>
 
     infix fun <R> bind(f: (T) -> Stream<R>): Stream<R>
 
@@ -14,8 +16,7 @@ sealed interface Stream<T> {
     operator fun invoke(): Stream<T> = force()
 
     companion object {
-        @Suppress("UNCHECKED_CAST")
-        fun <T, R : KanrenStream<T>> empty(): KanrenStream<T> = NilStream as KanrenStream<T>
+        fun <T, R : KanrenStream<T>> empty(): KanrenStream<T> = NilStream
         fun <T, R : KanrenStream<T>> nil(): KanrenStream<T> = empty<T, R>()
 
         fun <T, R : KanrenStream<T>> of(vararg elements: T): KanrenStream<T> {
@@ -33,7 +34,7 @@ sealed interface Stream<T> {
 }
 
 @Suppress("SpellCheckingInspection")
-sealed class KanrenStream<T> : Stream<T> {
+sealed class KanrenStream<out T> : Stream<T> {
     @Suppress("NAME_SHADOWING")
     override infix fun take(n: Int): List<T> {
         val result = mutableListOf<T>()
@@ -55,7 +56,7 @@ sealed class KanrenStream<T> : Stream<T> {
         return result
     }
 
-    override fun mplus(other: Stream<T>): KanrenStream<T> {
+    override fun mplus(other: Stream<@UnsafeVariance T>): KanrenStream<T> {
         require(other is KanrenStream)
 
         return when (this) {
@@ -87,7 +88,7 @@ sealed class KanrenStream<T> : Stream<T> {
 
     override operator fun invoke(): KanrenStream<T> = force()
 
-    operator fun plus(head: T): KanrenStream<T> = ConsStream(head, this)
+    operator fun plus(head: @UnsafeVariance T): KanrenStream<T> = ConsStream(head, this)
 }
 
 private object NilStream : KanrenStream<Nothing>()
@@ -95,3 +96,38 @@ private object NilStream : KanrenStream<Nothing>()
 data class ConsStream<T>(val head: T, val tail: KanrenStream<T>) : KanrenStream<T>()
 
 data class ThunksStream<T>(val elements: () -> KanrenStream<T>) : KanrenStream<T>()
+
+fun KanrenStream<State>.check(): KanrenStream<State> =
+    when (this) {
+        NilStream -> nil()
+        is ConsStream -> {
+            val checkedHead = head.check()
+            val checkedTail = tail.check()
+
+            checkedHead?.let {
+                ConsStream(it, checkedTail)
+            } ?: checkedTail
+        }
+        is ThunksStream -> ThunksStream { elements().check() }
+    }
+
+fun State.check(): State? =
+    inequalityConstraints.flatMap { inequalityConstraint ->
+        val left = inequalityConstraint.left
+        val right = inequalityConstraint.right
+
+        unify(left, right)?.let { inequalityState ->
+            val newSubstitution = inequalityState.substitution
+
+            val delta = newSubstitution - substitution
+            if (delta.isEmpty()) {
+                return@check null
+            }
+
+            delta.entries.map {
+                InequalityConstraint(it.key, it.value)
+            }
+        } ?: emptyList()
+    }.toPersistentList().let {
+        copy(inequalityConstraints = it)
+    }
