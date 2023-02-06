@@ -76,7 +76,7 @@ class InequalityTest {
 
         val expectedInequalityConstraints =
             setOf(InequalityConstraint(list, nil)) + InequalityConstraint(list, first + second)
-        assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
+        assertEquals(expectedInequalityConstraints, run.constraints)
     }
 
     // See corresponding "=/=-22"
@@ -98,7 +98,7 @@ class InequalityTest {
             InequalityConstraint(y, one),
         )
         val expectedTerm = x + y
-        assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
+        assertEquals(expectedInequalityConstraints, run.constraints)
         assertEquals(expectedTerm, run.terms.single())
     }
 
@@ -120,7 +120,7 @@ class InequalityTest {
 
         val expectedInequalityConstraints = emptySet<InequalityConstraint>()
         val expectedTerm = two + "9".toSymbol()
-        assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
+        assertEquals(expectedInequalityConstraints, run.constraints)
         assertEquals(expectedTerm, run.terms.single())
     }
 
@@ -145,7 +145,7 @@ class InequalityTest {
 
         val expectedInequalityConstraints = setOf(InequalityConstraint(z, five))
         val expectedTerm = five + z
-        assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
+        assertEquals(expectedInequalityConstraints, run.constraints)
         assertEquals(expectedTerm, run.terms.single())
     }
 
@@ -159,7 +159,7 @@ class InequalityTest {
         val run = run(2, q, goals)
 
         val expectedInequalityConstraints = emptySet<InequalityConstraint>()
-        assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
+        assertEquals(expectedInequalityConstraints, run.constraints)
         assertEquals(q, run.terms.single())
     }
 
@@ -173,7 +173,7 @@ class InequalityTest {
         val run = run(2, q, goals)
 
         val expectedInequalityConstraints = emptySet<InequalityConstraint>()
-        assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
+        assertEquals(expectedInequalityConstraints, run.constraints)
         assertTrue(run.terms.isEmpty())
     }
 
@@ -195,7 +195,7 @@ class InequalityTest {
 
         val expectedInequalityConstraints = emptySet<InequalityConstraint>()
         val expectedTerm = a + b + (one + two) + (one + three)
-        assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
+        assertEquals(expectedInequalityConstraints, run.constraints)
         assertEquals(expectedTerm, run.terms.single())
     }
 
@@ -229,7 +229,7 @@ class InequalityTest {
         )
 
         assertEquals(expectedTerm, run.terms.single())
-        assertEquals(expectedConstraints, run.inequalityConstraints)
+        assertEquals(expectedConstraints, run.constraints)
     }
 
     @Tag("implementation-dependent")
@@ -255,6 +255,6 @@ class InequalityTest {
         )
 
         assertEquals(expectedTerm, run.terms.single())
-        assertEquals(expectedConstraints, run.inequalityConstraints)
+        assertEquals(expectedConstraints, run.constraints)
     }
 }

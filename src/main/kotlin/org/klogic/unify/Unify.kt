@@ -8,13 +8,19 @@ import org.klogic.core.Symbol
 import org.klogic.core.Term
 import org.klogic.core.Var
 
-internal fun occurs(variable: Var, term: Term): Boolean =
+/**
+ * Checks whether [variable] occurs in [term].
+ */
+internal fun occurs(term: Term, variable: Var): Boolean =
     when (term) {
         is Var -> term.index == variable.index
-        is Cons -> occurs(variable, term.head) || occurs(variable, term.tail)
+        is Cons -> occurs(term.head, variable) || occurs(term.tail, variable)
         is Symbol, Nil -> false
     }
 
+/**
+ * Substitutes all occurrences of [term] to its value in [substitution].
+ */
 internal fun walk(term: Term, substitution: Substitution): Term =
     when (term) {
         is Var -> {
@@ -31,7 +37,15 @@ internal fun walk(term: Term, substitution: Substitution): Term =
         is Symbol, Nil -> term
     }
 
+/**
+ * Represents a result of [UnificationResult.unify].
+ */
 data class UnificationResult(val newState: State, val substitutionDifference: MutableMap<Var, Term> = mutableMapOf()) {
+    /**
+     * Tries to unify two terms [left] and [right]. If it is possible, returns [UnificationResult] with [State] with
+     * corresponding logic bounds for variables in [State.substitution] and [substitutionDifference] as a difference
+     * between [State.substitution] before unification and after. Otherwise, returns null.
+     */
     fun unify(left: Term, right: Term): UnificationResult? {
         val walkedLeft = walk(left, newState.substitution)
         val walkedRight = walk(right, newState.substitution)
@@ -50,7 +64,7 @@ data class UnificationResult(val newState: State, val substitutionDifference: Mu
                         }
                     }
                     is Symbol, is Cons, Nil -> {
-                        if (occurs(walkedLeft, walkedRight)) {
+                        if (occurs(walkedRight, walkedLeft)) {
                             null
                         } else {
                             val newAssociation = walkedLeft to walkedRight
@@ -88,6 +102,15 @@ data class UnificationResult(val newState: State, val substitutionDifference: Mu
     }
 }
 
+/**
+ * Returns a [UnificationResult] with [UnificationResult.newState] equal to [this] and
+ * empty [UnificationResult.substitutionDifference].
+ */
 fun State.toUnificationResult(): UnificationResult = UnificationResult(this)
 
+/**
+ * Tries to unify [left] and [right] terms, starting with empty [Substitution].
+ *
+ * @see [UnificationResult.unify] for details.
+ */
 fun unify(left: Term, right: Term): UnificationResult? = UnificationResult.empty.unify(left, right)

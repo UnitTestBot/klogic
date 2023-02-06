@@ -1,25 +1,42 @@
 package org.klogic.core
 
-import org.klogic.core.Stream.Companion.nil
-import org.klogic.core.Stream.Companion.single
+import org.klogic.core.RecursiveStream.Companion.nil
+import org.klogic.core.RecursiveStream.Companion.single
+import org.klogic.unify.UnificationResult
 import org.klogic.unify.toUnificationResult
 
-sealed class Term {
+/**
+ * Represents a logic object.
+ */
+sealed interface Term {
     operator fun plus(other: Term): Cons = Cons(this, other)
 
+    /**
+     * Tries to unify this term to [other]. If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a
+     * corresponding [Substitution], and a goal with the [nil] stream otherwise.
+     *
+     * @see [UnificationResult.unify] for details.
+     */
     infix fun unify(other: Term): Goal = { st: State ->
         st.toUnificationResult().unify(this, other)?.let {
             single(it.newState)
         } ?: nil()
     }
 
+    /**
+     * Returns a goal with added to state an [InequalityConstraint] of this term and [other].
+     */
     infix fun ineq(other: Term): Goal = { st: State -> single(st.ineq(this, other)) }
 
     infix fun `===`(other: Term): Goal = this unify other
     infix fun `!==`(other: Term): Goal = this ineq other
 }
 
-data class Symbol(val name: String) : Term() {
+/**
+ * Represents a simple string constant.
+ */
+@JvmInline
+value class Symbol(private val name: String) : Term {
     override fun toString(): String = name
 
     companion object {
@@ -27,18 +44,33 @@ data class Symbol(val name: String) : Term() {
     }
 }
 
-sealed class RecursiveList : Term()
+/**
+ * Represents classic recursive lists.
+ */
+sealed class RecursiveList : Term
 
+/**
+ * Represents an empty [RecursiveList].
+ */
 object Nil : RecursiveList() {
     val empty: RecursiveList = this
     val nil: RecursiveList = this
 
     override fun toString(): String = "Nil"
 }
+
+/**
+ * Represents a [RecursiveList] consisting of element [head] at the beginning and [tail] as the rest.
+ */
 data class Cons(val head: Term, val tail: Term) : RecursiveList() {
     override fun toString(): String = "($head ++ $tail)"
 }
-data class Var(val index: Int) : Term() {
+
+/**
+ * Represents a symbolic term that can be equal to any other [Term].
+ */
+@JvmInline
+value class Var(val index: Int) : Term {
     override fun toString(): String = "_.$index"
 
     companion object {
