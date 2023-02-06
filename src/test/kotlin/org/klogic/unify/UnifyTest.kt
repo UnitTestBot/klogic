@@ -17,7 +17,7 @@ class UnifyTest {
     fun testUnifyReflexivity() {
         val variable = 1.toVar()
         val symbol = two
-        val unification = unify(variable + symbol, symbol + variable)!!.substitution
+        val unification = unify(variable + symbol, symbol + variable)!!.newState.substitution
 
         val expectedUnification = Substitution(mapOf(variable to symbol))
         assertEquals(expectedUnification, unification)
@@ -27,7 +27,7 @@ class UnifyTest {
     fun testUnifyVarToVar() {
         val first = 1.toVar()
         val second = 2.toVar()
-        val unification = unify(first, second)!!.substitution
+        val unification = unify(first, second)!!.newState.substitution
 
         val expectedUnification = Substitution(mapOf(first to second))
         assertEquals(expectedUnification, unification)
@@ -40,7 +40,7 @@ class UnifyTest {
 
         val left = firstVar + secondVar
         val right = secondVar + nil
-        val unification = unify(left, right)!!.substitution
+        val unification = unify(left, right)!!.newState.substitution
 
         val expectedUnification = Substitution(mapOf(firstVar to secondVar, secondVar to nil))
         assertEquals(expectedUnification, unification)
@@ -57,7 +57,7 @@ class UnifyTest {
         val unification = unify(left, right)
 
         val failedUnification: State? = null
-        assertEquals(failedUnification, unification)
+        assertEquals(failedUnification, unification?.newState)
     }
     
     @Test

@@ -1,8 +1,6 @@
 package org.klogic.core
 
-import kotlinx.collections.immutable.toPersistentList
 import org.klogic.core.Stream.Companion.nil
-import org.klogic.unify.walk
 
 sealed interface Stream<out T> {
     infix fun take(n: Int): List<T>
@@ -111,23 +109,3 @@ fun KanrenStream<State>.check(): KanrenStream<State> =
         is ThunksStream -> ThunksStream { elements().check() }
     }
 
-fun State.check(): State? =
-    inequalityConstraints.flatMap { inequalityConstraint ->
-        val left = inequalityConstraint.left
-        val right = inequalityConstraint.right
-
-        unify(left, right)?.let { inequalityState ->
-            val newSubstitution = inequalityState.substitution
-
-            val delta = newSubstitution - substitution
-            if (delta.isEmpty()) {
-                return@check null
-            }
-
-            delta.entries.map {
-                InequalityConstraint(it.key, it.value)
-            }
-        } ?: emptyList()
-    }.toPersistentList().let {
-        copy(inequalityConstraints = it)
-    }

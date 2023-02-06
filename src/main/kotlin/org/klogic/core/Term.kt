@@ -2,13 +2,14 @@ package org.klogic.core
 
 import org.klogic.core.Stream.Companion.nil
 import org.klogic.core.Stream.Companion.single
+import org.klogic.unify.toUnificationResult
 
 sealed class Term {
     operator fun plus(other: Term): Cons = Cons(this, other)
 
     infix fun unify(other: Term): Goal = { st: State ->
-        st.unify(this, other)?.let {
-            single(it)
+        st.toUnificationResult().unify(this, other)?.let {
+            single(it.newState)
         } ?: nil()
     }
 

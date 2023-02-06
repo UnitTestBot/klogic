@@ -2,6 +2,7 @@ package org.klogic.unify
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.klogic.core.`&&&`
 import org.klogic.core.InequalityConstraint
@@ -74,7 +75,7 @@ class InequalityTest {
         val run = run(2, list, goal)
 
         val expectedInequalityConstraints =
-            listOf(InequalityConstraint(list, nil)) + InequalityConstraint(list, first + second)
+            setOf(InequalityConstraint(list, nil)) + InequalityConstraint(list, first + second)
         assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
     }
 
@@ -92,7 +93,7 @@ class InequalityTest {
 
         val run = run(2, q, goals)
 
-        val expectedInequalityConstraints = listOf(
+        val expectedInequalityConstraints = setOf(
             InequalityConstraint(x, two),
             InequalityConstraint(y, one),
         )
@@ -117,7 +118,7 @@ class InequalityTest {
 
         val run = run(2, q, goals)
 
-        val expectedInequalityConstraints = emptyList<InequalityConstraint>()
+        val expectedInequalityConstraints = emptySet<InequalityConstraint>()
         val expectedTerm = two + "9".toSymbol()
         assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
         assertEquals(expectedTerm, run.terms.single())
@@ -142,7 +143,7 @@ class InequalityTest {
 
         val run = run(2, q, goals)
 
-        val expectedInequalityConstraints = listOf(InequalityConstraint(z, five))
+        val expectedInequalityConstraints = setOf(InequalityConstraint(z, five))
         val expectedTerm = five + z
         assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
         assertEquals(expectedTerm, run.terms.single())
@@ -157,7 +158,7 @@ class InequalityTest {
 
         val run = run(2, q, goals)
 
-        val expectedInequalityConstraints = emptyList<InequalityConstraint>()
+        val expectedInequalityConstraints = emptySet<InequalityConstraint>()
         assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
         assertEquals(q, run.terms.single())
     }
@@ -171,7 +172,7 @@ class InequalityTest {
 
         val run = run(2, q, goals)
 
-        val expectedInequalityConstraints = emptyList<InequalityConstraint>()
+        val expectedInequalityConstraints = emptySet<InequalityConstraint>()
         assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
         assertTrue(run.terms.isEmpty())
     }
@@ -192,9 +193,68 @@ class InequalityTest {
 
         val run = run(2, a + b + c + d, goals)
 
-        val expectedInequalityConstraints = emptyList<InequalityConstraint>()
+        val expectedInequalityConstraints = emptySet<InequalityConstraint>()
         val expectedTerm = a + b + (one + two) + (one + three)
         assertEquals(expectedInequalityConstraints, run.inequalityConstraints)
         assertEquals(expectedTerm, run.terms.single())
+    }
+
+    @Tag("implementation-dependent")
+    @Test
+    fun testOnlyOneConstraintIsEnoughExample1() {
+        val a = 1.toVar()
+        val x = 2.toVar()
+        val y = 3.toVar()
+        val z = 4.toVar()
+
+        val five = "5".toSymbol()
+        val seven = "7".toSymbol()
+        val goals = arrayOf(
+            x `===` y + z,
+            y `===` five + a,
+            x `!==` (five + seven) + three,
+        )
+
+        val run = run(2, x, goals)
+
+        // Looks like the answer is implementation-dependent:
+        // 1) There are can be 2 the same terms with different inequality constraints: (z !== 3) OR (a !== 7),
+        // 2) or only one the same term with both constraints at the same time: (z !== 3) AND (a !== 7).
+
+        // The current implementation returns the second answer, but in can change in the future.
+        val expectedTerm = (five + a) + z
+        val expectedConstraints = setOf(
+            InequalityConstraint(a, seven),
+            InequalityConstraint(z, three)
+        )
+
+        assertEquals(expectedTerm, run.terms.single())
+        assertEquals(expectedConstraints, run.inequalityConstraints)
+    }
+
+    @Tag("implementation-dependent")
+    @Test
+    fun testOnlyOneConstraintIsEnoughExample2() {
+        val q = 0.toVar()
+        val x = 1.toVar()
+        val y = 2.toVar()
+
+        val goal = (x + one `!==` two + y) `&&&` (x + y `===` q)
+        val run = run(3, q, goal)
+
+        // Looks like the answer is implementation-dependent:
+        // 1) There are can be 2 the same terms with different inequality constraints: (x !== 2) OR (y !== 1),
+        // 2) or only one the same term with both constraints at the same time: (x !== 2) AND (y !== 1).
+
+        // The current implementation returns the second answer, but in can change in the future.
+
+        val expectedTerm = x + y
+        val expectedConstraints = setOf(
+            InequalityConstraint(x, two),
+            InequalityConstraint(y, one)
+        )
+
+        assertEquals(expectedTerm, run.terms.single())
+        assertEquals(expectedConstraints, run.inequalityConstraints)
     }
 }

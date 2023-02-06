@@ -17,7 +17,7 @@ fun fresh(f: (Term) -> Goal): Goal = delay {
     { st: State -> f(st.fresh())(st) }
 }
 
-data class RunAnswer(val terms: List<Term>, val inequalityConstraints: List<InequalityConstraint> = emptyList())
+data class RunAnswer(val terms: List<Term>, val inequalityConstraints: Set<InequalityConstraint> = emptySet())
 
 fun run(count: Int, term: Term, goal: Goal, vararg nextGoals: Goal): RunAnswer =
     nextGoals.fold(goal) { acc, nextGoal ->
@@ -27,7 +27,7 @@ fun run(count: Int, term: Term, goal: Goal, vararg nextGoals: Goal): RunAnswer =
         .take(count)
         .let { states ->
             val terms = states.map { st -> walk(term, st.substitution) }
-            val inequalityConstraints = states.flatMap { it.inequalityConstraints }
+            val inequalityConstraints = states.flatMapTo(mutableSetOf()) { it.inequalityConstraints }
 
             RunAnswer(terms, inequalityConstraints)
         }

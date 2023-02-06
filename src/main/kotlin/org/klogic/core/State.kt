@@ -1,15 +1,15 @@
 package org.klogic.core
 
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
-import org.klogic.unify.occurs
-import org.klogic.unify.walk
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentSet
+import org.klogic.unify.toUnificationResult
 
-typealias InequalityConstraints = PersistentList<InequalityConstraint>
+typealias InequalityConstraints = PersistentSet<InequalityConstraint>
 
 data class State(
     val substitution: Substitution,
-    val inequalityConstraints: InequalityConstraints = persistentListOf(),
+    val inequalityConstraints: InequalityConstraints = persistentSetOf(),
     private var lastCreatedVariableIndex: Int = 0
 ) {
     constructor(map: Map<Var, Term>, inequalityConstraints: InequalityConstraints, lastCreatedVariableIndex: Int = 0) :
@@ -25,52 +25,27 @@ data class State(
         return State(substitution + (variable to term), inequalityConstraints, lastCreatedVariableIndex)
     }
 
-    @Suppress("NAME_SHADOWING")
-    fun unify(left: Term, right: Term): State? {
-        val left = walk(left, substitution)
-        val right = walk(right, substitution)
-
-        return when (left) {
-            is Var -> {
-                when (right) {
-                    is Var -> {
-                        if (left == right) {
-                            this
-                        } else {
-                            this + (left to right)
-                        }
-                    }
-                    is Symbol, is Cons, Nil -> {
-                        if (occurs(left, right)) {
-                            null
-                        } else {
-                            this + (left to right)
-                        }
-                    }
-                }
-            }
-            is Cons -> when (right) {
-                is Cons -> {
-                    unify(left.head, right.head)?.unify(left.tail, right.tail)
-                }
-                is Var -> this.unify(right, left)
-                is Symbol, Nil -> null
-            }
-            Nil -> when (right) {
-                is Var -> this.unify(right, left)
-                Nil -> this
-                is Symbol, is Cons -> null
-            }
-            is Symbol -> when (right) {
-                is Var -> this.unify(right, left)
-                is Symbol -> if (left == right) this else null
-                is Cons, Nil -> null
-            }
-        }
-    }
-
     fun ineq(left: Term, right: Term): State =
         copy(inequalityConstraints = inequalityConstraints.add(InequalityConstraint(left, right)))
+
+    fun check(): State? =
+        inequalityConstraints.flatMap { inequalityConstraint ->
+            val left = inequalityConstraint.left
+            val right = inequalityConstraint.right
+
+            toUnificationResult().unify(left, right)?.let { inequalityUnificationResult ->
+                val delta = inequalityUnificationResult.substitutionDifference
+                if (delta.isEmpty()) {
+                    return@check null
+                }
+
+                delta.entries.map {
+                    InequalityConstraint(it.key, it.value)
+                }
+            } ?: emptyList()
+        }.toPersistentSet().let {
+            copy(inequalityConstraints = it)
+        }
 
     operator fun plus(pair: Pair<Var, Term>): State = extend(pair.first, pair.second)
 
