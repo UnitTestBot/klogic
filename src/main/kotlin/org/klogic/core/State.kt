@@ -3,6 +3,8 @@ package org.klogic.core
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.collections.immutable.toPersistentHashSet
+import org.klogic.core.InequalityConstraint.SingleInequalityConstraint
+import org.klogic.unify.toUnificationResult
 
 typealias InequalityConstraints = PersistentSet<InequalityConstraint>
 
@@ -40,28 +42,43 @@ data class State(
     /**
      * Returns a new state with [InequalityConstraint] of [left] and [right] terms added to [constraints].
      */
-    fun ineq(left: Term, right: Term): State =
-        copy(constraints = constraints.add(InequalityConstraint(left, right)))
-
-    /**
-     * Checks [constraints] for satisfiability by invoking [Constraint.check] - if any constraint is always violated, returns null.
-     * Otherwise, returns a new state with new constraints transforming according to theirs [Constraint.check].
-     */
-    fun check(): State? {
-        val resultedConstraints = mutableSetOf<Constraint>()
-        val constraintsResults = constraints.asSequence().map {
-            it.check(this)
-        }
-
-        for (constraintResult in constraintsResults) {
-            if (constraintResult !is SatisfiedConstraintResult) {
+    fun ineq(left: Term, right: Term): State? {
+        return toUnificationResult().unify(left, right)?.let { unificationResult ->
+            val delta = unificationResult.substitutionDifference
+            // If the substitution from unification does not differ from the current substitution,
+            // it means that this constraint is always violated.
+            if (delta.isEmpty()) {
                 return null
             }
 
-            resultedConstraints += constraintResult.resultedConstraints
+            val simplifiedConstraints = delta.map { SingleInequalityConstraint(it.key, it.value) }
+            val singleConstraint = InequalityConstraint(simplifiedConstraints)
+
+            copy(constraints = constraints.add(singleConstraint))
+        } ?: this
+    }
+
+    /**
+     * Verifies [constraints] by invoking [Constraint.verify] - if any constraint is always violated, returns null.
+     * Otherwise, returns a new state with new constraints simplified according to theirs [Constraint.verify].
+     */
+    fun verify(): State? {
+        val simplifiedConstraints = mutableSetOf<Constraint>()
+        val constraintsResults = constraints.asSequence().map {
+            it.verify(this)
         }
 
-        return copy(constraints = resultedConstraints.toPersistentHashSet())
+        for (constraintResult in constraintsResults) {
+            when (constraintResult) {
+                is ViolatedConstraintResult -> return null
+                is SatisfiedConstraintResult -> simplifiedConstraints += constraintResult.simplifiedConstraint
+                is RedundantConstraintResult -> {
+                    // do nothing
+                }
+            }
+        }
+
+        return copy(constraints = simplifiedConstraints.toPersistentHashSet())
     }
 
     operator fun plus(pair: Pair<Var, Term>): State = extend(pair.first, pair.second)

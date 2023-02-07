@@ -15,10 +15,10 @@ sealed interface Term {
      * Tries to unify this term to [other]. If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a
      * corresponding [Substitution], and a goal with the [nil] stream otherwise.
      *
-     * @see [UnificationResult.unify] for details.
+     * @see [UnificationResult.unifyWithConstraintsVerification] for details.
      */
     infix fun unify(other: Term): Goal = { st: State ->
-        st.toUnificationResult().unify(this, other)?.let {
+        st.toUnificationResult().unifyWithConstraintsVerification(this, other)?.let {
             single(it.newState)
         } ?: nil()
     }
@@ -26,7 +26,11 @@ sealed interface Term {
     /**
      * Returns a goal with added to state an [InequalityConstraint] of this term and [other].
      */
-    infix fun ineq(other: Term): Goal = { st: State -> single(st.ineq(this, other)) }
+    infix fun ineq(other: Term): Goal = { st: State ->
+        st.ineq(this, other)?.let {
+            single(it)
+        } ?: nil()
+    }
 
     infix fun `===`(other: Term): Goal = this unify other
     infix fun `!==`(other: Term): Goal = this ineq other

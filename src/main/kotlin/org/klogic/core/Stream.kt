@@ -20,7 +20,6 @@ sealed interface Stream<out T> {
     infix fun <R> bind(f: (T) -> Stream<R>): Stream<R>
 }
 
-@Suppress("SpellCheckingInspection")
 sealed class RecursiveStream<out T> : Stream<T> {
     @Suppress("NAME_SHADOWING")
     override infix fun take(n: Int): List<T> {
@@ -111,19 +110,19 @@ data class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveS
 data class ThunkStream<T>(val elements: () -> RecursiveStream<T>) : RecursiveStream<T>()
 
 /**
- * Transforms [this] stream by performing [State.check] to each element.
+ * Transforms [this] stream by performing [State.verify] to each element.
  */
-fun RecursiveStream<State>.check(): RecursiveStream<State> =
+fun RecursiveStream<State>.verify(): RecursiveStream<State> =
     when (this) {
         NilStream -> RecursiveStream.nil()
         is ConsStream -> {
-            val checkedHead = head.check()
-            val checkedTail = tail.check()
+            val verifiedHead = head.verify()
+            val verifiedTail = tail.verify()
 
-            checkedHead?.let {
-                ConsStream(it, checkedTail)
-            } ?: checkedTail
+            verifiedHead?.let {
+                ConsStream(it, verifiedTail)
+            } ?: verifiedTail
         }
-        is ThunkStream -> ThunkStream { elements().check() }
+        is ThunkStream -> ThunkStream { elements().verify() }
     }
 

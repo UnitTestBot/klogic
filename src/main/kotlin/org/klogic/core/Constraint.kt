@@ -1,58 +1,83 @@
 package org.klogic.core
 
+import org.klogic.unify.UnificationResult
 import org.klogic.unify.toUnificationResult
 
 /**
- * Represents a result of invoking [Constraint.check].
+ * Represents a result of invoking [Constraint.verify].
  */
-sealed class ConstraintCheckResult
+sealed class ConstraintVerificationResult
 
 /**
- * Represents a successful [Constraint.check] result, with [resultedConstraints] as transformed constraints.
+ * Represents a successful [Constraint.verify] result, with [simplifiedConstraint] as a simplified passed constraint.
  */
-class SatisfiedConstraintResult(val resultedConstraints: List<Constraint>) : ConstraintCheckResult()
+class SatisfiedConstraintResult(val simplifiedConstraint: Constraint) : ConstraintVerificationResult()
 
 /**
- * Represents a failed [Constraint.check] result — means that constraint is always violated.
+ * Represents a [Constraint.verify] result that indicates that constraint can never be violated, i.e., it is redundant.
  */
-object ViolatedConstraintResult : ConstraintCheckResult()
+object RedundantConstraintResult : ConstraintVerificationResult()
+
+/**
+ * Represents a failed [Constraint.verify] result — means that constraint is always violated.
+ */
+object ViolatedConstraintResult : ConstraintVerificationResult()
 
 /**
  * Represents any constraint that could be applied for the current [Goal].
  */
 interface Constraint {
     /**
-     * Checks this constraint for satisfiability with a substitution from [state].
+     * Verifies this constraint with a substitution from [state].
      */
-    fun check(state: State): ConstraintCheckResult
+    fun verify(state: State): ConstraintVerificationResult
 }
 
 /**
- * Represents an inequality constraint - [left] term cannot be equal to [right] term.
+ * Represents an inequality constraint that contains some [SingleInequalityConstraint]s.
  * The standard operation that applies this constraint is [Term.ineq].
  */
-data class InequalityConstraint(val left: Term, val right: Term) : Constraint {
-    override fun check(state: State): ConstraintCheckResult =
-        with(state) {
-            // To check whether it is possible to violate this inequality constraint,
-            // we need to try to unify its left term with its right term.
-            toUnificationResult().unify(left, right)?.let { inequalityUnificationResult ->
-                val delta = inequalityUnificationResult.substitutionDifference
-                // If the substitution from unification does not differ from the current substitution,
-                // it means that this constraint is always violated.
-                if (delta.isEmpty()) {
-                    return@check ViolatedConstraintResult
-                }
+data class InequalityConstraint(val simplifiedConstraints: List<SingleInequalityConstraint>) : Constraint {
+    constructor(variable: Var, term: Term) : this(listOf(SingleInequalityConstraint(variable, term)))
+    constructor(vararg pairs: Pair<Var, Term>) : this(pairs.map {
+        SingleInequalityConstraint(it.first, it.second) }
+    )
 
-                // Otherwise, we should transform this constraint to the list of inequality constraints from resulted
-                // substitution difference.
-                delta.entries.map {
-                    InequalityConstraint(it.key, it.value)
-                }
-            } ?: emptyList()
-        }.toSatisfiedConstraintResult()
+    override fun verify(state: State): ConstraintVerificationResult =
+        state.toUnificationResult().verify(simplifiedConstraints)?.let {
+            val delta = it.substitutionDifference
+            // If the substitution from unification does not differ from the current substitution,
+            // it means that this constraint is always violated.
+            if (delta.isEmpty()) {
+                return ViolatedConstraintResult
+            }
 
-    override fun toString(): String = "$left !== $right"
+            val simplifiedConstraints = delta.map { SingleInequalityConstraint(it.key, it.value) }
+            val singleConstraint = InequalityConstraint(simplifiedConstraints)
+
+            singleConstraint.toSatisfiedConstraintResult()
+        } ?: RedundantConstraintResult
+
+    private fun UnificationResult.verify(remainingSimplifiedConstraints: List<SingleInequalityConstraint>): UnificationResult? {
+        if (remainingSimplifiedConstraints.isEmpty()) {
+            return this
+        }
+
+        val firstSingleConstraint = remainingSimplifiedConstraints.first()
+
+        return unify(firstSingleConstraint.variable, firstSingleConstraint.term)
+            ?.verify(remainingSimplifiedConstraints.subList(1, remainingSimplifiedConstraints.size))
+    }
+
+    override fun toString(): String = simplifiedConstraints.joinToString(separator = ", ", prefix = "[", postfix = "]")
+
+
+    /**
+     * Represents a simple inequality constraint - [variable] cannot be equal to [term].
+     */
+    data class SingleInequalityConstraint(val variable: Var, val term: Term) {
+        override fun toString(): String = "$variable !== $term"
+    }
 }
 
-fun List<Constraint>.toSatisfiedConstraintResult(): SatisfiedConstraintResult = SatisfiedConstraintResult(this)
+fun Constraint.toSatisfiedConstraintResult(): SatisfiedConstraintResult = SatisfiedConstraintResult(this)

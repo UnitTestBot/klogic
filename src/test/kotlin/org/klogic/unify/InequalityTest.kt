@@ -11,7 +11,7 @@ import org.klogic.core.Symbol.Companion.toSymbol
 import org.klogic.core.Term
 import org.klogic.core.Var.Companion.toVar
 import org.klogic.core.run
-import org.klogic.core.toRunAnswer
+import org.klogic.core.reified
 import org.klogic.core.`|||`
 import org.klogic.utils.one
 import org.klogic.utils.three
@@ -27,7 +27,7 @@ class InequalityTest {
 
         val run = run(2, first, onlyOneResult)
 
-        val expected = listOf("b".toSymbol()).toRunAnswer()
+        val expected = listOf("b".toSymbol()).reified()
         assertEquals(expected, run)
     }
 
@@ -38,7 +38,7 @@ class InequalityTest {
 
         val run = run(2, first, noResults)
 
-        val expected = emptyList<Term>().toRunAnswer()
+        val expected = emptyList<Term>().reified()
         assertEquals(expected, run)
     }
 
@@ -50,8 +50,8 @@ class InequalityTest {
         val run = run(2, variable, goal)
 
         val expectedConstraints = setOf(InequalityConstraint(variable, one))
-        assertEquals(variable, run.terms.single())
-        assertEquals(expectedConstraints, run.constraints)
+        assertEquals(variable, run.single().term)
+        assertEquals(expectedConstraints, run.single().constraints)
     }
 
     @Test
@@ -62,7 +62,7 @@ class InequalityTest {
 
         val run = run(2, first, noResults)
 
-        val expected = emptyList<Term>().toRunAnswer()
+        val expected = emptyList<Term>().reified()
         assertEquals(expected, run)
     }
 
@@ -78,7 +78,7 @@ class InequalityTest {
 
         val expectedInequalityConstraints =
             setOf(InequalityConstraint(list, nil)) + InequalityConstraint(list, first + second)
-        assertEquals(expectedInequalityConstraints, run.constraints)
+        assertEquals(expectedInequalityConstraints, run.single().constraints)
     }
 
     // See corresponding "=/=-22"
@@ -95,13 +95,10 @@ class InequalityTest {
 
         val run = run(2, q, goals)
 
-        val expectedInequalityConstraints = setOf(
-            InequalityConstraint(x, two),
-            InequalityConstraint(y, one),
-        )
+        val expectedInequalityConstraints = setOf(InequalityConstraint(x to two, y to one))
         val expectedTerm = x + y
-        assertEquals(expectedInequalityConstraints, run.constraints)
-        assertEquals(expectedTerm, run.terms.single())
+        assertEquals(expectedInequalityConstraints, run.single().constraints)
+        assertEquals(expectedTerm, run.single().term)
     }
 
     // See corresponding "=/=-24"
@@ -122,8 +119,8 @@ class InequalityTest {
 
         val expectedInequalityConstraints = emptySet<InequalityConstraint>()
         val expectedTerm = two + "9".toSymbol()
-        assertEquals(expectedInequalityConstraints, run.constraints)
-        assertEquals(expectedTerm, run.terms.single())
+        assertEquals(expectedInequalityConstraints, run.single().constraints)
+        assertEquals(expectedTerm, run.single().term)
     }
 
     // See corresponding "=/=-27"
@@ -147,8 +144,8 @@ class InequalityTest {
 
         val expectedInequalityConstraints = setOf(InequalityConstraint(z, five))
         val expectedTerm = five + z
-        assertEquals(expectedInequalityConstraints, run.constraints)
-        assertEquals(expectedTerm, run.terms.single())
+        assertEquals(expectedInequalityConstraints, run.single().constraints)
+        assertEquals(expectedTerm, run.single().term)
     }
 
     // See corresponding "=/=-28"
@@ -161,8 +158,8 @@ class InequalityTest {
         val run = run(2, q, goals)
 
         val expectedInequalityConstraints = emptySet<InequalityConstraint>()
-        assertEquals(expectedInequalityConstraints, run.constraints)
-        assertEquals(q, run.terms.single())
+        assertEquals(expectedInequalityConstraints, run.single().constraints)
+        assertEquals(q, run.single().term)
     }
 
     // See corresponding "=/=-29"
@@ -174,14 +171,12 @@ class InequalityTest {
 
         val run = run(2, q, goals)
 
-        val expectedInequalityConstraints = emptySet<InequalityConstraint>()
-        assertEquals(expectedInequalityConstraints, run.constraints)
-        assertTrue(run.terms.isEmpty())
+        assertTrue(run.isEmpty())
     }
 
     // See "non watch-var pair implies satisfied"
     @Test
-    fun testComplicatedExample() {
+    fun testNoConstraintsRequired() {
         val a = 1.toVar()
         val b = 2.toVar()
         val c = 3.toVar()
@@ -195,10 +190,11 @@ class InequalityTest {
 
         val run = run(2, a + b + c + d, goals)
 
+        // The main point of this test is that constraint (a !== b) is not required here
         val expectedInequalityConstraints = emptySet<InequalityConstraint>()
         val expectedTerm = a + b + (one + two) + (one + three)
-        assertEquals(expectedInequalityConstraints, run.constraints)
-        assertEquals(expectedTerm, run.terms.single())
+        assertEquals(expectedInequalityConstraints, run.single().constraints)
+        assertEquals(expectedTerm, run.single().term)
     }
 
     @Tag("implementation-dependent")
@@ -225,13 +221,10 @@ class InequalityTest {
 
         // The current implementation returns the second answer, but in can change in the future.
         val expectedTerm = (five + a) + z
-        val expectedConstraints = setOf(
-            InequalityConstraint(a, seven),
-            InequalityConstraint(z, three)
-        )
+        val expectedConstraints = setOf(InequalityConstraint(a to seven, z to three))
 
-        assertEquals(expectedTerm, run.terms.single())
-        assertEquals(expectedConstraints, run.constraints)
+        assertEquals(expectedConstraints, run.single().constraints)
+        assertEquals(expectedTerm, run.single().term)
     }
 
     @Tag("implementation-dependent")
@@ -251,12 +244,34 @@ class InequalityTest {
         // The current implementation returns the second answer, but in can change in the future.
 
         val expectedTerm = x + y
-        val expectedConstraints = setOf(
-            InequalityConstraint(x, two),
-            InequalityConstraint(y, one)
+        val expectedConstraints = setOf(InequalityConstraint(x to two, y to one))
+
+        assertEquals(expectedConstraints, run.single().constraints)
+        assertEquals(expectedTerm, run.single().term)
+    }
+
+    // Example from "Relational Programming in miniKanren: Techniques, Applications, and Implementations", Chapter 8.
+    @Test
+    fun testByrdExample() {
+        val p = 0.toVar()
+        val x = 1.toVar()
+        val y = 2.toVar()
+
+        val five = "5".toSymbol()
+        val six = "6".toSymbol()
+        val seven = "7".toSymbol()
+
+        val goals = arrayOf(
+            five + six `!==` p,
+            x + y `===` p,
+            five `===` x,
+            seven `===` y
         )
 
-        assertEquals(expectedTerm, run.terms.single())
-        assertEquals(expectedConstraints, run.constraints)
+        val run = run(2, p + x + y, goals)
+
+        val expectedTerm = ((five + seven) + five + seven)
+        assertTrue(run.single().constraints.isEmpty())
+        assertEquals(expectedTerm, run.single().term)
     }
 }

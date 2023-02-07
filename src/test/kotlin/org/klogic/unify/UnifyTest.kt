@@ -8,7 +8,7 @@ import org.klogic.core.Substitution
 import org.klogic.core.Symbol.Companion.toSymbol
 import org.klogic.core.run
 import org.klogic.core.Var.Companion.toVar
-import org.klogic.core.toRunAnswer
+import org.klogic.core.reified
 import org.klogic.core.`|||`
 import org.klogic.utils.two
 
@@ -17,7 +17,7 @@ class UnifyTest {
     fun testUnifyReflexivity() {
         val variable = 1.toVar()
         val symbol = two
-        val unification = unify(variable + symbol, symbol + variable)!!.newState.substitution
+        val unification = unifyWithConstraintsVerification(variable + symbol, symbol + variable)!!.newState.substitution
 
         val expectedUnification = Substitution(mapOf(variable to symbol))
         assertEquals(expectedUnification, unification)
@@ -27,7 +27,7 @@ class UnifyTest {
     fun testUnifyVarToVar() {
         val first = 1.toVar()
         val second = 2.toVar()
-        val unification = unify(first, second)!!.newState.substitution
+        val unification = unifyWithConstraintsVerification(first, second)!!.newState.substitution
 
         val expectedUnification = Substitution(mapOf(first to second))
         assertEquals(expectedUnification, unification)
@@ -40,7 +40,7 @@ class UnifyTest {
 
         val left = firstVar + secondVar
         val right = secondVar + nil
-        val unification = unify(left, right)!!.newState.substitution
+        val unification = unifyWithConstraintsVerification(left, right)!!.newState.substitution
 
         val expectedUnification = Substitution(mapOf(firstVar to secondVar, secondVar to nil))
         assertEquals(expectedUnification, unification)
@@ -54,7 +54,7 @@ class UnifyTest {
         val left = firstVar + secondVar
         val right = nil
 
-        val unification = unify(left, right)
+        val unification = unifyWithConstraintsVerification(left, right)
 
         val failedUnification: State? = null
         assertEquals(failedUnification, unification?.newState)
@@ -70,7 +70,7 @@ class UnifyTest {
 
         val run = run(3, q, goal)
 
-        val expectedAnswer = listOf(five, six).toRunAnswer()
+        val expectedAnswer = listOf(five, six).reified()
         assertEquals(expectedAnswer, run)
     }
 }

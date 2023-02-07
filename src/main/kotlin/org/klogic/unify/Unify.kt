@@ -7,6 +7,7 @@ import org.klogic.core.Substitution
 import org.klogic.core.Symbol
 import org.klogic.core.Term
 import org.klogic.core.Var
+import org.klogic.core.Constraint
 
 /**
  * Checks whether [variable] occurs in [term].
@@ -38,14 +39,28 @@ internal fun walk(term: Term, substitution: Substitution): Term =
     }
 
 /**
- * Represents a result of [UnificationResult.unify].
+ * Represents a result of [UnificationResult.unifyWithConstraintsVerification].
  */
 data class UnificationResult(val newState: State, val substitutionDifference: MutableMap<Var, Term> = mutableMapOf()) {
     /**
-     * Tries to unify two terms [left] and [right]. If it is possible, returns [UnificationResult] with [State] with
-     * corresponding logic bounds for variables in [State.substitution] and [substitutionDifference] as a difference
-     * between [State.substitution] before unification and after. Otherwise, returns null.
+     * Tries to unify two terms [left] and [right] with verifying all [Constraint]s in [newState]. If it is possible,
+     * returns [UnificationResult] with [State] with corresponding logic bounds for variables in
+     * [State.substitution] and simplified constraints, and [substitutionDifference] as a difference between
+     * [State.substitution] before unification and after. Otherwise, returns null.
      */
+    fun unifyWithConstraintsVerification(left: Term, right: Term): UnificationResult? {
+        val successfulUnificationResult = unify(left, right) ?: return null
+
+        if (successfulUnificationResult.substitutionDifference.isEmpty()) {
+            // Empty difference allows us to not verify constraints as they should be already verified.
+            return this
+        }
+
+        val successfulVerification = successfulUnificationResult.newState.verify() ?: return null
+
+        return successfulUnificationResult.copy(newState = successfulVerification)
+    }
+
     fun unify(left: Term, right: Term): UnificationResult? {
         val walkedLeft = walk(left, newState.substitution)
         val walkedRight = walk(right, newState.substitution)
@@ -111,6 +126,6 @@ fun State.toUnificationResult(): UnificationResult = UnificationResult(this)
 /**
  * Tries to unify [left] and [right] terms, starting with empty [Substitution].
  *
- * @see [UnificationResult.unify] for details.
+ * @see [UnificationResult.unifyWithConstraintsVerification] for details.
  */
-fun unify(left: Term, right: Term): UnificationResult? = UnificationResult.empty.unify(left, right)
+fun unifyWithConstraintsVerification(left: Term, right: Term): UnificationResult? = UnificationResult.empty.unifyWithConstraintsVerification(left, right)
