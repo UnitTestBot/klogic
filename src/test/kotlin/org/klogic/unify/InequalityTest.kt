@@ -49,7 +49,9 @@ class InequalityTest {
 
         val run = run(2, variable, goal)
 
-        println(run)
+        val expectedConstraints = setOf(InequalityConstraint(variable, one))
+        assertEquals(variable, run.terms.single())
+        assertEquals(expectedConstraints, run.constraints)
     }
 
     @Test
