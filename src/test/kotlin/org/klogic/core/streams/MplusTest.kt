@@ -1,7 +1,8 @@
-package org.klogic.core
+package org.klogic.core.streams
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.klogic.core.ThunkStream
 import org.klogic.utils.ones
 import org.klogic.utils.repeat
 

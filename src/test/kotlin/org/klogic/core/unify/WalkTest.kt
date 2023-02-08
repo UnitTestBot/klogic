@@ -1,10 +1,11 @@
-package org.klogic.core
+package org.klogic.core.unify
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.klogic.core.Nil.nil
 import org.klogic.core.Substitution.Companion.of
 import org.klogic.core.Var.Companion.toVar
+import org.klogic.core.toTerm
 import org.klogic.unify.walk
 
 class WalkTest {

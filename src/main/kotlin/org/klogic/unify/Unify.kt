@@ -42,6 +42,9 @@ internal fun walk(term: Term, substitution: Substitution): Term =
  * Represents a result of [UnificationResult.unifyWithConstraintsVerification].
  */
 data class UnificationResult(val newState: State, val substitutionDifference: MutableMap<Var, Term> = mutableMapOf()) {
+    val substitution: Substitution
+        get() = newState.substitution
+
     /**
      * Tries to unify two terms [left] and [right] with verifying all [Constraint]s in [newState]. If it is possible,
      * returns [UnificationResult] with [State] with corresponding logic bounds for variables in
@@ -62,8 +65,8 @@ data class UnificationResult(val newState: State, val substitutionDifference: Mu
     }
 
     fun unify(left: Term, right: Term): UnificationResult? {
-        val walkedLeft = walk(left, newState.substitution)
-        val walkedRight = walk(right, newState.substitution)
+        val walkedLeft = walk(left, substitution)
+        val walkedRight = walk(right, substitution)
 
         return when (walkedLeft) {
             is Var -> {
