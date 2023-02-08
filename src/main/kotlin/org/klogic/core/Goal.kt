@@ -53,6 +53,7 @@ fun run(count: Int, term: Term, goals: Array<Goal>): List<ReifiedTerm> {
  *
  * For more details, see [ReifiedTerm] docs.
  */
+// TODO pass user mapper function to stream
 fun run(count: Int, term: Term, goal: Goal, vararg nextGoals: Goal): List<ReifiedTerm> =
     nextGoals
         .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(State.empty)
