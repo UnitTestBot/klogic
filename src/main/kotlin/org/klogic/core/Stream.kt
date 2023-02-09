@@ -108,21 +108,3 @@ data class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveS
  * Represents not already evaluated [RecursiveStream].
  */
 data class ThunkStream<T>(val elements: () -> RecursiveStream<T>) : RecursiveStream<T>()
-
-/**
- * Transforms [this] stream by performing [State.verify] to each element.
- */
-fun RecursiveStream<State>.verify(): RecursiveStream<State> =
-    when (this) {
-        NilStream -> RecursiveStream.nil()
-        is ConsStream -> {
-            val verifiedHead = head.verify()
-            val verifiedTail = tail.verify()
-
-            verifiedHead?.let {
-                ConsStream(it, verifiedTail)
-            } ?: verifiedTail
-        }
-        is ThunkStream -> ThunkStream { elements().verify() }
-    }
-
