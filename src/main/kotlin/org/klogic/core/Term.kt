@@ -14,7 +14,7 @@ sealed interface Term {
      * Tries to unify this term to [other]. If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a
      * corresponding [Substitution], and a goal with the [nil] stream otherwise.
      *
-     * @see [UnificationState.unifyWithConstraintsVerification] for details.
+     * @see [State.unifyWithConstraintsVerification] for details.
      */
     infix fun unify(other: Term): Goal = { st: State ->
         st.unifyWithConstraintsVerification(this, other)?.let {
@@ -23,7 +23,13 @@ sealed interface Term {
     }
 
     /**
-     * Returns a goal with added to state an [InequalityConstraint] of this term and [other].
+     * Returns a goal that contains one of the following:
+     * - Copy of the passed state with an [InequalityConstraint] of this term and [other], if this constraint can be
+     * satisfied somehow;
+     * - Passed state (the same reference), if the mentioned above constraint can never be violated (i.e., it is redundant);
+     * - No state at all, if this constraint is always violated.
+     *
+     * @see [Substitution.ineq] for details.
      */
     infix fun ineq(other: Term): Goal = { st: State ->
         st.substitution.ineq(this, other).let {

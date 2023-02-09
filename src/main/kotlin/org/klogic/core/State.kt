@@ -3,7 +3,6 @@ package org.klogic.core
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.collections.immutable.toPersistentHashSet
-import org.klogic.core.InequalityConstraint.SingleInequalityConstraint
 import org.klogic.unify.toUnificationState
 
 typealias InequalityConstraints = PersistentSet<InequalityConstraint>
@@ -14,10 +13,10 @@ typealias InequalityConstraints = PersistentSet<InequalityConstraint>
  */
 data class State(
     val substitution: Substitution,
-    val constraints: PersistentSet<Constraint> = persistentHashSetOf(),
+    val constraints: PersistentSet<Constraint<*>> = persistentHashSetOf(),
     private var lastCreatedVariableIndex: Int = 0
 ) {
-    constructor(map: Map<Var, Term>, constraints: PersistentSet<Constraint>, lastCreatedVariableIndex: Int = 0) :
+    constructor(map: Map<Var, Term>, constraints: PersistentSet<Constraint<*>>, lastCreatedVariableIndex: Int = 0) :
             this(Substitution(map), constraints, lastCreatedVariableIndex)
 
     private val inequalityConstraints: InequalityConstraints =
@@ -63,17 +62,18 @@ data class State(
     }
 }
 
+// TODO change docs.
 /**
  * Verifies [constraints] by invoking [Constraint.verify] - if any constraint is always violated, returns null.
  * Otherwise, returns a new state with new constraints simplified according to theirs [Constraint.verify].
  */
-fun verify(substitution: Substitution, constraints: Collection<Constraint>): Collection<Constraint>? {
-    val simplifiedConstraints = mutableSetOf<Constraint>()
+fun <T : Constraint<T>> verify(substitution: Substitution, constraints: Collection<T>): Collection<T>? {
+    val simplifiedConstraints = mutableSetOf<T>()
 
     for (constraint in constraints) {
         when (val constraintVerificationResult = constraint.verify(substitution)) {
             is ViolatedConstraintResult -> return null
-            is SatisfiedConstraintResult -> simplifiedConstraints += constraintVerificationResult.simplifiedConstraint
+            is SatisfiedConstraintResult<T> -> simplifiedConstraints += constraintVerificationResult.simplifiedConstraint
             is RedundantConstraintResult -> {
                 // Skip this constraint
             }

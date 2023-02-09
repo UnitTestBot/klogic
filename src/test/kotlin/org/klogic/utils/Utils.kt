@@ -45,5 +45,5 @@ internal val d: Var = variables[7]
 
 val List<ReifiedTerm>.singleReifiedTerm: Term
     get() = single().term
-val List<ReifiedTerm>.singleReifiedTermConstraints: Set<Constraint>
+val List<ReifiedTerm>.singleReifiedTermConstraints: Set<Constraint<*>>
     get() = single().constraints

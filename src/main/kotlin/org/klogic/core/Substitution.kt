@@ -5,6 +5,7 @@ import kotlinx.collections.immutable.minus
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.toPersistentMap
 import org.klogic.unify.toUnificationState
+import org.klogic.unify.UnificationState
 
 /**
  * Represents an immutable association of [Var]s and corresponding [Term]s.
@@ -12,11 +13,19 @@ import org.klogic.unify.toUnificationState
 data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persistentHashMapOf()) : Map<Var, Term> {
     constructor(map: Map<Var, Term>) : this(map as? PersistentMap<Var, Term> ?: map.toPersistentMap())
 
-    // TODO change docs.
     /**
-     * Returns a new state with [InequalityConstraint] of [left] and [right] terms added to [constraints].
+     * Checks whether [InequalityConstraint] of [left] and [right] can be satisfied.
+     *
+     * It tries to [UnificationState.unify] [left] and [right] - if it fails, it means that [left] cannot be equal to
+     * [right], i.e., this [InequalityConstraint] is redundant, and [RedundantConstraintResult] is returned.
+     * Otherwise, if [UnificationState.substitutionDifference] is empty, it means that this constraint is always violated,
+     * and [ViolatedConstraintResult] is returned.
+     * Else, [InequalityConstraint] is created from the [UnificationState.substitutionDifference], and [SatisfiedConstraintResult]
+     * is returned.
+     *
+     * @see [UnificationState.unify] for details.
      */
-    fun ineq(left: Term, right: Term): ConstraintVerificationResult {
+    fun ineq(left: Term, right: Term): ConstraintVerificationResult<InequalityConstraint> {
         return toUnificationState().unify(left, right)?.let { unificationState ->
             val delta = unificationState.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,

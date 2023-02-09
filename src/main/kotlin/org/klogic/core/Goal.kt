@@ -32,7 +32,7 @@ fun fresh(f: (Term) -> Goal): Goal = delay {
  *
  * @see [run], [Constraint].
  */
-data class ReifiedTerm(val term: Term, val constraints: Set<Constraint> = emptySet())
+data class ReifiedTerm(val term: Term, val constraints: Set<Constraint<*>> = emptySet())
 
 /**
  * Returns a result of invoking [run] overloading with first passed goal and the rest goals.
