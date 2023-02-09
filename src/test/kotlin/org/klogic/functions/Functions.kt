@@ -7,8 +7,8 @@ import org.klogic.core.Term
 import org.klogic.core.fresh
 import org.klogic.core.`|||`
 
-fun appendo(x: Term, y: Term, xy: Term): Goal {
-    return ((x `===` nil) `&&&` (y `===` xy)) `|||`
+fun appendo(x: Term, y: Term, xy: Term): Goal =
+    ((x `===` nil) `&&&` (y `===` xy)) `|||`
             fresh { head ->
                 fresh { tail ->
                     fresh { rest ->
@@ -16,10 +16,9 @@ fun appendo(x: Term, y: Term, xy: Term): Goal {
                     }
                 }
             }
-}
 
-fun reverso(x: Term, reversed: Term): Goal {
-    return ((x `===` nil) `&&&` (reversed `===` nil)) `|||`
+fun reverso(x: Term, reversed: Term): Goal =
+    ((x `===` nil) `&&&` (reversed `===` nil)) `|||`
             fresh { head ->
                 fresh { tail ->
                     fresh { rest ->
@@ -31,4 +30,3 @@ fun reverso(x: Term, reversed: Term): Goal {
                     }
                 }
             }
-}
