@@ -64,16 +64,13 @@ data class State(
      */
     fun verify(): State? {
         val simplifiedConstraints = mutableSetOf<Constraint>()
-        val constraintsResults = constraints.asSequence().map {
-            it.verify(this)
-        }
 
-        for (constraintResult in constraintsResults) {
-            when (constraintResult) {
+        for (constraint in constraints) {
+            when (val constraintVerificationResult = constraint.verify(this)) {
                 is ViolatedConstraintResult -> return null
-                is SatisfiedConstraintResult -> simplifiedConstraints += constraintResult.simplifiedConstraint
+                is SatisfiedConstraintResult -> simplifiedConstraints += constraintVerificationResult.simplifiedConstraint
                 is RedundantConstraintResult -> {
-                    // do nothing
+                    // Skip this constraint
                 }
             }
         }
