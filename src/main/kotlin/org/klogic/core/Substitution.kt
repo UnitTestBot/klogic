@@ -4,12 +4,33 @@ import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.minus
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.toPersistentMap
+import org.klogic.unify.toUnificationState
 
 /**
  * Represents an immutable association of [Var]s and corresponding [Term]s.
  */
 data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persistentHashMapOf()) : Map<Var, Term> {
     constructor(map: Map<Var, Term>) : this(map as? PersistentMap<Var, Term> ?: map.toPersistentMap())
+
+    // TODO change docs.
+    /**
+     * Returns a new state with [InequalityConstraint] of [left] and [right] terms added to [constraints].
+     */
+    fun ineq(left: Term, right: Term): ConstraintVerificationResult {
+        return toUnificationState().unify(left, right)?.let { unificationState ->
+            val delta = unificationState.substitutionDifference
+            // If the substitution from unification does not differ from the current substitution,
+            // it means that this constraint is always violated.
+            if (delta.isEmpty()) {
+                return ViolatedConstraintResult
+            }
+
+            val simplifiedConstraints = delta.map { InequalityConstraint.SingleInequalityConstraint(it.key, it.value) }
+            val singleConstraint = InequalityConstraint(simplifiedConstraints)
+
+            SatisfiedConstraintResult(singleConstraint)
+        } ?: RedundantConstraintResult
+    }
 
     override val entries: Set<Map.Entry<Var, Term>> = innerSubstitution.entries
     override val keys: Set<Var> = innerSubstitution.keys

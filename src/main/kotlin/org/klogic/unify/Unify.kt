@@ -38,33 +38,22 @@ internal fun walk(term: Term, substitution: Substitution): Term =
         is Symbol, Nil -> term
     }
 
+// TODO docs.
 /**
- * Represents a result of [UnificationResult.unifyWithConstraintsVerification].
+ * Represents a mutable state of unification process.
  */
-data class UnificationResult(val newState: State, val substitutionDifference: MutableMap<Var, Term> = mutableMapOf()) {
-    val substitution: Substitution
-        get() = newState.substitution
-
+data class UnificationState(
+    val substitution: Substitution = Substitution.empty,
+    val substitutionDifference: MutableMap<Var, Term> = mutableMapOf()
+) {
     /**
      * Tries to unify two terms [left] and [right] with verifying all [Constraint]s in [newState]. If it is possible,
-     * returns [UnificationResult] with [State] with corresponding logic bounds for variables in
+     * returns [UnificationState] with [State] with corresponding logic bounds for variables in
      * [State.substitution] and simplified constraints, and [substitutionDifference] as a difference between
      * [State.substitution] before unification and after. Otherwise, returns null.
      */
-    fun unifyWithConstraintsVerification(left: Term, right: Term): UnificationResult? {
-        val successfulUnificationResult = unify(left, right) ?: return null
 
-        if (successfulUnificationResult.substitutionDifference.isEmpty()) {
-            // Empty difference allows us to not verify constraints as they should be already verified.
-            return this
-        }
-
-        val successfulVerification = successfulUnificationResult.newState.verify() ?: return null
-
-        return successfulUnificationResult.copy(newState = successfulVerification)
-    }
-
-    fun unify(left: Term, right: Term): UnificationResult? {
+    fun unify(left: Term, right: Term): UnificationState? {
         val walkedLeft = walk(left, substitution)
         val walkedRight = walk(right, substitution)
 
@@ -78,7 +67,7 @@ data class UnificationResult(val newState: State, val substitutionDifference: Mu
                             val newAssociation = walkedLeft to walkedRight
                             substitutionDifference += newAssociation
 
-                            copy(newState = newState + newAssociation)
+                            copy(substitution = substitution + newAssociation)
                         }
                     }
                     is Symbol, is Cons, Nil -> {
@@ -88,7 +77,7 @@ data class UnificationResult(val newState: State, val substitutionDifference: Mu
                             val newAssociation = walkedLeft to walkedRight
                             substitutionDifference += newAssociation
 
-                            copy(newState = newState + newAssociation)
+                            copy(substitution = substitution + newAssociation)
                         }
                     }
                 }
@@ -114,21 +103,26 @@ data class UnificationResult(val newState: State, val substitutionDifference: Mu
     }
 
     companion object {
-        private val EMPTY: UnificationResult = UnificationResult(State.empty)
+        private val EMPTY: UnificationState = UnificationState()
 
-        val empty: UnificationResult = EMPTY
+        val empty: UnificationState = EMPTY
     }
 }
 
 /**
- * Returns a [UnificationResult] with [UnificationResult.newState] equal to [this] and
- * empty [UnificationResult.substitutionDifference].
+ * Returns a [UnificationState] with [UnificationState.newState] equal to [this] and
+ * empty [UnificationState.substitutionDifference].
  */
-fun State.toUnificationResult(): UnificationResult = UnificationResult(this)
+fun State.toUnificationState(): UnificationState = substitution.toUnificationState()
+
+fun Substitution.toUnificationState(): UnificationState = UnificationState(this)
 
 /**
  * Tries to unify [left] and [right] terms, starting with empty [Substitution].
  *
- * @see [UnificationResult.unifyWithConstraintsVerification] for details.
+ * @see [UnificationState.unifyWithConstraintsVerification] for details.
  */
-fun unifyWithConstraintsVerification(left: Term, right: Term): UnificationResult? = UnificationResult.empty.unifyWithConstraintsVerification(left, right)
+fun unifyWithConstraintsVerification(
+    left: Term,
+    right: Term
+): State? = State.empty.unifyWithConstraintsVerification(left, right)

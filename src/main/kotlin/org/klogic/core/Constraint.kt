@@ -1,7 +1,7 @@
 package org.klogic.core
 
-import org.klogic.unify.UnificationResult
-import org.klogic.unify.toUnificationResult
+import org.klogic.unify.UnificationState
+import org.klogic.unify.toUnificationState
 
 /**
  * Represents a result of invoking [Constraint.verify].
@@ -28,9 +28,9 @@ object ViolatedConstraintResult : ConstraintVerificationResult()
  */
 interface Constraint {
     /**
-     * Verifies this constraint with a substitution from [state].
+     * Verifies this constraint with the [substitution].
      */
-    fun verify(state: State): ConstraintVerificationResult
+    fun verify(substitution: Substitution): ConstraintVerificationResult
 }
 
 /**
@@ -43,8 +43,8 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
         SingleInequalityConstraint(it.first, it.second) }
     )
 
-    override fun verify(state: State): ConstraintVerificationResult =
-        state.toUnificationResult().verify(simplifiedConstraints)?.let {
+    override fun verify(substitution: Substitution): ConstraintVerificationResult =
+        substitution.toUnificationState().verify(simplifiedConstraints)?.let {
             val delta = it.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
             // it means that this constraint is always violated.
@@ -58,7 +58,7 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
             singleConstraint.toSatisfiedConstraintResult()
         } ?: RedundantConstraintResult
 
-    private fun UnificationResult.verify(remainingSimplifiedConstraints: List<SingleInequalityConstraint>): UnificationResult? {
+    private fun UnificationState.verify(remainingSimplifiedConstraints: List<SingleInequalityConstraint>): UnificationState? {
         if (remainingSimplifiedConstraints.isEmpty()) {
             return this
         }

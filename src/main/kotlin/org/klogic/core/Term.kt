@@ -2,8 +2,7 @@ package org.klogic.core
 
 import org.klogic.core.RecursiveStream.Companion.nil
 import org.klogic.core.RecursiveStream.Companion.single
-import org.klogic.unify.UnificationResult
-import org.klogic.unify.toUnificationResult
+import org.klogic.unify.UnificationState
 
 /**
  * Represents a logic object.
@@ -15,11 +14,11 @@ sealed interface Term {
      * Tries to unify this term to [other]. If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a
      * corresponding [Substitution], and a goal with the [nil] stream otherwise.
      *
-     * @see [UnificationResult.unifyWithConstraintsVerification] for details.
+     * @see [UnificationState.unifyWithConstraintsVerification] for details.
      */
     infix fun unify(other: Term): Goal = { st: State ->
-        st.toUnificationResult().unifyWithConstraintsVerification(this, other)?.let {
-            single(it.newState)
+        st.unifyWithConstraintsVerification(this, other)?.let {
+            single(it)
         } ?: nil()
     }
 
@@ -27,9 +26,18 @@ sealed interface Term {
      * Returns a goal with added to state an [InequalityConstraint] of this term and [other].
      */
     infix fun ineq(other: Term): Goal = { st: State ->
-        st.ineq(this, other)?.let {
-            single(it)
-        } ?: nil()
+        st.substitution.ineq(this, other).let {
+            when (it) {
+                ViolatedConstraintResult -> nil()
+                RedundantConstraintResult -> single(st)
+                is SatisfiedConstraintResult -> {
+                    val newConstraint = it.simplifiedConstraint
+                    val newState = st.copy(constraints = st.constraints.add(newConstraint))
+
+                    single(newState)
+                }
+            }
+        }
     }
 
     infix fun `===`(other: Term): Goal = this unify other

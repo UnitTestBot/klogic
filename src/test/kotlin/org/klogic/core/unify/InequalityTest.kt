@@ -37,6 +37,15 @@ class InequalityTest {
     }
 
     @Test
+    fun testDropAllBranchesReverted() {
+        val noResults = (x `!==` `1`) `&&&` (x `===` `1`)
+
+        val run = run(2, x, noResults)
+
+        assertTrue(run.isEmpty())
+    }
+
+    @Test
     fun testOnlyInequalityGoal() {
         val goal = x `!==` `1`
 

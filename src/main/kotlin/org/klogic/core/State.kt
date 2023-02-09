@@ -4,7 +4,7 @@ import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.collections.immutable.toPersistentHashSet
 import org.klogic.core.InequalityConstraint.SingleInequalityConstraint
-import org.klogic.unify.toUnificationResult
+import org.klogic.unify.toUnificationState
 
 typealias InequalityConstraints = PersistentSet<InequalityConstraint>
 
@@ -39,43 +39,19 @@ data class State(
         return State(substitution + (variable to term), inequalityConstraints, lastCreatedVariableIndex)
     }
 
-    /**
-     * Returns a new state with [InequalityConstraint] of [left] and [right] terms added to [constraints].
-     */
-    fun ineq(left: Term, right: Term): State? {
-        return toUnificationResult().unify(left, right)?.let { unificationResult ->
-            val delta = unificationResult.substitutionDifference
-            // If the substitution from unification does not differ from the current substitution,
-            // it means that this constraint is always violated.
-            if (delta.isEmpty()) {
-                return null
-            }
+    fun unifyWithConstraintsVerification(left: Term, right: Term): State? {
+        val unificationState = toUnificationState()
+        val successfulUnificationState = unificationState.unify(left, right) ?: return null
 
-            val simplifiedConstraints = delta.map { SingleInequalityConstraint(it.key, it.value) }
-            val singleConstraint = InequalityConstraint(simplifiedConstraints)
-
-            copy(constraints = constraints.add(singleConstraint))
-        } ?: this
-    }
-
-    /**
-     * Verifies [constraints] by invoking [Constraint.verify] - if any constraint is always violated, returns null.
-     * Otherwise, returns a new state with new constraints simplified according to theirs [Constraint.verify].
-     */
-    fun verify(): State? {
-        val simplifiedConstraints = mutableSetOf<Constraint>()
-
-        for (constraint in constraints) {
-            when (val constraintVerificationResult = constraint.verify(this)) {
-                is ViolatedConstraintResult -> return null
-                is SatisfiedConstraintResult -> simplifiedConstraints += constraintVerificationResult.simplifiedConstraint
-                is RedundantConstraintResult -> {
-                    // Skip this constraint
-                }
-            }
+        if (successfulUnificationState.substitutionDifference.isEmpty()) {
+            // Empty difference allows us to not verify constraints as they should be already verified.
+            return this
         }
 
-        return copy(constraints = simplifiedConstraints.toPersistentHashSet())
+        val unificationSubstitution = successfulUnificationState.substitution
+        val verifiedConstraints = verify(unificationSubstitution, constraints) ?: return null
+
+        return copy(substitution = unificationSubstitution, constraints = verifiedConstraints.toPersistentHashSet())
     }
 
     operator fun plus(pair: Pair<Var, Term>): State = extend(pair.first, pair.second)
@@ -85,4 +61,24 @@ data class State(
 
         val empty: State = EMPTY_STATE
     }
+}
+
+/**
+ * Verifies [constraints] by invoking [Constraint.verify] - if any constraint is always violated, returns null.
+ * Otherwise, returns a new state with new constraints simplified according to theirs [Constraint.verify].
+ */
+fun verify(substitution: Substitution, constraints: Collection<Constraint>): Collection<Constraint>? {
+    val simplifiedConstraints = mutableSetOf<Constraint>()
+
+    for (constraint in constraints) {
+        when (val constraintVerificationResult = constraint.verify(substitution)) {
+            is ViolatedConstraintResult -> return null
+            is SatisfiedConstraintResult -> simplifiedConstraints += constraintVerificationResult.simplifiedConstraint
+            is RedundantConstraintResult -> {
+                // Skip this constraint
+            }
+        }
+    }
+
+    return simplifiedConstraints
 }
