@@ -71,7 +71,7 @@ data class State(
 }
 
 /**
- * Verifies [constraints] with passed [substitution] by invoking [Constraint.verify] - if any constraint is always violated, returns null.
+ * Verifies [constraints] with passed [substitution] by invoking [Constraint.verify] - if any constraint is violated, returns null.
  * Otherwise, returns a [Collection] of new constraints simplified according to theirs [Constraint.verify].
  */
 fun <T : Constraint<T>> verify(substitution: Substitution, constraints: Collection<T>): Collection<T>? {
@@ -80,7 +80,7 @@ fun <T : Constraint<T>> verify(substitution: Substitution, constraints: Collecti
     for (constraint in constraints) {
         when (val constraintVerificationResult = constraint.verify(substitution)) {
             is ViolatedConstraintResult -> return null
-            is SatisfiedConstraintResult<T> -> simplifiedConstraints += constraintVerificationResult.simplifiedConstraint
+            is SatisfiableConstraintResult<T> -> simplifiedConstraints += constraintVerificationResult.simplifiedConstraint
             is RedundantConstraintResult -> {
                 // Skip this constraint
             }

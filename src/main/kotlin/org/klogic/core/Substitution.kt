@@ -3,7 +3,7 @@ package org.klogic.core
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.minus
 import kotlinx.collections.immutable.persistentHashMapOf
-import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.collections.immutable.toPersistentHashMap
 import org.klogic.unify.toUnificationState
 import org.klogic.unify.UnificationState
 
@@ -11,16 +11,16 @@ import org.klogic.unify.UnificationState
  * Represents an immutable association of [Var]s and corresponding [Term]s.
  */
 data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persistentHashMapOf()) : Map<Var, Term> {
-    constructor(map: Map<Var, Term>) : this(map as? PersistentMap<Var, Term> ?: map.toPersistentMap())
+    constructor(map: Map<Var, Term>) : this(map.toPersistentHashMap())
 
     /**
      * Checks whether [InequalityConstraint] of [left] and [right] can be satisfied.
      *
      * It tries to [UnificationState.unify] [left] and [right] - if it fails, it means that [left] cannot be equal to
      * [right], i.e., this [InequalityConstraint] is redundant, and [RedundantConstraintResult] is returned.
-     * Otherwise, if [UnificationState.substitutionDifference] is empty, it means that this constraint is always violated,
+     * Otherwise, if [UnificationState.substitutionDifference] is empty, it means that this constraint is violated,
      * and [ViolatedConstraintResult] is returned.
-     * Else, [InequalityConstraint] is created from the [UnificationState.substitutionDifference], and [SatisfiedConstraintResult]
+     * Else, [InequalityConstraint] is created from the [UnificationState.substitutionDifference], and [SatisfiableConstraintResult]
      * is returned.
      *
      * @see [UnificationState.unify] for details.
@@ -29,7 +29,7 @@ data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persis
         return toUnificationState().unify(left, right)?.let { unificationState ->
             val delta = unificationState.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
-            // it means that this constraint is always violated.
+            // it means that this constraint is violated.
             if (delta.isEmpty()) {
                 return ViolatedConstraintResult
             }
@@ -38,7 +38,7 @@ data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persis
             val simplifiedConstraints = delta.map { InequalityConstraint.SingleInequalityConstraint(it.key, it.value) }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
-            SatisfiedConstraintResult(singleConstraint)
+            SatisfiableConstraintResult(singleConstraint)
         } ?: RedundantConstraintResult // Failed unification means this constraint is never violated, i.e., it is redundant.
     }
 

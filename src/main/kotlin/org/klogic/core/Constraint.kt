@@ -11,7 +11,7 @@ sealed class ConstraintVerificationResult<out T : Constraint<*>>
 /**
  * Represents a successful [Constraint.verify] result, with [simplifiedConstraint] as a simplified passed constraint.
  */
-class SatisfiedConstraintResult<out T : Constraint<*>>(val simplifiedConstraint: T) : ConstraintVerificationResult<T>()
+class SatisfiableConstraintResult<out T : Constraint<*>>(val simplifiedConstraint: T) : ConstraintVerificationResult<T>()
 
 /**
  * Represents a [Constraint.verify] result that indicates that constraint can never be violated, i.e., it is redundant.
@@ -19,7 +19,7 @@ class SatisfiedConstraintResult<out T : Constraint<*>>(val simplifiedConstraint:
 object RedundantConstraintResult : ConstraintVerificationResult<Nothing>()
 
 /**
- * Represents a failed [Constraint.verify] result — means that constraint is always violated.
+ * Represents a failed [Constraint.verify] result — means that constraint is violated.
  */
 object ViolatedConstraintResult : ConstraintVerificationResult<Nothing>()
 
@@ -47,7 +47,7 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
         substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
             val delta = unificationResult.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
-            // it means that this constraint is always violated.
+            // it means that this constraint is violated.
             if (delta.isEmpty()) {
                 return ViolatedConstraintResult
             }
@@ -81,6 +81,6 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
 }
 
 /**
- * Creates a [SatisfiedConstraintResult] from [this].
+ * Creates a [SatisfiableConstraintResult] from [this].
  */
-fun <T : Constraint<T>> T.toSatisfiedConstraintResult(): SatisfiedConstraintResult<T> = SatisfiedConstraintResult(this)
+fun <T : Constraint<T>> T.toSatisfiedConstraintResult(): SatisfiableConstraintResult<T> = SatisfiableConstraintResult(this)

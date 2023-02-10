@@ -2,7 +2,6 @@ package org.klogic.core
 
 import org.klogic.core.RecursiveStream.Companion.nil
 import org.klogic.core.RecursiveStream.Companion.single
-import org.klogic.unify.UnificationState
 
 /**
  * Represents a logic object.
@@ -27,7 +26,7 @@ sealed interface Term {
      * - Copy of the passed state with an [InequalityConstraint] of this term and [other], if this constraint can be
      * satisfied somehow;
      * - Passed state (the same reference), if the mentioned above constraint can never be violated (i.e., it is redundant);
-     * - No state at all, if this constraint is always violated.
+     * - No state at all, if this constraint is violated.
      *
      * @see [Substitution.ineq] for details.
      */
@@ -36,7 +35,7 @@ sealed interface Term {
             when (it) {
                 ViolatedConstraintResult -> nil()
                 RedundantConstraintResult -> single(st)
-                is SatisfiedConstraintResult -> {
+                is SatisfiableConstraintResult -> {
                     val newConstraint = it.simplifiedConstraint
                     val newState = st.copy(constraints = st.constraints.add(newConstraint))
 
