@@ -7,15 +7,21 @@ import org.klogic.core.Substitution
 import org.klogic.core.Symbol
 import org.klogic.core.Term
 import org.klogic.core.Var
+import org.klogic.core.Constraint
 
-internal fun occurs(variable: Var, term: Term): Boolean {
-    return when (term) {
+/**
+ * Checks whether [variable] occurs in [term].
+ */
+internal fun occurs(term: Term, variable: Var): Boolean =
+    when (term) {
         is Var -> term.index == variable.index
-        is Cons -> occurs(variable, term.head) || occurs(variable, term.tail)
+        is Cons -> occurs(term.head, variable) || occurs(term.tail, variable)
         is Symbol, Nil -> false
     }
-}
 
+/**
+ * Substitutes all occurrences of [term] to its value in [substitution].
+ */
 internal fun walk(term: Term, substitution: Substitution): Term =
     when (term) {
         is Var -> {
@@ -32,4 +38,91 @@ internal fun walk(term: Term, substitution: Substitution): Term =
         is Symbol, Nil -> term
     }
 
-fun unify(left: Term, right: Term): State? = State.empty.unify(left, right)
+// TODO docs.
+/**
+ * Represents a mutable state of unification process.
+ */
+data class UnificationState(
+    val substitution: Substitution = Substitution.empty,
+    val substitutionDifference: MutableMap<Var, Term> = mutableMapOf()
+) {
+    /**
+     * Tries to unify two terms [left] and [right] with verifying all [Constraint]s in [newState]. If it is possible,
+     * returns [UnificationState] with [State] with corresponding logic bounds for variables in
+     * [State.substitution] and simplified constraints, and [substitutionDifference] as a difference between
+     * [State.substitution] before unification and after. Otherwise, returns null.
+     */
+
+    fun unify(left: Term, right: Term): UnificationState? {
+        val walkedLeft = walk(left, substitution)
+        val walkedRight = walk(right, substitution)
+
+        return when (walkedLeft) {
+            is Var -> {
+                when (walkedRight) {
+                    is Var -> {
+                        if (walkedLeft == walkedRight) {
+                            this
+                        } else {
+                            val newAssociation = walkedLeft to walkedRight
+                            substitutionDifference += newAssociation
+
+                            copy(substitution = substitution + newAssociation)
+                        }
+                    }
+                    is Symbol, is Cons, Nil -> {
+                        if (occurs(walkedRight, walkedLeft)) {
+                            null
+                        } else {
+                            val newAssociation = walkedLeft to walkedRight
+                            substitutionDifference += newAssociation
+
+                            copy(substitution = substitution + newAssociation)
+                        }
+                    }
+                }
+            }
+            is Cons -> when (walkedRight) {
+                is Cons -> {
+                    unify(walkedLeft.head, walkedRight.head)?.unify(walkedLeft.tail, walkedRight.tail)
+                }
+                is Var -> unify(walkedRight, walkedLeft)
+                is Symbol, Nil -> null
+            }
+            Nil -> when (walkedRight) {
+                is Var -> unify(walkedRight, walkedLeft)
+                Nil -> this
+                is Symbol, is Cons -> null
+            }
+            is Symbol -> when (walkedRight) {
+                is Var -> unify(walkedRight, walkedLeft)
+                is Symbol -> if (walkedLeft == walkedRight) this else null
+                is Cons, Nil -> null
+            }
+        }
+    }
+
+    companion object {
+        private val EMPTY: UnificationState = UnificationState()
+
+        val empty: UnificationState = EMPTY
+    }
+}
+
+/**
+ * Returns a [UnificationState] with [UnificationState.newState] equal to [this] and
+ * empty [UnificationState.substitutionDifference].
+ */
+fun State.toUnificationState(): UnificationState = substitution.toUnificationState()
+
+fun Substitution.toUnificationState(): UnificationState = UnificationState(this)
+
+/**
+ * Tries to unify [left] and [right] terms, starting with empty [Substitution].
+ *
+ * @see [UnificationState.unifyWithConstraintsVerification] for details.
+ */
+fun unifyWithConstraintsVerification(
+    left: Term,
+    right: Term
+): State? = State.empty.unifyWithConstraintsVerification(left, right)

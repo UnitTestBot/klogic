@@ -1,8 +1,9 @@
-package org.klogic.core
+package org.klogic.core.streams
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.Stream.Companion.nil
+import org.klogic.core.ConsStream
+import org.klogic.core.RecursiveStream.Companion.nil
 import org.klogic.utils.ones
 
 class BindTest {

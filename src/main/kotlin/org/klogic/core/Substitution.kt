@@ -1,11 +1,46 @@
 package org.klogic.core
 
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.minus
 import kotlinx.collections.immutable.persistentHashMapOf
-import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.collections.immutable.toPersistentHashMap
+import org.klogic.unify.toUnificationState
+import org.klogic.unify.UnificationState
 
+/**
+ * Represents an immutable association of [Var]s and corresponding [Term]s.
+ */
 data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persistentHashMapOf()) : Map<Var, Term> {
-    constructor(map: Map<Var, Term>) : this(map as? PersistentMap<Var, Term> ?: map.toPersistentMap())
+    constructor(map: Map<Var, Term>) : this(map.toPersistentHashMap())
+
+    /**
+     * Checks whether [InequalityConstraint] of [left] and [right] can be satisfied.
+     *
+     * It tries to [UnificationState.unify] [left] and [right] - if it fails, it means that [left] cannot be equal to
+     * [right], i.e., this [InequalityConstraint] is redundant, and [RedundantConstraintResult] is returned.
+     * Otherwise, if [UnificationState.substitutionDifference] is empty, it means that this constraint is violated,
+     * and [ViolatedConstraintResult] is returned.
+     * Else, [InequalityConstraint] is created from the [UnificationState.substitutionDifference], and [SatisfiableConstraintResult]
+     * is returned.
+     *
+     * @see [UnificationState.unify] for details.
+     */
+    fun ineq(left: Term, right: Term): ConstraintVerificationResult<InequalityConstraint> {
+        return toUnificationState().unify(left, right)?.let { unificationState ->
+            val delta = unificationState.substitutionDifference
+            // If the substitution from unification does not differ from the current substitution,
+            // it means that this constraint is violated.
+            if (delta.isEmpty()) {
+                return ViolatedConstraintResult
+            }
+
+            // Otherwise, this constraint can be satisfied, and we can simplify it according to calculated substitution delta.
+            val simplifiedConstraints = delta.map { InequalityConstraint.SingleInequalityConstraint(it.key, it.value) }
+            val singleConstraint = InequalityConstraint(simplifiedConstraints)
+
+            SatisfiableConstraintResult(singleConstraint)
+        } ?: RedundantConstraintResult // Failed unification means this constraint is never violated, i.e., it is redundant.
+    }
 
     override val entries: Set<Map.Entry<Var, Term>> = innerSubstitution.entries
     override val keys: Set<Var> = innerSubstitution.keys
@@ -21,6 +56,7 @@ data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persis
     override fun isEmpty(): Boolean = innerSubstitution.isEmpty()
 
     operator fun plus(pair: Pair<Var, Term>): Substitution = (innerSubstitution + pair).toSubstitution()
+    operator fun minus(other: Substitution): Substitution = (innerSubstitution - other.keys).toSubstitution()
 
     override fun toString(): String = innerSubstitution.toString()
 

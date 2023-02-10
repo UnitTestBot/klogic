@@ -2,10 +2,11 @@ package org.klogic.functions
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.RecursiveList.Companion.nil
+import org.klogic.core.Nil.nil
 import org.klogic.core.Symbol.Companion.toSymbol
 import org.klogic.core.Var.Companion.toVar
 import org.klogic.core.run
+import org.klogic.core.reified
 
 class AppendoTest {
     // TODO test forward
@@ -23,7 +24,7 @@ class AppendoTest {
             nil + xy,
             (a + nil) + (b + nil),
             xy + nil
-        )
+        ).reified()
         assertEquals(expected, results)
     }
 }
