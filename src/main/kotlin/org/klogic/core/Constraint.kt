@@ -44,8 +44,8 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
     )
 
     override fun verify(substitution: Substitution): ConstraintVerificationResult<InequalityConstraint> =
-        substitution.toUnificationState().verify(simplifiedConstraints)?.let {
-            val delta = it.substitutionDifference
+        substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
+            val delta = unificationResult.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
             // it means that this constraint is always violated.
             if (delta.isEmpty()) {
@@ -80,4 +80,7 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
     }
 }
 
+/**
+ * Creates a [SatisfiedConstraintResult] from [this].
+ */
 fun <T : Constraint<T>> T.toSatisfiedConstraintResult(): SatisfiedConstraintResult<T> = SatisfiedConstraintResult(this)

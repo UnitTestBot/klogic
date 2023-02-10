@@ -32,6 +32,7 @@ fun fresh(f: (Term) -> Goal): Goal = delay {
  *
  * @see [run], [Constraint].
  */
+// TODO support typed terms.
 data class ReifiedTerm(val term: Term, val constraints: Set<Constraint<*>> = emptySet())
 
 /**
@@ -53,7 +54,7 @@ fun run(count: Int, term: Term, goals: Array<Goal>): List<ReifiedTerm> {
  *
  * For more details, see [ReifiedTerm] docs.
  */
-// TODO pass user mapper function to stream
+// TODO pass user mapper function to stream.
 fun run(count: Int, term: Term, goal: Goal, vararg nextGoals: Goal): List<ReifiedTerm> =
     nextGoals
         .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(State.empty)

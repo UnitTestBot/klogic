@@ -34,11 +34,12 @@ data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persis
                 return ViolatedConstraintResult
             }
 
+            // Otherwise, this constraint can be satisfied, and we can simplify it according to calculated substitution delta.
             val simplifiedConstraints = delta.map { InequalityConstraint.SingleInequalityConstraint(it.key, it.value) }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
             SatisfiedConstraintResult(singleConstraint)
-        } ?: RedundantConstraintResult
+        } ?: RedundantConstraintResult // Failed unification means this constraint is never violated, i.e., it is redundant.
     }
 
     override val entries: Set<Map.Entry<Var, Term>> = innerSubstitution.entries

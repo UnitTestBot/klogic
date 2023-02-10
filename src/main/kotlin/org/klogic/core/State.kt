@@ -8,7 +8,8 @@ import org.klogic.unify.toUnificationState
 typealias InequalityConstraints = PersistentSet<InequalityConstraint>
 
 /**
- * Represents a current immutable state of current [run] expression with [substitution] for [Var]s, passed [Constraint]s,
+ * Represents a current immutable state of current [run] expression with [substitution] for [Var]s,
+ * passed satisfiable [Constraint]s,
  * and an index of the last created with [fresh] variable.
  */
 data class State(
@@ -38,6 +39,13 @@ data class State(
         return State(substitution + (variable to term), inequalityConstraints, lastCreatedVariableIndex)
     }
 
+    /**
+     * Tries to unify [left] and [right] terms with the current [substitution].
+     * If the unification succeeds, tries to [verify] current [constraints] with calculated unification substitution,
+     * and returns null otherwise.
+     * If constraints verification succeeds, returns new [State] with unification substitution and verified simplified
+     * constraints, and returns null otherwise.
+     */
     fun unifyWithConstraintsVerification(left: Term, right: Term): State? {
         val unificationState = toUnificationState()
         val successfulUnificationState = unificationState.unify(left, right) ?: return null
@@ -62,10 +70,9 @@ data class State(
     }
 }
 
-// TODO change docs.
 /**
- * Verifies [constraints] by invoking [Constraint.verify] - if any constraint is always violated, returns null.
- * Otherwise, returns a new state with new constraints simplified according to theirs [Constraint.verify].
+ * Verifies [constraints] with passed [substitution] by invoking [Constraint.verify] - if any constraint is always violated, returns null.
+ * Otherwise, returns a [Collection] of new constraints simplified according to theirs [Constraint.verify].
  */
 fun <T : Constraint<T>> verify(substitution: Substitution, constraints: Collection<T>): Collection<T>? {
     val simplifiedConstraints = mutableSetOf<T>()
