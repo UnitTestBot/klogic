@@ -3,6 +3,7 @@ package org.klogic.core
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.collections.immutable.toPersistentHashSet
+import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.unify.toUnificationState
 
 typealias InequalityConstraints = PersistentSet<InequalityConstraint>
@@ -10,15 +11,18 @@ typealias InequalityConstraints = PersistentSet<InequalityConstraint>
 /**
  * Represents a current immutable state of current [run] expression with [substitution] for [Var]s,
  * passed satisfiable [Constraint]s,
- * and an index of the last created with [fresh] variable.
+ * and an index of the last created with [freshTypedVar] variable.
  */
 data class State(
     val substitution: Substitution,
     val constraints: PersistentSet<Constraint<*>> = persistentHashSetOf(),
-    private var lastCreatedVariableIndex: Int = 0
+    @PublishedApi internal var lastCreatedVariableIndex: Int = 0
 ) {
-    constructor(map: Map<Var, Term>, constraints: PersistentSet<Constraint<*>>, lastCreatedVariableIndex: Int = 0) :
-            this(Substitution(map), constraints, lastCreatedVariableIndex)
+    constructor(
+        map: Map<Var<Any>, Term<Any>>,
+        constraints: PersistentSet<Constraint<*>>,
+        lastCreatedVariableIndex: Int = 0
+    ) : this(Substitution(map), constraints, lastCreatedVariableIndex)
 
     private val inequalityConstraints: InequalityConstraints =
         constraints.filterIsInstance<InequalityConstraint>().toPersistentHashSet()
@@ -26,12 +30,12 @@ data class State(
     /**
      * Returns a new variable [Var] with [lastCreatedVariableIndex] as its [Var.index] and increments [lastCreatedVariableIndex].
      */
-    fun fresh(): Var = Var(lastCreatedVariableIndex++)
+    inline fun <reified T: Any> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
 
     /**
      * Returns a new state with [substitution] extended with passed not already presented association of [variable] to [term].
      */
-    fun extend(variable: Var, term: Term): State {
+    fun <T: Any> extend(variable: Var<T>, term: Term<T>): State {
         require(variable !in substitution) {
             "Variable $variable already exists in substitution $substitution"
         }
@@ -46,9 +50,9 @@ data class State(
      * If constraints verification succeeds, returns new [State] with unification substitution and verified simplified
      * constraints, and returns null otherwise.
      */
-    fun unifyWithConstraintsVerification(left: Term, right: Term): State? {
+    fun <T : Any> unifyWithConstraintsVerification(left: Term<T>, right: Term<T>): State? {
         val unificationState = toUnificationState()
-        val successfulUnificationState = unificationState.unify(left, right) ?: return null
+        val successfulUnificationState = left.unify(right, unificationState) ?: return null
 
         if (successfulUnificationState.substitutionDifference.isEmpty()) {
             // Empty difference allows us to not verify constraints as they should be already verified.
@@ -61,7 +65,7 @@ data class State(
         return copy(substitution = unificationSubstitution, constraints = verifiedConstraints.toPersistentHashSet())
     }
 
-    operator fun plus(pair: Pair<Var, Term>): State = extend(pair.first, pair.second)
+    operator fun <T : Any> plus(pair: Pair<Var<T>, Term<T>>): State = extend(pair.first, pair.second)
 
     companion object {
         private val EMPTY_STATE: State = State(Substitution.empty)

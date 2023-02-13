@@ -8,8 +8,29 @@ import kotlin.reflect.KClass
 /**
  * Represents a logic object.
  */
-sealed interface Term {
-    operator fun plus(other: Term): Cons = Cons(this, other)
+interface Term<T : Any> {
+    /**
+     * Checks whether [variable] occurs in [term].
+     */
+    fun occurs(variable: Var<out Any>): Boolean
+
+    /**
+     * Substitutes all occurrences of [term] to its value in [substitution].
+     */
+    fun walk(substitution: Substitution): Term<T>
+
+    fun unify(other: Term<T>, unificationState: UnificationState): UnificationState? {
+        val walkedThis = walk(unificationState.substitution)
+        val walkedOther = other.walk(unificationState.substitution)
+
+        return if (walkedOther is Var<*>) {
+            walkedOther.unifyImpl(walkedThis, unificationState)
+        } else {
+            walkedThis.unifyImpl(walkedOther, unificationState)
+        }
+    }
+
+    fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState?
 
     /**
      * Tries to unify this term to [other]. If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a
@@ -17,11 +38,13 @@ sealed interface Term {
      *
      * @see [State.unifyWithConstraintsVerification] for details.
      */
+/*
     infix fun unify(other: Term): Goal = { st: State ->
         st.unifyWithConstraintsVerification(this, other)?.let {
             single(it)
         } ?: nil()
     }
+*/
 
     /**
      * Returns a goal that contains one of the following:
@@ -32,6 +55,7 @@ sealed interface Term {
      *
      * @see [Substitution.ineq] for details.
      */
+/*
     infix fun ineq(other: Term): Goal = { st: State ->
         st.substitution.ineq(this, other).let {
             when (it) {
@@ -46,62 +70,75 @@ sealed interface Term {
             }
         }
     }
+*/
 
-    infix fun `===`(other: Term): Goal = this unify other
-    infix fun `!==`(other: Term): Goal = this ineq other
-}
-
-/**
- * Represents a simple string constant.
- */
-@JvmInline
-value class Symbol(private val name: String) : Term {
-    override fun toString(): String = name
-
-    companion object {
-        fun String.toSymbol(): Symbol = Symbol(this)
-    }
-}
-
-/**
- * Represents classic recursive lists.
- */
-sealed class RecursiveList : Term
-
-/**
- * Represents an empty [RecursiveList].
- */
-object Nil : RecursiveList() {
-    val empty: RecursiveList = this
-    val nil: RecursiveList = this
-
-    override fun toString(): String = "Nil"
-}
-
-/**
- * Represents a [RecursiveList] consisting of element [head] at the beginning and [tail] as the rest.
- */
-data class Cons(val head: Term, val tail: Term) : RecursiveList() {
-    override fun toString(): String = "($head ++ $tail)"
+    /*infix fun `===`(other: Term): Goal = this unify other
+    infix fun `!==`(other: Term): Goal = this ineq other*/
 }
 
 /**
  * Represents a symbolic term that can be equal to any other [Term].
  */
-@JvmInline
-value class Var(val index: Int) : Term {
-    override fun toString(): String = "_.$index"
+class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variableType: KClass<T>) : Term<T> {
+    override fun occurs(variable: Var<out Any>): Boolean = this == variable
+
+    override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
+        it.walk(substitution)
+    } ?: this
+
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? =
+        if (walkedOther is Var<*>) {
+            if (variableType != walkedOther.variableType) {
+                TODO("Error message")
+            }
+
+            if (this == walkedOther) {
+                unificationState
+            } else {
+                val newAssociation = this to (walkedOther as Var<T>)
+                unificationState.substitutionDifference += newAssociation
+
+                unificationState.copy(substitution = unificationState.substitution + newAssociation)
+            }
+        } else {
+            if (walkedOther.occurs(this)) {
+                null
+            } else {
+                val newAssociation = this to walkedOther
+                unificationState.substitutionDifference += newAssociation
+
+                unificationState.copy(substitution = unificationState.substitution + newAssociation)
+            }
+        }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Var<*>
+
+        if (index != other.index) return false
+        if (variableType != other.variableType) return false
+
+        return true
+    }
+    override fun hashCode(): Int {
+        var result = index
+        result = 31 * result + variableType.hashCode()
+        return result
+    }
+
+    override fun toString(): String = "_.$index:$variableType"
 
     companion object {
-        fun Int.toVar(): Var = Var(this)
+        inline fun <reified T : Any> Int.createTypedVar(): Var<T> = Var(this, T::class)
     }
 }
 
-fun Any.toTerm(): Term = when (this) {
-    is Int -> Var(this)
-    is String -> Symbol(this)
-    is Term -> this
-    else -> error("Could not transform $this to term")
+interface CustomTerm<T : CustomTerm<T>> : Term<T> {
+    // TODO this method seems redundant
+    fun unify(variable: Var<T>, unificationState: UnificationState): UnificationState? =
+        variable.unify(this, unificationState)
 }
 
 /*interface ITerm<T : Any> {

@@ -10,8 +10,8 @@ import org.klogic.unify.UnificationState
 /**
  * Represents an immutable association of [Var]s and corresponding [Term]s.
  */
-data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persistentHashMapOf()) : Map<Var, Term> {
-    constructor(map: Map<Var, Term>) : this(map.toPersistentHashMap())
+data class Substitution(val innerSubstitution: PersistentMap<Var<Any>, Term<Any>> = persistentHashMapOf()) : Map<Var<Any>, Term<Any>> {
+    constructor(map: Map<Var<Any>, Term<Any>>) : this(map.toPersistentHashMap())
 
     /**
      * Checks whether [InequalityConstraint] of [left] and [right] can be satisfied.
@@ -25,7 +25,7 @@ data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persis
      *
      * @see [UnificationState.unify] for details.
      */
-    fun ineq(left: Term, right: Term): ConstraintVerificationResult<InequalityConstraint> {
+    fun <T : Any> ineq(left: Term<T>, right: Term<T>): ConstraintVerificationResult<InequalityConstraint> {
         return toUnificationState().unify(left, right)?.let { unificationState ->
             val delta = unificationState.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
@@ -42,20 +42,20 @@ data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persis
         } ?: RedundantConstraintResult // Failed unification means this constraint is never violated, i.e., it is redundant.
     }
 
-    override val entries: Set<Map.Entry<Var, Term>> = innerSubstitution.entries
-    override val keys: Set<Var> = innerSubstitution.keys
+    override val entries: Set<Map.Entry<Var<Any>, Term<Any>>> = innerSubstitution.entries
+    override val keys: Set<Var<Any>> = innerSubstitution.keys
     override val size: Int = innerSubstitution.size
-    override val values: Collection<Term> = innerSubstitution.values
+    override val values: Collection<Term<Any>> = innerSubstitution.values
 
-    override fun containsKey(key: Var): Boolean = innerSubstitution.containsKey(key)
+    override fun containsKey(key: Var<Any>): Boolean = innerSubstitution.containsKey(key)
 
-    override fun containsValue(value: Term): Boolean = innerSubstitution.containsValue(value)
+    override fun containsValue(value: Term<Any>): Boolean = innerSubstitution.containsValue(value)
 
-    override fun get(key: Var): Term? = innerSubstitution[key]
+    override fun get(key: Var<Any>): Term<Any>? = innerSubstitution[key]
 
     override fun isEmpty(): Boolean = innerSubstitution.isEmpty()
 
-    operator fun plus(pair: Pair<Var, Term>): Substitution = (innerSubstitution + pair).toSubstitution()
+    operator fun plus(pair: Pair<Var<Any>, Term<Any>>): Substitution = (innerSubstitution + pair).toSubstitution()
     operator fun minus(other: Substitution): Substitution = (innerSubstitution - other.keys).toSubstitution()
 
     override fun toString(): String = innerSubstitution.toString()
@@ -66,8 +66,8 @@ data class Substitution(val innerSubstitution: PersistentMap<Var, Term> = persis
 
         val empty: Substitution = EMPTY_SUBSTITUTION
 
-        fun of(vararg pairs: Pair<Var, Term>): Substitution = Substitution(mapOf(*pairs))
+        fun of(vararg pairs: Pair<Var<Any>, Term<Any>>): Substitution = Substitution(mapOf(*pairs))
     }
 }
 
-fun Map<Var, Term>.toSubstitution(): Substitution = Substitution(this)
+fun Map<Var<Any>, Term<Any>>.toSubstitution(): Substitution = Substitution(this)

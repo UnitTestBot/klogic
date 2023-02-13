@@ -37,12 +37,7 @@ interface Constraint<out T : Constraint<T>> {
  * Represents an inequality constraint that contains some [SingleInequalityConstraint]s.
  * The standard operation that applies this constraint is [Term.ineq].
  */
-data class InequalityConstraint(val simplifiedConstraints: List<SingleInequalityConstraint>) : Constraint<InequalityConstraint> {
-    constructor(variable: Var, term: Term) : this(listOf(SingleInequalityConstraint(variable, term)))
-    constructor(vararg pairs: Pair<Var, Term>) : this(pairs.map {
-        SingleInequalityConstraint(it.first, it.second) }
-    )
-
+data class InequalityConstraint(val simplifiedConstraints: List<SingleInequalityConstraint<Any>>) : Constraint<InequalityConstraint> {
     override fun verify(substitution: Substitution): ConstraintVerificationResult<InequalityConstraint> =
         substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
             val delta = unificationResult.substitutionDifference
@@ -58,7 +53,7 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
             singleConstraint.toSatisfiedConstraintResult()
         } ?: RedundantConstraintResult
 
-    private fun UnificationState.verify(remainingSimplifiedConstraints: List<SingleInequalityConstraint>): UnificationState? {
+    private fun UnificationState.verify(remainingSimplifiedConstraints: List<SingleInequalityConstraint<Any>>): UnificationState? {
         if (remainingSimplifiedConstraints.isEmpty()) {
             return this
         }
@@ -71,11 +66,23 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
 
     override fun toString(): String = simplifiedConstraints.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
+    companion object {
+        fun <T : Any> of(variable: Var<T>, term: Term<T>): InequalityConstraint = of(variable to term)
+
+        fun of(vararg pairs: Pair<Var<Any>, Term<Any>>): InequalityConstraint {
+            val singleInequalityConstraints = pairs.map {
+                SingleInequalityConstraint(it.first, it.second)
+            }
+
+            return InequalityConstraint(singleInequalityConstraints)
+        }
+    }
+
 
     /**
      * Represents a simple inequality constraint - [variable] cannot be equal to [term].
      */
-    data class SingleInequalityConstraint(val variable: Var, val term: Term) {
+    data class SingleInequalityConstraint<T : Any>(val variable: Var<T>, val term: Term<T>) {
         override fun toString(): String = "$variable !== $term"
     }
 }
