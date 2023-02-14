@@ -8,25 +8,25 @@ import kotlin.reflect.KClass
 /**
  * Represents a logic object.
  */
-interface Term<T : Any> {
+interface Term {
     /**
      * Checks whether [variable] occurs in [term].
      */
-    fun occurs(variable: Var<out Any>): Boolean
+    fun occurs(variable: Var<out Term>): Boolean
 
     /**
      * Substitutes all occurrences of [term] to its value in [substitution].
      */
-    fun walk(substitution: Substitution): Term<T>
+    fun walk(substitution: Substitution): Term
 
-    fun unify(other: Term<T>, unificationState: UnificationState): UnificationState? {
+    fun unify(other: Term, unificationState: UnificationState): UnificationState? {
         val walkedThis = walk(unificationState.substitution)
         val walkedOther = other.walk(unificationState.substitution)
 
         return walkedThis.unifyImpl(walkedOther, unificationState)
     }
 
-    fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState?
+    fun unifyImpl(walkedOther: Term, unificationState: UnificationState): UnificationState?
 
     /**
      * Tries to unify this term to [other]. If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a
@@ -34,7 +34,7 @@ interface Term<T : Any> {
      *
      * @see [State.unifyWithConstraintsVerification] for details.
      */
-    infix fun unify(other: Term<T>): Goal = { st: State ->
+    infix fun unify(other: Term): Goal = { st: State ->
         st.unifyWithConstraintsVerification(this, other)?.let {
             single(it)
         } ?: nil()
@@ -49,7 +49,7 @@ interface Term<T : Any> {
      *
      * @see [Substitution.ineq] for details.
      */
-    infix fun ineq(other: Term<T>): Goal = { st: State ->
+    infix fun ineq(other: Term): Goal = { st: State ->
         st.substitution.ineq(this, other).let {
             when (it) {
                 ViolatedConstraintResult -> nil()
@@ -64,31 +64,31 @@ interface Term<T : Any> {
         }
     }
 
-    infix fun `===`(other: Term<T>): Goal = this unify other
-    infix fun `!==`(other: Term<T>): Goal = this ineq other
-
     @Suppress("UNCHECKED_CAST")
-    fun <T2 : Any> cast(): Term<T2> = this as Term<T2>
+    fun <T2 : Term> cast(): T2 = this as T2
 }
+
+infix fun <T : Term> T.`===`(other: T): Goal = this unify other
+infix fun <T : Term> T.`!==`(other: T): Goal = this ineq other
 
 /**
  * Represents a symbolic term that can be equal to any other [Term].
  */
-class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variableType: KClass<T>) : Term<T> {
-    override fun occurs(variable: Var<out Any>): Boolean = this == variable
+class Var<T : Term> @PublishedApi internal constructor(val index: Int, val variableType: KClass<T>) : Term {
+    override fun occurs(variable: Var<out Term>): Boolean = this == variable
 
-    override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
+    override fun walk(substitution: Substitution): Term = substitution[this]?.let {
         (it.walk(substitution))
     } ?: this
 
-    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
-        return if (walkedOther is Var<T>) {
+    override fun unifyImpl(walkedOther: Term, unificationState: UnificationState): UnificationState? {
+        return if (walkedOther is Var<*>) {
             if (this == walkedOther) {
                 unificationState
             } else {
-                val newAssociation: Pair<Var<T>, Var<T>> = this to walkedOther
+                val newAssociation = this to walkedOther
 
-                unificationState.substitutionDifference[newAssociation.first.cast()] = newAssociation.second.cast()
+                unificationState.substitutionDifference[newAssociation.first.cast()] = newAssociation.second
 
                 unificationState.copy(substitution = unificationState.substitution + newAssociation)
             }
@@ -97,15 +97,12 @@ class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variab
                 null
             } else {
                 val newAssociation = this to walkedOther
-                unificationState.substitutionDifference[newAssociation.first.cast()] = newAssociation.second.cast()
+                unificationState.substitutionDifference[newAssociation.first.cast()] = newAssociation.second
 
                 unificationState.copy(substitution = unificationState.substitution + newAssociation)
             }
         }
     }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T2 : Any> cast(): Var<T2> = this as Var<T2>
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -127,21 +124,21 @@ class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variab
     override fun toString(): String = "${variableType.simpleName}_$index"
 
     companion object {
-        inline fun <reified T : Any> Int.createTypedVar(): Var<T> = Var(this, T::class)
+        inline fun <reified T : Term> Int.createTypedVar(): Var<T> = Var(this, T::class)
     }
 }
 
-interface CustomTerm<T : CustomTerm<T>> : Term<T> {
+interface CustomTerm : Term {
     // TODO this method seems redundant
-    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
-        if (walkedOther is Var<T>) {
+    override fun unifyImpl(walkedOther: Term, unificationState: UnificationState): UnificationState? {
+        if (walkedOther is Var<*>) {
             return walkedOther.unify(this, unificationState)
         }
 
-        return unifyCustomTermImpl(walkedOther as CustomTerm<T>, unificationState)
+        return unifyCustomTermImpl(walkedOther as CustomTerm, unificationState)
     }
 
-    fun unifyCustomTermImpl(walkedOther: CustomTerm<T>, unificationState: UnificationState): UnificationState?
+    fun unifyCustomTermImpl(walkedOther: CustomTerm, unificationState: UnificationState): UnificationState?
 }
 
 /*interface ITerm<T : Any> {

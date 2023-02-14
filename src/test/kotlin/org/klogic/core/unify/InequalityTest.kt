@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.klogic.core.`!==`
 import org.klogic.core.`&&&`
+import org.klogic.core.`===`
 import org.klogic.core.InequalityConstraint
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.core.reified
@@ -70,7 +72,7 @@ class InequalityTest {
 
     @Test
     fun testListExample1() {
-        val goal = (listQ `!==` nilRecursiveList()) `&&&` (listQ `!==` x + y)
+        val goal = (listQ `!==` nilRecursiveList<Symbol>()) `&&&` (listQ `!==` x + y)
 
         val run = run(2, listQ, goal)
 

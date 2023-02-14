@@ -14,7 +14,7 @@ class RunTest {
 
         val run = run(2, variable, unreachableGoal)
 
-        val expected = emptyList<ReifiedTerm<*>>()
+        val expected = emptyList<ReifiedTerm>()
         assertEquals(expected, run)
     }
 }
