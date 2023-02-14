@@ -1,5 +1,7 @@
 package org.klogic.unify
 
+import org.klogic.core.MutableMapOfVariablesToTermsOfTheSameType
+import org.klogic.core.MutableMapOfVariablesToTermsOfTheSameTypeImpl
 import org.klogic.core.State
 import org.klogic.core.Substitution
 import org.klogic.core.Term
@@ -11,6 +13,7 @@ import org.klogic.core.Var
  */
 data class UnificationState(
     val substitution: Substitution = Substitution.empty,
+//    val substitutionDifference: MutableMapOfVariablesToTermsOfTheSameType = MutableMapOfVariablesToTermsOfTheSameTypeImpl()
     val substitutionDifference: MutableMap<Var<Any>, Term<Any>> = mutableMapOf()
 ) {
     fun <T : Any> unify(left: Term<T>, right: Term<T>) = left.unify(right, this)

@@ -37,7 +37,7 @@ interface Constraint<out T : Constraint<T>> {
  * Represents an inequality constraint that contains some [SingleInequalityConstraint]s.
  * The standard operation that applies this constraint is [Term.ineq].
  */
-data class InequalityConstraint(val simplifiedConstraints: List<SingleInequalityConstraint<Any>>) : Constraint<InequalityConstraint> {
+class InequalityConstraint internal constructor(private val simplifiedConstraints: List<SingleInequalityConstraint<Any>>) : Constraint<InequalityConstraint> {
     override fun verify(substitution: Substitution): ConstraintVerificationResult<InequalityConstraint> =
         substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
             val delta = unificationResult.substitutionDifference
@@ -47,7 +47,13 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
                 return ViolatedConstraintResult
             }
 
-            val simplifiedConstraints = delta.map { SingleInequalityConstraint(it.key, it.value) }
+
+            val simplifiedConstraints = delta.entries.map {
+                SingleInequalityConstraint(it.key, it.value.cast())
+            }
+
+
+//            val simplifiedConstraints = delta.map { SingleInequalityConstraint(it.key, it.value) }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
             singleConstraint.toSatisfiedConstraintResult()
@@ -64,14 +70,31 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
             ?.verify(remainingSimplifiedConstraints.subList(1, remainingSimplifiedConstraints.size))
     }
 
+
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as InequalityConstraint
+
+        if (simplifiedConstraints != other.simplifiedConstraints) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return simplifiedConstraints.hashCode()
+    }
+
     override fun toString(): String = simplifiedConstraints.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
     companion object {
         fun <T : Any> of(variable: Var<T>, term: Term<T>): InequalityConstraint = of(variable to term)
 
-        fun of(vararg pairs: Pair<Var<Any>, Term<Any>>): InequalityConstraint {
+        fun of(vararg pairs: Pair<Var<out Any>, Term<out Any>>): InequalityConstraint {
             val singleInequalityConstraints = pairs.map {
-                SingleInequalityConstraint(it.first, it.second)
+                SingleInequalityConstraint(it.first, it.second.cast())
             }
 
             return InequalityConstraint(singleInequalityConstraints)
@@ -82,8 +105,13 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
     /**
      * Represents a simple inequality constraint - [variable] cannot be equal to [term].
      */
-    data class SingleInequalityConstraint<T : Any>(val variable: Var<T>, val term: Term<T>) {
+    data class SingleInequalityConstraint<out T : Any>(val variable: Var<@UnsafeVariance T>, val term: Term<@UnsafeVariance T>) {
         override fun toString(): String = "$variable !== $term"
+
+        companion object {
+//            private fun unsafeOf(variable: Var<out Any>, term: Term<out Any>): SingleInequalityConstraint<Any> =
+//                SingleInequalityConstraint(variable, term)
+        }
     }
 }
 

@@ -15,7 +15,7 @@ value class Symbol(private val name: String) : CustomTerm<Symbol> {
 
     override fun walk(substitution: Substitution): CustomTerm<Symbol> = this
 
-    override fun unifyImpl(walkedOther: Term<Symbol>, unificationState: UnificationState): UnificationState? =
+    override fun unifyCustomTermImpl(walkedOther: CustomTerm<Symbol>, unificationState: UnificationState): UnificationState? =
         if (this == walkedOther) unificationState else null
 
     override fun toString(): String = name

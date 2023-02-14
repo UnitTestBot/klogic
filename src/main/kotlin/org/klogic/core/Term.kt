@@ -23,11 +23,7 @@ interface Term<T : Any> {
         val walkedThis = walk(unificationState.substitution)
         val walkedOther = other.walk(unificationState.substitution)
 
-        return if (walkedOther is Var<*>) {
-            walkedOther.unifyImpl(walkedThis, unificationState)
-        } else {
-            walkedThis.unifyImpl(walkedOther, unificationState)
-        }
+        return walkedThis.unifyImpl(walkedOther, unificationState)
     }
 
     fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState?
@@ -38,13 +34,11 @@ interface Term<T : Any> {
      *
      * @see [State.unifyWithConstraintsVerification] for details.
      */
-/*
-    infix fun unify(other: Term): Goal = { st: State ->
+    infix fun unify(other: Term<T>): Goal = { st: State ->
         st.unifyWithConstraintsVerification(this, other)?.let {
             single(it)
         } ?: nil()
     }
-*/
 
     /**
      * Returns a goal that contains one of the following:
@@ -55,8 +49,7 @@ interface Term<T : Any> {
      *
      * @see [Substitution.ineq] for details.
      */
-/*
-    infix fun ineq(other: Term): Goal = { st: State ->
+    infix fun ineq(other: Term<T>): Goal = { st: State ->
         st.substitution.ineq(this, other).let {
             when (it) {
                 ViolatedConstraintResult -> nil()
@@ -70,10 +63,12 @@ interface Term<T : Any> {
             }
         }
     }
-*/
 
-    /*infix fun `===`(other: Term): Goal = this unify other
-    infix fun `!==`(other: Term): Goal = this ineq other*/
+    infix fun `===`(other: Term<T>): Goal = this unify other
+    infix fun `!==`(other: Term<T>): Goal = this ineq other
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T2 : Any> cast(): Term<T2> = this as Term<T2>
 }
 
 /**
@@ -83,20 +78,17 @@ class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variab
     override fun occurs(variable: Var<out Any>): Boolean = this == variable
 
     override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
-        it.walk(substitution)
+        (it.walk(substitution))
     } ?: this
 
-    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? =
-        if (walkedOther is Var<*>) {
-            if (variableType != walkedOther.variableType) {
-                TODO("Error message")
-            }
-
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        return if (walkedOther is Var<T>) {
             if (this == walkedOther) {
                 unificationState
             } else {
-                val newAssociation = this to (walkedOther as Var<T>)
-                unificationState.substitutionDifference += newAssociation
+                val newAssociation: Pair<Var<T>, Var<T>> = this to walkedOther
+
+                unificationState.substitutionDifference[newAssociation.first.cast()] = newAssociation.second.cast()
 
                 unificationState.copy(substitution = unificationState.substitution + newAssociation)
             }
@@ -105,11 +97,15 @@ class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variab
                 null
             } else {
                 val newAssociation = this to walkedOther
-                unificationState.substitutionDifference += newAssociation
+                unificationState.substitutionDifference[newAssociation.first.cast()] = newAssociation.second.cast()
 
                 unificationState.copy(substitution = unificationState.substitution + newAssociation)
             }
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T2 : Any> cast(): Var<T2> = this as Var<T2>
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -128,7 +124,7 @@ class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variab
         return result
     }
 
-    override fun toString(): String = "_.$index:$variableType"
+    override fun toString(): String = "${variableType.simpleName}_$index"
 
     companion object {
         inline fun <reified T : Any> Int.createTypedVar(): Var<T> = Var(this, T::class)
@@ -137,8 +133,15 @@ class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variab
 
 interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     // TODO this method seems redundant
-    fun unify(variable: Var<T>, unificationState: UnificationState): UnificationState? =
-        variable.unify(this, unificationState)
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        if (walkedOther is Var<T>) {
+            return walkedOther.unify(this, unificationState)
+        }
+
+        return unifyCustomTermImpl(walkedOther as CustomTerm<T>, unificationState)
+    }
+
+    fun unifyCustomTermImpl(walkedOther: CustomTerm<T>, unificationState: UnificationState): UnificationState?
 }
 
 /*interface ITerm<T : Any> {

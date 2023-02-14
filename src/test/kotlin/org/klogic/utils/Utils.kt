@@ -5,12 +5,13 @@ package org.klogic.utils
 import org.klogic.core.ConsStream
 import org.klogic.core.Constraint
 import org.klogic.core.ReifiedTerm
-import org.klogic.core.Symbol
-import org.klogic.core.Symbol.Companion.toSymbol
 import org.klogic.core.Term
 import org.klogic.core.ThunkStream
 import org.klogic.core.Var
-import org.klogic.core.Var.Companion.toVar
+import org.klogic.core.Var.Companion.createTypedVar
+import org.klogic.terms.RecursiveList
+import org.klogic.terms.Symbol
+import org.klogic.terms.Symbol.Companion.toSymbol
 
 internal fun <T> repeat(element: T): ThunkStream<T> = ThunkStream {
     ConsStream(element, repeat(element))
@@ -32,18 +33,29 @@ internal val `8`: Symbol = digitSymbols[8]
 internal val `9`: Symbol = digitSymbols[9]
 
 // TODO introduce a state for tests for creating fresh variables
-private val variables: List<Var> = (0..7).map { it.toVar() }
+private val symbolVariables: List<Var<Symbol>> = (0..7).map { it.createTypedVar() }
 
-internal val q: Var = variables[0]
-internal val x: Var = variables[1]
-internal val y: Var = variables[2]
-internal val z: Var = variables[3]
-internal val a: Var = variables[4]
-internal val b: Var = variables[5]
-internal val c: Var = variables[6]
-internal val d: Var = variables[7]
+internal val q: Var<Symbol> = symbolVariables[0]
+internal val x: Var<Symbol> = symbolVariables[1]
+internal val y: Var<Symbol> = symbolVariables[2]
+internal val z: Var<Symbol> = symbolVariables[3]
+internal val a: Var<Symbol> = symbolVariables[4]
+internal val b: Var<Symbol> = symbolVariables[5]
+internal val c: Var<Symbol> = symbolVariables[6]
+internal val d: Var<Symbol> = symbolVariables[7]
 
-val List<ReifiedTerm>.singleReifiedTerm: Term
+private val listSymbolVariables: List<Var<RecursiveList<Symbol>>> = (0..7).map { it.createTypedVar() }
+
+internal val listQ: Var<RecursiveList<Symbol>> = listSymbolVariables[0]
+internal val listX: Var<RecursiveList<Symbol>> = listSymbolVariables[1]
+internal val listY: Var<RecursiveList<Symbol>> = listSymbolVariables[2]
+internal val listZ: Var<RecursiveList<Symbol>> = listSymbolVariables[3]
+internal val listA: Var<RecursiveList<Symbol>> = listSymbolVariables[4]
+internal val listB: Var<RecursiveList<Symbol>> = listSymbolVariables[5]
+internal val listC: Var<RecursiveList<Symbol>> = listSymbolVariables[6]
+internal val listD: Var<RecursiveList<Symbol>> = listSymbolVariables[7]
+
+val List<ReifiedTerm<out Any>>.singleReifiedTerm: Term<out Any>
     get() = single().term
-val List<ReifiedTerm>.singleReifiedTermConstraints: Set<Constraint<*>>
+val List<ReifiedTerm<out Any>>.singleReifiedTermConstraints: Set<Constraint<*>>
     get() = single().constraints

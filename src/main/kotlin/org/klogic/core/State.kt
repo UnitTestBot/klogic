@@ -19,7 +19,7 @@ data class State(
     @PublishedApi internal var lastCreatedVariableIndex: Int = 0
 ) {
     constructor(
-        map: Map<Var<Any>, Term<Any>>,
+        map: Map<Var<out Any>, Term<out Any>>,
         constraints: PersistentSet<Constraint<*>>,
         lastCreatedVariableIndex: Int = 0
     ) : this(Substitution(map), constraints, lastCreatedVariableIndex)
