@@ -74,7 +74,8 @@ interface Term<T : Any> {
 /**
  * Represents a symbolic term that can be equal to any other [Term].
  */
-class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variableType: KClass<T>) : Term<T> {
+@JvmInline
+value class Var<T : Any>(val index: Int) : Term<T> {
     override fun occurs(variable: Var<out Any>): Boolean = this == variable
 
     override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
@@ -107,27 +108,10 @@ class Var<T : Any> @PublishedApi internal constructor(val index: Int, val variab
     @Suppress("UNCHECKED_CAST")
     override fun <T2 : Any> cast(): Var<T2> = this as Var<T2>
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Var<*>
-
-        if (index != other.index) return false
-        if (variableType != other.variableType) return false
-
-        return true
-    }
-    override fun hashCode(): Int {
-        var result = index
-        result = 31 * result + variableType.hashCode()
-        return result
-    }
-
-    override fun toString(): String = "${variableType.simpleName}_$index"
+    override fun toString(): String = "_.$index"
 
     companion object {
-        inline fun <reified T : Any> Int.createTypedVar(): Var<T> = Var(this, T::class)
+        fun <T : Any> Int.createTypedVar(): Var<T> = Var(this)
     }
 }
 

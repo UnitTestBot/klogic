@@ -16,7 +16,7 @@ typealias InequalityConstraints = PersistentSet<InequalityConstraint>
 data class State(
     val substitution: Substitution,
     val constraints: PersistentSet<Constraint<*>> = persistentHashSetOf(),
-    @PublishedApi internal var lastCreatedVariableIndex: Int = 0
+    private var lastCreatedVariableIndex: Int = 0
 ) {
     constructor(
         map: Map<Var<out Any>, Term<out Any>>,
@@ -30,7 +30,7 @@ data class State(
     /**
      * Returns a new variable [Var] with [lastCreatedVariableIndex] as its [Var.index] and increments [lastCreatedVariableIndex].
      */
-    inline fun <reified T: Any> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
+    fun <T: Any> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
 
     /**
      * Returns a new state with [substitution] extended with passed not already presented association of [variable] to [term].

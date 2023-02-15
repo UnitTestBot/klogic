@@ -19,7 +19,7 @@ fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
  *
  * @see [delay], [State.freshTypedVar].
  */
-inline fun <reified T : Any> freshTypedVar(crossinline f: (Term<T>) -> Goal): Goal = delay {
+fun <T : Any> freshTypedVar(f: (Term<T>) -> Goal): Goal = delay {
     { st: State -> f(st.freshTypedVar())(st) }
 }
 
