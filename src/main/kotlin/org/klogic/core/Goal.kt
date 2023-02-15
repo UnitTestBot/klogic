@@ -19,8 +19,8 @@ fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
  *
  * @see [delay], [State.freshTypedVar].
  */
-inline fun <reified T : Term> freshTypedVar(crossinline f: (Term) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar<T>())(st) }
+inline fun <reified T : Any> freshTypedVar(crossinline f: (Term<T>) -> Goal): Goal = delay {
+    { st: State -> f(st.freshTypedVar())(st) }
 }
 
 /**
@@ -31,13 +31,13 @@ inline fun <reified T : Term> freshTypedVar(crossinline f: (Term) -> Goal): Goal
  * @see [run], [Constraint].
  */
 // TODO support typed terms.
-data class ReifiedTerm(val term: Term, val constraints: Set<Constraint<*>> = emptySet())
+data class ReifiedTerm<T : Any>(val term: Term<T>, val constraints: Set<Constraint<*>> = emptySet())
 
 /**
  * Returns a result of invoking [run] overloading with first passed goal and the rest goals.
  * NOTE: [goals] must not be empty.
  */
-fun run(count: Int, term: Term, goals: Array<Goal>): List<ReifiedTerm> {
+fun <T : Any> run(count: Int, term: Term<T>, goals: Array<Goal>): List<ReifiedTerm<T>> {
     require(goals.isNotEmpty()) {
         "Could not `run` with empty goals"
     }
@@ -53,7 +53,7 @@ fun run(count: Int, term: Term, goals: Array<Goal>): List<ReifiedTerm> {
  * For more details, see [ReifiedTerm] docs.
  */
 // TODO pass user mapper function to stream.
-fun run(count: Int, term: Term, goal: Goal, vararg nextGoals: Goal): List<ReifiedTerm> =
+fun <T : Any> run(count: Int, term: Term<T>, goal: Goal, vararg nextGoals: Goal): List<ReifiedTerm<T>> =
     nextGoals
         .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(State.empty)
         .take(count)
@@ -65,11 +65,11 @@ fun run(count: Int, term: Term, goal: Goal, vararg nextGoals: Goal): List<Reifie
 /**
  * Creates a [ReifiedTerm] with [this] as [ReifiedTerm.term] and empty [ReifiedTerm.constraints].
  */
-fun Term.reified(): ReifiedTerm = ReifiedTerm(this)
+fun <T : Any> Term<T>.reified(): ReifiedTerm<T> = ReifiedTerm(this)
 
 /**
  * Creates a [List] of [ReifiedTerm]s with [this] elements as [ReifiedTerm.term] and empty [ReifiedTerm.constraints].
  *
  * See [Term.reified] for more details.
  */
-fun List<Term>.reified(): List<ReifiedTerm> = map { it.reified() }
+fun <T : Any> List<Term<T>>.reified(): List<ReifiedTerm<T>> = map { it.reified() }

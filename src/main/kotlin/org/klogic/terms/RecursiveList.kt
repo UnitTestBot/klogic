@@ -11,21 +11,21 @@ import org.klogic.unify.UnificationState
 /**
  * Represents classic recursive lists.
  */
-sealed class RecursiveList<T : Term> : CustomTerm
+sealed class RecursiveList<T : Any> : CustomTerm<RecursiveList<T>>
 
 /**
  * Represents an empty [RecursiveList].
  */
 object Nil : RecursiveList<Nothing>() {
     @Suppress("UNCHECKED_CAST")
-    fun <T : Term> emptyRecursiveList(): RecursiveList<T> = this as RecursiveList<T>
-    fun <T : Term> nilRecursiveList(): RecursiveList<T> = emptyRecursiveList()
+    fun <T : Any> emptyRecursiveList(): RecursiveList<T> = this as RecursiveList<T>
+    fun <T : Any> nilRecursiveList(): RecursiveList<T> = emptyRecursiveList()
 
-    override fun occurs(variable: Var<out Term>): Boolean = false
+    override fun occurs(variable: Var<out Any>): Boolean = false
 
-    override fun walk(substitution: Substitution): RecursiveList<out Term> = this
+    override fun walk(substitution: Substitution): CustomTerm<RecursiveList<Nothing>> = this
 
-    override fun unifyCustomTermImpl(walkedOther: CustomTerm, unificationState: UnificationState): UnificationState? =
+    override fun unifyCustomTermImpl(walkedOther: CustomTerm<RecursiveList<Nothing>>, unificationState: UnificationState): UnificationState? =
         if (this == walkedOther) unificationState else null
 
     override fun toString(): String = "Nil"
@@ -34,14 +34,13 @@ object Nil : RecursiveList<Nothing>() {
 /**
  * Represents a [RecursiveList] consisting of element [head] at the beginning and [tail] as the rest.
  */
-data class Cons<T : Term>(val head: T, val tail: RecursiveList<T>) : RecursiveList<T>() {
-    override fun occurs(variable: Var<out Term>): Boolean = head.occurs(variable) || tail.occurs(variable)
+data class Cons<T : Any>(val head: Term<T>, val tail: RecursiveList<T>) : RecursiveList<T>() {
+    override fun occurs(variable: Var<out Any>): Boolean = head.occurs(variable) || tail.occurs(variable)
 
-    @Suppress("UNCHECKED_CAST")
-    override fun walk(substitution: Substitution): RecursiveList<T> =
-        Cons(head.walk(substitution) as T, tail.walk(substitution) as RecursiveList<T>)
+    override fun walk(substitution: Substitution): CustomTerm<RecursiveList<T>> =
+        Cons(head.walk(substitution), tail.walk(substitution) as RecursiveList<T>)
 
-    override fun unifyCustomTermImpl(walkedOther: CustomTerm, unificationState: UnificationState): UnificationState? {
+    override fun unifyCustomTermImpl(walkedOther: CustomTerm<RecursiveList<T>>, unificationState: UnificationState): UnificationState? {
         if (walkedOther is Nil) {
             return null
         }
@@ -57,27 +56,18 @@ data class Cons<T : Term>(val head: T, val tail: RecursiveList<T>) : RecursiveLi
     override fun toString(): String = "($head ++ $tail)"
 
     companion object {
-        inline fun <reified T : Term> recursiveListOf(vararg terms: T): RecursiveList<T> {
+        fun <T : Any> recursiveListOf(vararg terms: Term<T>): RecursiveList<T> {
             if (terms.isEmpty()) {
                 return nilRecursiveList()
             }
 
-            // Cannot use recursion here because this method is inlined
-            val last = terms.last()
-            var result = Cons(last, nilRecursiveList())
-            var remainingTerms = terms.toList().subList(0, terms.lastIndex)
-            (0..remainingTerms.lastIndex).forEach { _ ->
-                result = Cons(remainingTerms.last(), result)
-                remainingTerms = remainingTerms.subList(0, remainingTerms.lastIndex)
-            }
-
-            return result
+            return Cons(terms.first(), recursiveListOf(*terms.drop(1).toTypedArray()))
         }
     }
 }
 
-operator fun <T : Term> T.plus(list: RecursiveList<T>): RecursiveList<T> = Cons(this, list)
-operator fun <T : Term> RecursiveList<T>.plus(list: RecursiveList<T>): RecursiveList<T> {
+operator fun <T : Any> Term<T>.plus(list: RecursiveList<T>): RecursiveList<T> = Cons(this, list)
+operator fun <T : Any> RecursiveList<T>.plus(list: RecursiveList<T>): RecursiveList<T> {
     if (this is Nil) {
         return list
     }
@@ -89,9 +79,8 @@ operator fun <T : Term> RecursiveList<T>.plus(list: RecursiveList<T>): Recursive
     return (this as Cons).head + (tail + list)
 }
 
-@Suppress("USELESS_CAST")
-operator fun <T : Term> RecursiveList<T>.plus(term: T): RecursiveList<T> = this + ((term + nilRecursiveList()) as RecursiveList<T>)
+operator fun <T : Any> RecursiveList<T>.plus(term: Term<T>): RecursiveList<T> = this + (term + nilRecursiveList())
 
-inline operator fun <reified T : Term> T.plus(other: T): RecursiveList<T> = recursiveListOf(this, other)
+operator fun <T : Any> Term<T>.plus(other: Term<T>): RecursiveList<T> = recursiveListOf(this, other)
 
-fun <T : Term> T.toList(): Cons<T> = Cons(this, nilRecursiveList())
+fun <T : Any> Term<T>.toList(): Cons<T> = Cons(this, nilRecursiveList())

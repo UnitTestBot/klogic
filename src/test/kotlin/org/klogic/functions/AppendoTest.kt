@@ -1,4 +1,3 @@
-/*
 package org.klogic.functions
 
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -40,4 +39,3 @@ class AppendoTest {
         assertEquals(expected, results)
     }
 }
-*/

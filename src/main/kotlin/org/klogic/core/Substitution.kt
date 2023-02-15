@@ -10,8 +10,8 @@ import org.klogic.unify.UnificationState
 /**
  * Represents an immutable association of [Var]s and corresponding [Term]s.
  */
-data class Substitution(private val innerSubstitution: PersistentMap<Var<out Term>, Term> = persistentHashMapOf()) {
-    constructor(map: Map<Var<out Term>, Term>) : this(map.toPersistentHashMap())
+data class Substitution(private val innerSubstitution: PersistentMap<Var<out Any>, Term<out Any>> = persistentHashMapOf()) {
+    constructor(map: Map<Var<out Any>, Term<out Any>>) : this(map.toPersistentHashMap())
 
     /**
      * Checks whether [InequalityConstraint] of [left] and [right] can be satisfied.
@@ -25,7 +25,7 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<out Ter
      *
      * @see [UnificationState.unify] for details.
      */
-    fun <T : Term> ineq(left: T, right: T): ConstraintVerificationResult<InequalityConstraint> {
+    fun <T : Any> ineq(left: Term<T>, right: Term<T>): ConstraintVerificationResult<InequalityConstraint> {
         return toUnificationState().unify(left, right)?.let { unificationState ->
             val delta = unificationState.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
@@ -47,18 +47,18 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<out Ter
 //    override val size: Int = innerSubstitution.size
 //    override val values: Collection<Term<out Any>> = innerSubstitution.values
 
-    operator fun contains(key: Var<out Term>): Boolean = containsKey(key)
+    operator fun contains(key: Var<out Any>): Boolean = containsKey(key)
 
-    fun containsKey(key: Var<out Term>): Boolean = innerSubstitution.containsKey(key)
+    fun containsKey(key: Var<out Any>): Boolean = innerSubstitution.containsKey(key)
 
-    fun containsValue(value: Term): Boolean = innerSubstitution.containsValue(value)
+    fun containsValue(value: Term<out Any>): Boolean = innerSubstitution.containsValue(value)
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T : Term> get(key: Var<T>): T? = innerSubstitution[key] as T?
+    operator fun <T : Any> get(key: Var<T>): Term<T>? = innerSubstitution[key] as Term<T>?
 
     fun isEmpty(): Boolean = innerSubstitution.isEmpty()
 
-    operator fun plus(pair: Pair<Var<out Term>, Term>): Substitution = (innerSubstitution + pair).toSubstitution()
+    operator fun plus(pair: Pair<Var<out Any>, Term<out Any>>): Substitution = (innerSubstitution + pair).toSubstitution()
 
 //    operator fun minus(other: Substitution): Substitution = (innerSubstitution - other.keys).toSubstitution()
 
@@ -70,11 +70,11 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<out Ter
 
         val empty: Substitution = EMPTY_SUBSTITUTION
 
-        fun of(vararg pairs: Pair<Var<out Term>, Term>): Substitution = Substitution(mapOf(*pairs))
+        fun of(vararg pairs: Pair<Var<out Any>, Term<out Any>>): Substitution = Substitution(mapOf(*pairs))
     }
 }
 
-/*// TODO add more docs
+// TODO add more docs
 // This class cannot extend Map interface because of `get` operator limitations
 interface MapOfVariablesToTermsOfTheSameType {
     val keys: Set<Var<out Any>>
@@ -83,7 +83,7 @@ interface MapOfVariablesToTermsOfTheSameType {
 
     operator fun <T: Any> get(key: Var<T>): Term<T>?
     operator fun contains(key: Var<out Any>): Boolean
-    fun containsValue(value: Term): Boolean
+    fun containsValue(value: Term<out Any>): Boolean
 
     operator fun <T: Any> plus(pair: Pair<Var<T>, Term<T>>): MapOfVariablesToTermsOfTheSameType
 
@@ -115,7 +115,7 @@ class MutableMapOfVariablesToTermsOfTheSameTypeImpl(private val innerMap: Mutabl
 
     override fun contains(key: Var<out Any>): Boolean = get(key) != null
 
-    override fun containsValue(value: Term): Boolean = innerMap.containsValue(value)
+    override fun containsValue(value: Term<out Any>): Boolean = innerMap.containsValue(value)
 
     override fun <T : Any> plus(pair: Pair<Var<T>, Term<T>>): MapOfVariablesToTermsOfTheSameType {
         val copy = MutableMapOfVariablesToTermsOfTheSameTypeImpl(this)
@@ -134,6 +134,6 @@ class MutableMapOfVariablesToTermsOfTheSameTypeImpl(private val innerMap: Mutabl
 
         return copy
     }
-}*/
+}
 
-fun Map<Var<out Term>, Term>.toSubstitution(): Substitution = Substitution(this)
+fun Map<Var<out Any>, Term<out Any>>.toSubstitution(): Substitution = Substitution(this)
