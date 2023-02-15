@@ -28,12 +28,14 @@ data class State(
         constraints.filterIsInstance<InequalityConstraint>().toPersistentHashSet()
 
     /**
-     * Returns a new variable [Var] with [lastCreatedVariableIndex] as its [Var.index] and increments [lastCreatedVariableIndex].
+     * Returns a new variable [Var] of the specified type with [lastCreatedVariableIndex] as its [Var.index]
+     * and increments [lastCreatedVariableIndex].
      */
     fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
 
     /**
-     * Returns a new state with [substitution] extended with passed not already presented association of [variable] to [term].
+     * Returns a new state with [substitution] extended with passed not already presented association
+     * of [variable] to the [term] of the same type.
      */
     private fun <T : Term<T>> extend(variable: Var<T>, term: Term<T>): State {
         require(variable !in substitution) {

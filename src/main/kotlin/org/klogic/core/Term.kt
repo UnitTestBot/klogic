@@ -9,15 +9,18 @@ import org.klogic.unify.UnificationState
  */
 interface Term<T : Term<T>> {
     /**
-     * Checks whether [variable] occurs in [term].
+     * Checks whether [variable] occurs in this term.
      */
     fun <R : Term<R>> occurs(variable: Var<R>): Boolean
 
     /**
-     * Substitutes all occurrences of [term] to its value in [substitution].
+     * Substitutes all occurrences of this term to its value in [substitution].
      */
     fun walk(substitution: Substitution): Term<T>
 
+    /**
+     * Tries to unify this term and [other] term with the same type using passed [unificationState].
+     */
     fun unify(other: Term<T>, unificationState: UnificationState): UnificationState? {
         val walkedThis = walk(unificationState.substitution)
         val walkedOther = other.walk(unificationState.substitution)
@@ -28,8 +31,9 @@ interface Term<T : Term<T>> {
     fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState?
 
     /**
-     * Tries to unify this term to [other]. If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a
-     * corresponding [Substitution], and a goal with the [nil] stream otherwise.
+     * Tries to unify this term to [other] term of the same type.
+     * If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a corresponding [Substitution],
+     * and a goal with the [nil] stream otherwise.
      *
      * @see [State.unifyWithConstraintsVerification] for details.
      */
@@ -41,8 +45,8 @@ interface Term<T : Term<T>> {
 
     /**
      * Returns a goal that contains one of the following:
-     * - Copy of the passed state with an [InequalityConstraint] of this term and [other], if this constraint can be
-     * satisfied somehow;
+     * - Copy of the passed state with an [InequalityConstraint] of this term and [other] term of the same type,
+     * if this constraint can be satisfied somehow;
      * - Passed state (the same reference), if the mentioned above constraint can never be violated (i.e., it is redundant);
      * - No state at all, if this constraint is violated.
      *
@@ -63,15 +67,20 @@ interface Term<T : Term<T>> {
         }
     }
 
+    /**
+     * Unsafely casts this term to the term of the passed type.
+     *
+     * NOTE: this API is NOT safe and should be used very carefully.
+     */
     @Suppress("UNCHECKED_CAST")
-    fun <T2 : Term<T2>> cast(): Term<T2> = this as Term<T2>
+    fun <R : Term<R>> cast(): Term<R> = this as Term<R>
 
     infix fun `===`(other: Term<T>): Goal = this unify other
     infix fun `!==`(other: Term<T>): Goal = this ineq other
 }
 
 /**
- * Represents a symbolic term that can be equal to any other [Term].
+ * Represents a symbolic term with the specified term that can be equal to any other [Term] of the same type.
  */
 @JvmInline
 value class Var<T : Term<T>>(val index: Int) : Term<T> {
@@ -114,127 +123,20 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
     }
 }
 
+/**
+ * Represents a custom (i.e., defined by user) term.
+ */
 interface CustomTerm<T : CustomTerm<T>> : Term<T> {
-    // TODO this method seems redundant
     override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
-        if (walkedOther is Var<T>) {
+        if (walkedOther !is CustomTerm) {
             return walkedOther.unify(this, unificationState)
         }
 
-        return unifyCustomTermImpl(walkedOther as CustomTerm<T>, unificationState)
+        return unifyCustomTermImpl(walkedOther, unificationState)
     }
 
+    /**
+     * Tries to unify this user's term with another user's term with the same type.
+     */
     fun unifyCustomTermImpl(walkedOther: CustomTerm<T>, unificationState: UnificationState): UnificationState?
 }
-
-/*fun Any.occurs(variable: Var<out Any>): Boolean =
-    when (this) {
-        is Term<*> -> occurs(variable)
-        else -> false
-    }
-
-@Suppress("UNCHECKED_CAST")
-fun <T : Any> T.walk(substitution: Substitution): T =
-    when (this) {
-        is Term<*> -> walk(substitution) as T
-        else -> this
-    }
-
-fun <T : Any> T.unify(walkedOther: T, unificationState: UnificationState): UnificationState? =
-    when (this) {
-        is Term<*> -> {
-            when (walkedOther) {
-                is Term<*> -> unify(walkedOther, unificationState)
-            }
-        }
-        else -> this
-    }*/
-
-/*interface ITerm<T : Any> {
-    fun occurs(variable: MyVar<out Any>): Boolean
-
-    fun walk(substitution: Substitution): ITerm<T>
-
-    fun unify(other: ITerm<T>, unificationState: UnificationState): Goal {
-        val walkedThis = walk(unificationState.substitution)
-        val walkedOther = other.walk(unificationState.substitution)
-
-        return if (walkedOther is MyVar<*>) {
-            walkedOther.unifyImpl(walkedThis, unificationState)
-        } else {
-            walkedThis.unifyImpl(walkedOther, unificationState)
-        }
-    }
-
-    fun unifyImpl(walkedOther: ITerm<T>, unificationState: UnificationState): Goal
-}
-
-class MyVar<T : Any> @PublishedApi internal constructor(val index: Int, val variableType: KClass<T>) : ITerm<T> {
-    override fun occurs(variable: MyVar<out Any>): Boolean = this == variable
-
-    override fun walk(substitution: Substitution): MyVar<T> = TODO()
-
-    override fun unifyImpl(walkedOther: ITerm<T>, unificationState: UnificationState): Goal = TODO()
-}
-
-interface CustomTerm<T : CustomTerm<T>> : ITerm<T> {
-    fun unify(variable: MyVar<T>, unificationState: UnificationState): Goal =
-        variable.unify(this, unificationState)
-}
-
-
-class MySymbol(val name: String) : CustomTerm<MySymbol> {
-    override fun occurs(variable: MyVar<out Any>): Boolean = false
-
-    override fun walk(substitution: Substitution): ITerm<MySymbol> = this
-
-    override fun unifyImpl(walkedOther: ITerm<MySymbol>, unificationState: UnificationState): Goal {
-        if (this == walkedOther) TODO() else TODO()
-    }
-}
-
-class Pair(val first: MyVar<Any>, val second: ITerm<Any>) : CustomTerm<Pair> {
-    override fun occurs(variable: MyVar<out Any>): Boolean = first.occurs(variable) || second.occurs(variable)
-
-    override fun walk(substitution: Substitution): Pair = Pair(first.walk(substitution), second.walk(substitution))
-
-    override fun unifyImpl(walkedOther: ITerm<Pair>, unificationState: UnificationState): Goal {
-        val otherPair = walkedOther as Pair
-
-        first.unify(otherPair.first, unificationState)
-        second.unify(otherPair.second, unificationState)
-
-        TODO()
-    }
-}
-
-fun main() {
-    val unificationState = UnificationState.empty
-
-    val variableString1 = MyVar(1, String::class)
-
-    val variableInt1 = MyVar(3, Int::class)
-    val variableInt2 = MyVar(4, Int::class)
-    val variableSymbol = MyVar(5, MySymbol::class)
-
-    val symbol = MySymbol("a")
-    val pair1 = Pair(variableString1, symbol)
-
-    // Occurs
-    variableString1.occurs(variableString1)
-    variableString1.occurs(variableInt1)
-    symbol.occurs(variableInt1)
-    symbol.occurs(variableString1)
-
-    // Unify
-    variableInt1.unify(variableInt2, unificationState)
-    // variableInt1.unify(variableString1, unificationState) - does not compile
-    // variableInt1.unify(symbol, unificationState) - does not compile
-
-    // symbol.unify(variableInt1, unificationState) - does not compile
-    // symbol.unify(variableString1, unificationState) - does not compile
-    // symbol.unify(pair1, unificationState) - does not compile
-    symbol.unify(symbol, unificationState)
-    symbol.unify(variableSymbol, unificationState)
-    variableSymbol.unify(symbol, unificationState)
-}*/

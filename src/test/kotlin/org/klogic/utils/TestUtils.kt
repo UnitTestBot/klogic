@@ -9,7 +9,7 @@ import org.klogic.core.Term
 import org.klogic.core.ThunkStream
 import org.klogic.core.Var
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.terms.RecursiveList
+import org.klogic.terms.LogicList
 import org.klogic.terms.Symbol
 import org.klogic.terms.Symbol.Companion.toSymbol
 
@@ -44,16 +44,16 @@ internal val b: Var<Symbol> = symbolVariables[5]
 internal val c: Var<Symbol> = symbolVariables[6]
 internal val d: Var<Symbol> = symbolVariables[7]
 
-private val listSymbolVariables: List<Var<RecursiveList<Symbol>>> = (0..7).map { it.createTypedVar() }
+private val listSymbolVariables: List<Var<LogicList<Symbol>>> = (0..7).map { it.createTypedVar() }
 
-internal val listQ: Var<RecursiveList<Symbol>> = listSymbolVariables[0]
-internal val listX: Var<RecursiveList<Symbol>> = listSymbolVariables[1]
-internal val listY: Var<RecursiveList<Symbol>> = listSymbolVariables[2]
-internal val listZ: Var<RecursiveList<Symbol>> = listSymbolVariables[3]
-internal val listA: Var<RecursiveList<Symbol>> = listSymbolVariables[4]
-internal val listB: Var<RecursiveList<Symbol>> = listSymbolVariables[5]
-internal val listC: Var<RecursiveList<Symbol>> = listSymbolVariables[6]
-internal val listD: Var<RecursiveList<Symbol>> = listSymbolVariables[7]
+internal val listQ: Var<LogicList<Symbol>> = listSymbolVariables[0]
+internal val listX: Var<LogicList<Symbol>> = listSymbolVariables[1]
+internal val listY: Var<LogicList<Symbol>> = listSymbolVariables[2]
+internal val listZ: Var<LogicList<Symbol>> = listSymbolVariables[3]
+internal val listA: Var<LogicList<Symbol>> = listSymbolVariables[4]
+internal val listB: Var<LogicList<Symbol>> = listSymbolVariables[5]
+internal val listC: Var<LogicList<Symbol>> = listSymbolVariables[6]
+internal val listD: Var<LogicList<Symbol>> = listSymbolVariables[7]
 
 val <T : Term<T>> List<ReifiedTerm<T>>.singleReifiedTerm: Term<T>
     get() = single().term

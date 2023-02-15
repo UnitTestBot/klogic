@@ -15,7 +15,7 @@ infix fun Goal.`&&&`(other: Goal): Goal = this and other
 fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
 
 /**
- * Creates a lazy [Goal] by passed goal generator [f] with a fresh variable.
+ * Creates a lazy [Goal] by passed goal generator [f] with a fresh variable with the specified type.
  *
  * @see [delay], [State.freshTypedVar].
  */

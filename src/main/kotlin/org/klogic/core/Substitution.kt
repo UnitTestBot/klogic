@@ -7,20 +7,20 @@ import org.klogic.unify.UnificationState
 import org.klogic.unify.toUnificationState
 
 /**
- * Represents an immutable association of [Var]s and corresponding [Term]s.
+ * Represents an immutable association of [Var]s with arbitrary types and bounded [Term]s with corresponding types.
  */
 data class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Term<*>> = persistentHashMapOf()) {
     constructor(map: Map<Var<*>, Term<*>>) : this(map.toPersistentHashMap())
 
     /**
-     * Checks whether [InequalityConstraint] of [left] and [right] can be satisfied.
+     * Checks whether [InequalityConstraint] for [left] and [right] of the same type can be satisfied.
      *
      * It tries to [UnificationState.unify] [left] and [right] - if it fails, it means that [left] cannot be equal to
      * [right], i.e., this [InequalityConstraint] is redundant, and [RedundantConstraintResult] is returned.
      * Otherwise, if [UnificationState.substitutionDifference] is empty, it means that this constraint is violated,
      * and [ViolatedConstraintResult] is returned.
-     * Else, [InequalityConstraint] is created from the [UnificationState.substitutionDifference], and [SatisfiableConstraintResult]
-     * is returned.
+     * Else, [InequalityConstraint] is created from the [UnificationState.substitutionDifference],
+     * and [SatisfiableConstraintResult] is returned.
      *
      * @see [UnificationState.unify] for details.
      */
@@ -34,7 +34,9 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Ter
             }
 
             // Otherwise, this constraint can be satisfied, and we can simplify it according to calculated substitution delta.
-            val simplifiedConstraints = delta.entries.map { InequalityConstraint.SingleInequalityConstraint(it.key, it.value) }
+            val simplifiedConstraints = delta.entries.map {
+                InequalityConstraint.SingleInequalityConstraint(it.key, it.value.cast())
+            }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
             SatisfiableConstraintResult(singleConstraint)

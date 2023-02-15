@@ -10,7 +10,7 @@ import org.klogic.core.reified
 import org.klogic.core.run
 import org.klogic.core.`|||`
 import org.klogic.terms.Cons.Companion.recursiveListOf
-import org.klogic.terms.Nil.nilRecursiveList
+import org.klogic.terms.Nil.nilLogicList
 import org.klogic.terms.Symbol
 import org.klogic.terms.plus
 import org.klogic.utils.*
@@ -69,12 +69,12 @@ class InequalityTest {
 
     @Test
     fun testListExample1() {
-        val goal = (listQ `!==` nilRecursiveList()) `&&&` (listQ `!==` x + y)
+        val goal = (listQ `!==` nilLogicList()) `&&&` (listQ `!==` x + y)
 
         val run = run(2, listQ, goal)
 
         val expectedInequalityConstraints = setOf(
-            InequalityConstraint.of(listQ to nilRecursiveList<Symbol>()),
+            InequalityConstraint.of(listQ to nilLogicList<Symbol>()),
             InequalityConstraint.of(listQ to x + y)
         )
         assertEquals(expectedInequalityConstraints, run.singleReifiedTermConstraints)
@@ -170,13 +170,13 @@ class InequalityTest {
         assertEquals(expectedTerm, run.singleReifiedTerm)
     }
 
-    /*@Tag("implementation-dependent")
+    @Tag("implementation-dependent")
     @Test
     fun testOnlyOneConstraintIsEnoughExample1() {
         val goals = arrayOf(
             listX `===` listY + listZ,
             listY `===` `5` + a,
-            listX `!==` (`5` + `7`) + `3`,
+            listX `!==` recursiveListOf(`5`, `7`, `3`),
         )
 
         val run = run(2, listX, goals)
@@ -186,12 +186,12 @@ class InequalityTest {
         // 2) or only one the same term with both constraints at the same time: (z !== 3) AND (a !== 7).
 
         // The current implementation returns the second answer, but in can change in the future.
-        val expectedTerm = (`5` + a) + z
+        val expectedTerm = recursiveListOf(`5`, a, z)
         val expectedConstraints = setOf(InequalityConstraint.of(a to `7`, z to `3`))
 
         assertEquals(expectedConstraints, run.singleReifiedTermConstraints)
         assertEquals(expectedTerm, run.singleReifiedTerm)
-    }*/
+    }
 
     @Tag("implementation-dependent")
     @Test

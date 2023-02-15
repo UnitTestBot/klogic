@@ -6,8 +6,8 @@ import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.core.reified
 import org.klogic.core.run
 import org.klogic.terms.Cons.Companion.recursiveListOf
-import org.klogic.terms.Nil.nilRecursiveList
-import org.klogic.terms.RecursiveList
+import org.klogic.terms.Nil.nilLogicList
+import org.klogic.terms.LogicList
 import org.klogic.terms.Symbol
 import org.klogic.terms.Symbol.Companion.toSymbol
 import org.klogic.terms.plus
@@ -19,9 +19,9 @@ class AppendoTest {
         val a = "a".toSymbol()
         val b = "b".toSymbol()
 
-        val x = (-1).createTypedVar<RecursiveList<Symbol>>()
-        val y = (-2).createTypedVar<RecursiveList<Symbol>>()
-        val xy = a + (b + nilRecursiveList())
+        val x = (-1).createTypedVar<LogicList<Symbol>>()
+        val y = (-2).createTypedVar<LogicList<Symbol>>()
+        val xy = a + (b + nilLogicList())
 
         val goal = appendo(x, y, xy)
 
@@ -29,9 +29,9 @@ class AppendoTest {
         val results = run(4, recursiveListOf(x, y), goal)
 
         val expected = listOf(
-            recursiveListOf(nilRecursiveList(), xy),
-            recursiveListOf(a + nilRecursiveList(), b + nilRecursiveList()),
-            recursiveListOf(xy, nilRecursiveList())
+            recursiveListOf(nilLogicList(), xy),
+            recursiveListOf(a + nilLogicList(), b + nilLogicList()),
+            recursiveListOf(xy, nilLogicList())
         ).reified()
         assertEquals(expected, results)
     }

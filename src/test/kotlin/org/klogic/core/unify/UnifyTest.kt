@@ -7,7 +7,7 @@ import org.klogic.core.Substitution
 import org.klogic.core.reified
 import org.klogic.core.run
 import org.klogic.core.`|||`
-import org.klogic.terms.Nil.nilRecursiveList
+import org.klogic.terms.Nil.nilLogicList
 import org.klogic.terms.Symbol
 import org.klogic.terms.plus
 import org.klogic.unify.unifyWithConstraintsVerification
@@ -43,7 +43,7 @@ class UnifyTest {
     @Test
     fun testUnunifiable1() {
         val left = x + y
-        val right = nilRecursiveList<Symbol>()
+        val right = nilLogicList<Symbol>()
 
         val unification = unifyWithConstraintsVerification(left, right)
 
