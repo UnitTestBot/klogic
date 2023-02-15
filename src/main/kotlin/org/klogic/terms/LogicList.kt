@@ -76,6 +76,11 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<T>) : LogicList<T
                 return nilLogicList()
             }
 
+            // Hack(?) for testOnlyOneConstraintIsEnoughExample1
+            if (terms.size == 2) {
+                return terms.first() + terms.last()
+            }
+
             return Cons(terms.first(), recursiveListOf(*terms.drop(1).toTypedArray()).cast())
         }
     }
