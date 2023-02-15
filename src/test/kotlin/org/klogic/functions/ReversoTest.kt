@@ -1,4 +1,3 @@
-/*
 package org.klogic.functions
 
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -18,7 +17,7 @@ class ReversoTest {
     @Test
     fun testForwardReverso() {
         val original = symbolA + (symbolB + nilRecursiveList())
-        val goal = reverso(original, (-1).createTypedVar<Symbol>())
+        val goal = reverso(original, (-1).createTypedVar())
 
         val results = run(2, (-1).createTypedVar(), goal)
 
@@ -29,7 +28,7 @@ class ReversoTest {
     @Test
     fun testBackwardReverso() {
         val reversed = symbolB + (symbolA + nilRecursiveList())
-        val goal = reverso((-1).createTypedVar<Symbol>(), reversed)
+        val goal = reverso((-1).createTypedVar(), reversed)
 
         // Hangs when count > 1
         val results = run(1, (-1).createTypedVar<Symbol>(), goal)
@@ -38,4 +37,3 @@ class ReversoTest {
         assertEquals(expected, results)
     }
 }
-*/

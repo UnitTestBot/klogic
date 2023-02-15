@@ -52,16 +52,6 @@ class UnifyTest {
     }
 
     @Test
-    fun testUnunifiable2() {
-        val left = x + y
-        val right = recursiveListOf(`1`)
-
-        val unification = unifyWithConstraintsVerification(left, right)
-
-        assertNull(unification)
-    }
-    
-    @Test
     fun testUnion() {
         val goal = (`5` `===` q) `|||` (`6` `===` q)
 

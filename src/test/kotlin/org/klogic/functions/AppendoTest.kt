@@ -2,12 +2,9 @@ package org.klogic.functions
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.Nil.nilList
-import org.klogic.core.Symbol.Companion.toSymbol
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.core.Var.Companion.toVar
-import org.klogic.core.run
 import org.klogic.core.reified
+import org.klogic.core.run
 import org.klogic.terms.Cons.Companion.recursiveListOf
 import org.klogic.terms.Nil.nilRecursiveList
 import org.klogic.terms.RecursiveList

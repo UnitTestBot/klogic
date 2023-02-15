@@ -64,11 +64,14 @@ interface Term<T : Any> {
         }
     }
 
-    infix fun `===`(other: Term<T>): Goal = this unify other
-    infix fun `!==`(other: Term<T>): Goal = this ineq other
+    fun injection(): Term<out T> = cast()
+    fun projection(): T
 
     @Suppress("UNCHECKED_CAST")
     fun <T2 : Any> cast(): Term<T2> = this as Term<T2>
+
+    infix fun `===`(other: Term<T>): Goal = this unify other
+    infix fun `!==`(other: Term<T>): Goal = this ineq other
 }
 
 /**
@@ -105,6 +108,9 @@ value class Var<T : Any>(val index: Int) : Term<T> {
         }
     }
 
+    override fun injection(): Var<out T> = cast()
+    override fun projection(): T = error("Cannot project variable $this")
+
     @Suppress("UNCHECKED_CAST")
     override fun <T2 : Any> cast(): Var<T2> = this as Var<T2>
 
@@ -126,7 +132,33 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     }
 
     fun unifyCustomTermImpl(walkedOther: CustomTerm<T>, unificationState: UnificationState): UnificationState?
+
+    @Suppress("UNCHECKED_CAST")
+    override fun projection(): T = this as T
 }
+
+/*fun Any.occurs(variable: Var<out Any>): Boolean =
+    when (this) {
+        is Term<*> -> occurs(variable)
+        else -> false
+    }
+
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> T.walk(substitution: Substitution): T =
+    when (this) {
+        is Term<*> -> walk(substitution) as T
+        else -> this
+    }
+
+fun <T : Any> T.unify(walkedOther: T, unificationState: UnificationState): UnificationState? =
+    when (this) {
+        is Term<*> -> {
+            when (walkedOther) {
+                is Term<*> -> unify(walkedOther, unificationState)
+            }
+        }
+        else -> this
+    }*/
 
 /*interface ITerm<T : Any> {
     fun occurs(variable: MyVar<out Any>): Boolean
