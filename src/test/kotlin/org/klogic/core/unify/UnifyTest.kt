@@ -7,7 +7,6 @@ import org.klogic.core.Substitution
 import org.klogic.core.reified
 import org.klogic.core.run
 import org.klogic.core.`|||`
-import org.klogic.terms.Cons.Companion.recursiveListOf
 import org.klogic.terms.Nil.nilRecursiveList
 import org.klogic.terms.Symbol
 import org.klogic.terms.plus

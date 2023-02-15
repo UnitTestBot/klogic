@@ -1,7 +1,5 @@
 package org.klogic.unify
 
-import org.klogic.core.MutableMapOfVariablesToTermsOfTheSameType
-import org.klogic.core.MutableMapOfVariablesToTermsOfTheSameTypeImpl
 import org.klogic.core.State
 import org.klogic.core.Substitution
 import org.klogic.core.Term
@@ -13,10 +11,9 @@ import org.klogic.core.Var
  */
 data class UnificationState(
     val substitution: Substitution = Substitution.empty,
-//    val substitutionDifference: MutableMapOfVariablesToTermsOfTheSameType = MutableMapOfVariablesToTermsOfTheSameTypeImpl()
-    val substitutionDifference: MutableMap<Var<Any>, Term<Any>> = mutableMapOf()
+    val substitutionDifference: MutableMap<Var<*>, Term<*>> = mutableMapOf()
 ) {
-    fun <T : Any> unify(left: Term<T>, right: Term<T>) = left.unify(right, this)
+    fun <T : Term<T>> unify(left: Term<T>, right: Term<T>) = left.unify(right, this)
 
     companion object {
         private val EMPTY: UnificationState = UnificationState()
@@ -38,7 +35,7 @@ fun Substitution.toUnificationState(): UnificationState = UnificationState(this)
  *
  * @see [UnificationState.unifyWithConstraintsVerification] for details.
  */
-fun <T : Any> unifyWithConstraintsVerification(
+fun <T : Term<T>> unifyWithConstraintsVerification(
     left: Term<T>,
     right: Term<T>
 ): State? = State.empty.unifyWithConstraintsVerification(left, right)

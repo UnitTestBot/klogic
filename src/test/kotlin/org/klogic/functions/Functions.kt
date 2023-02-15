@@ -10,7 +10,7 @@ import org.klogic.terms.RecursiveList
 import org.klogic.terms.plus
 
 @Suppress("RemoveExplicitTypeArguments")
-fun <T : Term<out Any>> appendo(x: Term<RecursiveList<T>>, y: Term<RecursiveList<T>>, xy: Term<RecursiveList<T>>): Goal =
+fun <T : Term<T>> appendo(x: Term<RecursiveList<T>>, y: Term<RecursiveList<T>>, xy: Term<RecursiveList<T>>): Goal =
     ((x `===` nilRecursiveList())) `&&&` (y `===` xy) `|||`
             freshTypedVar<T> { head ->
                 freshTypedVar<RecursiveList<T>> { tail ->
@@ -20,11 +20,11 @@ fun <T : Term<out Any>> appendo(x: Term<RecursiveList<T>>, y: Term<RecursiveList
                 }
             }
 
-fun <T : Term<out Any>> reverso(x: Term<RecursiveList<T>>, reversed: Term<RecursiveList<T>>): Goal =
+fun <T : Term<T>> reverso(x: Term<RecursiveList<T>>, reversed: Term<RecursiveList<T>>): Goal =
     ((x `===` nilRecursiveList()) `&&&` (reversed `===` nilRecursiveList())) `|||`
             freshTypedVar<T> { head ->
                 freshTypedVar<RecursiveList<T>> { tail ->
-                    freshTypedVar { rest ->
+                    freshTypedVar<RecursiveList<T>> { rest ->
                         (x `===` head + tail) `&&&` reverso(tail, rest) `&&&` appendo(
                             rest,
                             head + nilRecursiveList(),

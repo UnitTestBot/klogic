@@ -55,7 +55,7 @@ internal val listB: Var<RecursiveList<Symbol>> = listSymbolVariables[5]
 internal val listC: Var<RecursiveList<Symbol>> = listSymbolVariables[6]
 internal val listD: Var<RecursiveList<Symbol>> = listSymbolVariables[7]
 
-val List<ReifiedTerm<out Any>>.singleReifiedTerm: Term<out Any>
+val <T : Term<T>> List<ReifiedTerm<T>>.singleReifiedTerm: Term<T>
     get() = single().term
-val List<ReifiedTerm<out Any>>.singleReifiedTermConstraints: Set<Constraint<*>>
+val List<ReifiedTerm<*>>.singleReifiedTermConstraints: Set<Constraint<*>>
     get() = single().constraints

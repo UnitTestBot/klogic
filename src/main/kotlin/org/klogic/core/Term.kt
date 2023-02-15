@@ -3,16 +3,15 @@ package org.klogic.core
 import org.klogic.core.RecursiveStream.Companion.nil
 import org.klogic.core.RecursiveStream.Companion.single
 import org.klogic.unify.UnificationState
-import kotlin.reflect.KClass
 
 /**
  * Represents a logic object.
  */
-interface Term<T : Any> {
+interface Term<T : Term<T>> {
     /**
      * Checks whether [variable] occurs in [term].
      */
-    fun occurs(variable: Var<out Any>): Boolean
+    fun <R : Term<R>> occurs(variable: Var<R>): Boolean
 
     /**
      * Substitutes all occurrences of [term] to its value in [substitution].
@@ -64,11 +63,8 @@ interface Term<T : Any> {
         }
     }
 
-    fun injection(): Term<out T> = cast()
-    fun projection(): T
-
     @Suppress("UNCHECKED_CAST")
-    fun <T2 : Any> cast(): Term<T2> = this as Term<T2>
+    fun <T2 : Term<T2>> cast(): Term<T2> = this as Term<T2>
 
     infix fun `===`(other: Term<T>): Goal = this unify other
     infix fun `!==`(other: Term<T>): Goal = this ineq other
@@ -78,8 +74,8 @@ interface Term<T : Any> {
  * Represents a symbolic term that can be equal to any other [Term].
  */
 @JvmInline
-value class Var<T : Any>(val index: Int) : Term<T> {
-    override fun occurs(variable: Var<out Any>): Boolean = this == variable
+value class Var<T : Term<T>>(val index: Int) : Term<T> {
+    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = this == variable
 
     override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
         (it.walk(substitution))
@@ -101,23 +97,20 @@ value class Var<T : Any>(val index: Int) : Term<T> {
                 null
             } else {
                 val newAssociation = this to walkedOther
-                unificationState.substitutionDifference[newAssociation.first.cast()] = newAssociation.second.cast()
+                unificationState.substitutionDifference[newAssociation.first] = newAssociation.second.cast()
 
                 unificationState.copy(substitution = unificationState.substitution + newAssociation)
             }
         }
     }
 
-    override fun injection(): Var<out T> = cast()
-    override fun projection(): T = error("Cannot project variable $this")
-
     @Suppress("UNCHECKED_CAST")
-    override fun <T2 : Any> cast(): Var<T2> = this as Var<T2>
+    override fun <T2 : Term<T2>> cast(): Var<T2> = this as Var<T2>
 
     override fun toString(): String = "_.$index"
 
     companion object {
-        fun <T : Any> Int.createTypedVar(): Var<T> = Var(this)
+        fun <T :Term<T>> Int.createTypedVar(): Var<T> = Var(this)
     }
 }
 
@@ -132,9 +125,6 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     }
 
     fun unifyCustomTermImpl(walkedOther: CustomTerm<T>, unificationState: UnificationState): UnificationState?
-
-    @Suppress("UNCHECKED_CAST")
-    override fun projection(): T = this as T
 }
 
 /*fun Any.occurs(variable: Var<out Any>): Boolean =

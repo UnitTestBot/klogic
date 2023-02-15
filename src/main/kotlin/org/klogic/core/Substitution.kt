@@ -1,17 +1,16 @@
 package org.klogic.core
 
 import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.minus
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.toPersistentHashMap
-import org.klogic.unify.toUnificationState
 import org.klogic.unify.UnificationState
+import org.klogic.unify.toUnificationState
 
 /**
  * Represents an immutable association of [Var]s and corresponding [Term]s.
  */
-data class Substitution(private val innerSubstitution: PersistentMap<Var<out Any>, Term<out Any>> = persistentHashMapOf()) {
-    constructor(map: Map<Var<out Any>, Term<out Any>>) : this(map.toPersistentHashMap())
+data class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Term<*>> = persistentHashMapOf()) {
+    constructor(map: Map<Var<*>, Term<*>>) : this(map.toPersistentHashMap())
 
     /**
      * Checks whether [InequalityConstraint] of [left] and [right] can be satisfied.
@@ -25,7 +24,7 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<out Any
      *
      * @see [UnificationState.unify] for details.
      */
-    fun <T : Any> ineq(left: Term<T>, right: Term<T>): ConstraintVerificationResult<InequalityConstraint> {
+    fun <T : Term<T>> ineq(left: Term<T>, right: Term<T>): ConstraintVerificationResult<InequalityConstraint> {
         return toUnificationState().unify(left, right)?.let { unificationState ->
             val delta = unificationState.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
@@ -42,25 +41,21 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<out Any
         } ?: RedundantConstraintResult // Failed unification means this constraint is never violated, i.e., it is redundant.
     }
 
-//    override val entries: Set<Map.Entry<Var<out Any>, Term<out Any>>> = innerSubstitution.entries
-//    override val keys: Set<Var<out Any>> = innerSubstitution.keys
-//    override val size: Int = innerSubstitution.size
-//    override val values: Collection<Term<out Any>> = innerSubstitution.values
+    operator fun contains(key: Var<*>): Boolean = containsKey(key)
 
-    operator fun contains(key: Var<out Any>): Boolean = containsKey(key)
+    fun containsKey(key: Var<*>): Boolean = innerSubstitution.containsKey(key)
 
-    fun containsKey(key: Var<out Any>): Boolean = innerSubstitution.containsKey(key)
-
-    fun containsValue(value: Term<out Any>): Boolean = innerSubstitution.containsValue(value)
+    fun containsValue(value: Term<*>): Boolean = innerSubstitution.containsValue(value)
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T : Any> get(key: Var<T>): Term<T>? = innerSubstitution[key] as Term<T>?
+    operator fun <T : Term<T>> get(key: Var<T>): Term<T>? = innerSubstitution[key] as Term<T>?
 
     fun isEmpty(): Boolean = innerSubstitution.isEmpty()
 
-    operator fun plus(pair: Pair<Var<out Any>, Term<out Any>>): Substitution = (innerSubstitution + pair).toSubstitution()
+    operator fun plus(pair: Pair<Var<*>, Term<*>>): Substitution = (innerSubstitution + pair).toSubstitution()
 
-//    operator fun minus(other: Substitution): Substitution = (innerSubstitution - other.keys).toSubstitution()
+    operator fun minus(other: Substitution): Substitution =
+        (innerSubstitution - other.innerSubstitution.keys).toSubstitution()
 
     override fun toString(): String = innerSubstitution.toString()
 
@@ -70,70 +65,8 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<out Any
 
         val empty: Substitution = EMPTY_SUBSTITUTION
 
-        fun of(vararg pairs: Pair<Var<out Any>, Term<out Any>>): Substitution = Substitution(mapOf(*pairs))
+        fun of(vararg pairs: Pair<Var<*>, Term<*>>): Substitution = Substitution(mapOf(*pairs))
     }
 }
 
-// TODO add more docs
-// This class cannot extend Map interface because of `get` operator limitations
-interface MapOfVariablesToTermsOfTheSameType {
-    val keys: Set<Var<out Any>>
-    val values: Collection<Term<out Any>>
-    val entries: Set<Map.Entry<Var<out Any>, Term<out Any>>>
-
-    operator fun <T: Any> get(key: Var<T>): Term<T>?
-    operator fun contains(key: Var<out Any>): Boolean
-    fun containsValue(value: Term<out Any>): Boolean
-
-    operator fun <T: Any> plus(pair: Pair<Var<T>, Term<T>>): MapOfVariablesToTermsOfTheSameType
-
-    operator fun minus(other: MapOfVariablesToTermsOfTheSameType): MapOfVariablesToTermsOfTheSameType
-
-    fun isEmpty(): Boolean = entries.isEmpty()
-}
-interface MutableMapOfVariablesToTermsOfTheSameType : MapOfVariablesToTermsOfTheSameType {
-    override val keys: MutableSet<Var<out Any>>
-    override val values: MutableCollection<Term<out Any>>
-    override val entries: MutableSet<MutableMap.MutableEntry<Var<out Any>, Term<out Any>>>
-
-    operator fun <T: Any> plusAssign(pair: Pair<Var<T>, Term<T>>)
-
-    override operator fun minus(other: MapOfVariablesToTermsOfTheSameType): MutableMapOfVariablesToTermsOfTheSameType
-}
-
-class MutableMapOfVariablesToTermsOfTheSameTypeImpl(private val innerMap: MutableMap<Var<out Any>, Term<out Any>>) : MutableMapOfVariablesToTermsOfTheSameType {
-    constructor() : this(mutableMapOf())
-
-    constructor(other: MutableMapOfVariablesToTermsOfTheSameTypeImpl) : this(other.innerMap.toMutableMap())
-
-    override val keys: MutableSet<Var<out Any>> = innerMap.keys
-    override val values: MutableCollection<Term<out Any>> = innerMap.values
-    override val entries: MutableSet<MutableMap.MutableEntry<Var<out Any>, Term<out Any>>> = innerMap.entries
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : Any> get(key: Var<T>): Term<T>? = innerMap[key] as? Term<T>
-
-    override fun contains(key: Var<out Any>): Boolean = get(key) != null
-
-    override fun containsValue(value: Term<out Any>): Boolean = innerMap.containsValue(value)
-
-    override fun <T : Any> plus(pair: Pair<Var<T>, Term<T>>): MapOfVariablesToTermsOfTheSameType {
-        val copy = MutableMapOfVariablesToTermsOfTheSameTypeImpl(this)
-        copy += pair
-
-        return copy
-    }
-
-    override fun <T : Any> plusAssign(pair: Pair<Var<T>, Term<T>>) {
-        innerMap += pair
-    }
-
-    override fun minus(other: MapOfVariablesToTermsOfTheSameType): MutableMapOfVariablesToTermsOfTheSameType {
-        val copy = MutableMapOfVariablesToTermsOfTheSameTypeImpl(this)
-        copy.innerMap -= other.keys
-
-        return copy
-    }
-}
-
-fun Map<Var<out Any>, Term<out Any>>.toSubstitution(): Substitution = Substitution(this)
+fun Map<Var<*>, Term<*>>.toSubstitution(): Substitution = Substitution(this)

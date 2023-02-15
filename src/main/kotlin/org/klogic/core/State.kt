@@ -19,7 +19,7 @@ data class State(
     private var lastCreatedVariableIndex: Int = 0
 ) {
     constructor(
-        map: Map<Var<out Any>, Term<out Any>>,
+        map: Map<Var<*>, Term<*>>,
         constraints: PersistentSet<Constraint<*>>,
         lastCreatedVariableIndex: Int = 0
     ) : this(Substitution(map), constraints, lastCreatedVariableIndex)
@@ -30,12 +30,12 @@ data class State(
     /**
      * Returns a new variable [Var] with [lastCreatedVariableIndex] as its [Var.index] and increments [lastCreatedVariableIndex].
      */
-    fun <T: Any> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
+    fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
 
     /**
      * Returns a new state with [substitution] extended with passed not already presented association of [variable] to [term].
      */
-    fun <T: Any> extend(variable: Var<T>, term: Term<T>): State {
+    private fun <T : Term<T>> extend(variable: Var<T>, term: Term<T>): State {
         require(variable !in substitution) {
             "Variable $variable already exists in substitution $substitution"
         }
@@ -50,7 +50,7 @@ data class State(
      * If constraints verification succeeds, returns new [State] with unification substitution and verified simplified
      * constraints, and returns null otherwise.
      */
-    fun <T : Any> unifyWithConstraintsVerification(left: Term<T>, right: Term<T>): State? {
+    fun <T : Term<T>> unifyWithConstraintsVerification(left: Term<T>, right: Term<T>): State? {
         val unificationState = toUnificationState()
         val successfulUnificationState = left.unify(right, unificationState) ?: return null
 
@@ -65,7 +65,7 @@ data class State(
         return copy(substitution = unificationSubstitution, constraints = verifiedConstraints.toPersistentHashSet())
     }
 
-    operator fun <T : Any> plus(pair: Pair<Var<T>, Term<T>>): State = extend(pair.first, pair.second)
+    operator fun <T : Term<T>> plus(pair: Pair<Var<T>, Term<T>>): State = extend(pair.first, pair.second)
 
     companion object {
         private val EMPTY_STATE: State = State(Substitution.empty)

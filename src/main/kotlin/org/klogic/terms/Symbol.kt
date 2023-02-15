@@ -11,7 +11,7 @@ import org.klogic.unify.UnificationState
  */
 @JvmInline
 value class Symbol(private val name: String) : CustomTerm<Symbol> {
-    override fun occurs(variable: Var<out Any>): Boolean = false
+    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = false
 
     override fun walk(substitution: Substitution): CustomTerm<Symbol> = this
 

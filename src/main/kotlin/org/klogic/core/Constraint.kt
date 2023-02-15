@@ -37,7 +37,9 @@ interface Constraint<out T : Constraint<T>> {
  * Represents an inequality constraint that contains some [SingleInequalityConstraint]s.
  * The standard operation that applies this constraint is [Term.ineq].
  */
-class InequalityConstraint internal constructor(private val simplifiedConstraints: List<SingleInequalityConstraint<Any>>) : Constraint<InequalityConstraint> {
+class InequalityConstraint internal constructor(
+    private val simplifiedConstraints: List<SingleInequalityConstraint>
+) : Constraint<InequalityConstraint> {
     override fun verify(substitution: Substitution): ConstraintVerificationResult<InequalityConstraint> =
         substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
             val delta = unificationResult.substitutionDifference
@@ -47,26 +49,22 @@ class InequalityConstraint internal constructor(private val simplifiedConstraint
                 return ViolatedConstraintResult
             }
 
-
             val simplifiedConstraints = delta.entries.map {
-                SingleInequalityConstraint(it.key, it.value.cast())
+                SingleInequalityConstraint(it.key, it.value)
             }
-
-
-//            val simplifiedConstraints = delta.map { SingleInequalityConstraint(it.key, it.value) }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
             singleConstraint.toSatisfiedConstraintResult()
         } ?: RedundantConstraintResult
 
-    private fun UnificationState.verify(remainingSimplifiedConstraints: List<SingleInequalityConstraint<Any>>): UnificationState? {
+    private fun UnificationState.verify(remainingSimplifiedConstraints: List<SingleInequalityConstraint>): UnificationState? {
         if (remainingSimplifiedConstraints.isEmpty()) {
             return this
         }
 
         val firstSingleConstraint = remainingSimplifiedConstraints.first()
 
-        return unify(firstSingleConstraint.variable, firstSingleConstraint.term)
+        return unify(firstSingleConstraint.variable, firstSingleConstraint.term.cast())
             ?.verify(remainingSimplifiedConstraints.subList(1, remainingSimplifiedConstraints.size))
     }
 
@@ -90,11 +88,11 @@ class InequalityConstraint internal constructor(private val simplifiedConstraint
     override fun toString(): String = simplifiedConstraints.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
     companion object {
-        fun <T : Any> of(variable: Var<T>, term: Term<T>): InequalityConstraint = of(variable to term)
+        fun <T : Term<T>> of(variable: Var<T>, term: T): InequalityConstraint = of(variable to term)
 
-        fun of(vararg pairs: Pair<Var<out Any>, Term<out Any>>): InequalityConstraint {
+        fun <T : Term<T>> of(vararg pairs: Pair<Var<T>, T>): InequalityConstraint {
             val singleInequalityConstraints = pairs.map {
-                SingleInequalityConstraint(it.first, it.second.cast())
+                SingleInequalityConstraint(it.first, it.second)
             }
 
             return InequalityConstraint(singleInequalityConstraints)
@@ -105,13 +103,8 @@ class InequalityConstraint internal constructor(private val simplifiedConstraint
     /**
      * Represents a simple inequality constraint - [variable] cannot be equal to [term].
      */
-    data class SingleInequalityConstraint<out T : Any>(val variable: Var<@UnsafeVariance T>, val term: Term<@UnsafeVariance T>) {
+    data class SingleInequalityConstraint(val variable: Var<*>, val term: Term<*>) {
         override fun toString(): String = "$variable !== $term"
-
-        companion object {
-//            private fun unsafeOf(variable: Var<out Any>, term: Term<out Any>): SingleInequalityConstraint<Any> =
-//                SingleInequalityConstraint(variable, term)
-        }
     }
 }
 
