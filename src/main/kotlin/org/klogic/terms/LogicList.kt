@@ -21,14 +21,13 @@ object Nil : LogicList<Nothing>() {
     fun <T : Term<T>> emptyLogicList(): LogicList<T> = this as LogicList<T>
     fun <T : Term<T>> nilLogicList(): LogicList<T> = emptyLogicList()
 
-    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = false
+    override val subtreesToUnify: Sequence<Term<*>>
+        get() = emptySequence()
 
-    override fun walk(substitution: Substitution): CustomTerm<LogicList<Nothing>> = this
+    override fun constructFromSubtrees(subtrees: List<*>): CustomTerm<LogicList<Nothing>> = this
 
-    override fun unifyCustomTermImpl(
-        walkedOther: CustomTerm<LogicList<Nothing>>,
-        unificationState: UnificationState
-    ): UnificationState? = if (this == walkedOther) unificationState else null
+    // Nil cannot be unified with a not empty list
+    override fun isUnifiableWith(other: CustomTerm<LogicList<Nothing>>): Boolean = other is Nil
 
     override fun toString(): String = "Nil"
 }
@@ -38,25 +37,20 @@ object Nil : LogicList<Nothing>() {
  * and [tail] as the rest part of this list.
  */
 data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : LogicList<T>() {
-    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = head.occurs(variable) || tail.occurs(variable)
+    override val subtreesToUnify: Sequence<Term<*>>
+        get() = sequenceOf(head, tail)
 
-    override fun walk(substitution: Substitution): CustomTerm<LogicList<T>> =
-        head.walk(substitution) + tail.walk(substitution)
-
-    override fun unifyCustomTermImpl(
-        walkedOther: CustomTerm<LogicList<T>>,
-        unificationState: UnificationState
-    ): UnificationState? {
-        if (walkedOther is Nil) {
-            return null
+    override fun constructFromSubtrees(subtrees: List<*>): CustomTerm<LogicList<T>> {
+        require(subtrees.size == 2) {
+            "Expected 2 arguments for constructing Cons but ${subtrees.size} are presented - $subtrees"
         }
 
-        walkedOther as Cons<T>
-
-        return head.unify(walkedOther.head, unificationState)?.let {
-            tail.unify(walkedOther.tail, it)
-        }
+        @Suppress("UNCHECKED_CAST")
+        return subtrees.first() as Term<T> + (subtrees.last() as Term<LogicList<T>>)
     }
+
+    // A not empty list cannot be unified with an empty list
+    override fun isUnifiableWith(other: CustomTerm<LogicList<T>>): Boolean = other is Cons
 
     override fun toString(): String = "($head ++ $tail)"
 
@@ -74,7 +68,13 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
     }
 }
 
+/**
+ * Constructs [LogicList] using [this] term as a [Cons.head] and [list] as a [Cons.tail].
+ */
 operator fun <T : Term<T>> Term<T>.plus(list: Term<LogicList<T>>): LogicList<T> = Cons(this, list)
 infix fun <T : Term<T>> Term<T>.cons(list: Term<LogicList<T>>): LogicList<T> = this + list
 
+/**
+ * Constructs [LogicList] consisting of only [this] element.
+ */
 fun <T : Term<T>> Term<T>.toLogicList(): LogicList<T> = Cons(this, nilLogicList())

@@ -79,6 +79,14 @@ sealed interface Term<T : Term<T>> {
 
     infix fun `===`(other: Term<T>): Goal = this unify other
     infix fun `!==`(other: Term<T>): Goal = this ineq other
+
+    companion object {
+        /**
+         * Unifies [left] with [right] by invoking non-static method.
+         */
+        internal fun <T : Term<T>> unify(left: Term<T>, right: Term<T>, unificationState: UnificationState): UnificationState? =
+            left.unify(right, unificationState)
+    }
 }
 
 /**
@@ -128,17 +136,68 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
  * Represents a custom (i.e., defined by user) term.
  */
 interface CustomTerm<T : CustomTerm<T>> : Term<T> {
+    /**
+     * Returns a sequence of subtrees (of any types) that should be used in unification process.
+     */
+    val subtreesToUnify: Sequence<*>
+    /**
+     * Returns a sequence of subtrees (of any types) that should be used in substituting variables.
+     * Walked subtrees will be used for constructing an instance of this class.
+     *
+     * NOTE: for most of the classes equals to [subtreesToUnify], so by default has the same value.
+     */
+    val subtreesToWalk: Sequence<*>
+        get() = subtreesToUnify
+
+    override fun walk(substitution: Substitution): CustomTerm<T> {
+        val walkedSubtrees = subtreesToWalk.map {
+            if (it is Term<*>) it.walk(substitution) else it
+        }
+
+        return constructFromSubtrees(walkedSubtrees.toList())
+    }
+
+    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = subtreesToUnify.any {
+        if (it is Term<*>) it.occurs(variable) else false
+    }
+
     override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
         if (walkedOther !is CustomTerm) {
             // This branch means that walkedOther is Var
             return walkedOther.unify(this, unificationState)
         }
 
-        return unifyCustomTermImpl(walkedOther, unificationState)
+        if (!(this isUnifiableWith walkedOther)) {
+            return null
+        }
+
+        var currentUnificationState: UnificationState? = unificationState
+
+        subtreesToUnify.zip(walkedOther.subtreesToUnify).forEach { (curSubtree, otherSubtree) ->
+            if (currentUnificationState == null) {
+                return null
+            }
+
+            // Terms should be unified, non-logic types should be checked for equality
+            currentUnificationState = if (curSubtree is Term<*>) {
+                // Cannot use non-static method here because of type inference error
+                Term.unify(curSubtree, (otherSubtree as Term<*>).cast(), currentUnificationState!!)
+            } else {
+                currentUnificationState.takeIf { curSubtree == otherSubtree }
+            }
+        }
+
+        return currentUnificationState
     }
 
     /**
-     * Tries to unify this user's term with another user's term with the same type.
+     * Constructs an instance of this term using passed [subtrees].
      */
-    fun unifyCustomTermImpl(walkedOther: CustomTerm<T>, unificationState: UnificationState): UnificationState?
+    fun constructFromSubtrees(subtrees: List<*>): CustomTerm<T>
+
+    /**
+     * Checks whether this term can be unified with [other] term. For example, different branches of the same sealed term
+     * often cannot be unified - for instance, a not empty list cannot be unified with an empty list.
+     */
+    infix fun isUnifiableWith(other: CustomTerm<T>): Boolean = true
 }
