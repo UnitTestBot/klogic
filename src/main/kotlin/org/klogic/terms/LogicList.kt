@@ -40,7 +40,21 @@ object Nil : LogicList<Nothing>() {
 data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<T>) : LogicList<T>() {
     override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = head.occurs(variable) || tail.occurs(variable)
 
-    override fun walk(substitution: Substitution): CustomTerm<LogicList<T>> = head.walk(substitution) + tail.walk(substitution)
+    @Suppress("UNCHECKED_CAST")
+    override fun walk(substitution: Substitution): CustomTerm<LogicList<T>> {
+        val walkedHead = head.walk(substitution)
+        val walkedTail = tail.walk(substitution)
+
+        return when (walkedHead) {
+            is LogicList<*> -> {
+                when (walkedTail) {
+                    is LogicList<*> -> (walkedHead as LogicList<T>) + (walkedTail as LogicList<T>)
+                    else -> (walkedHead as LogicList<T>) + walkedTail
+                }
+            }
+            else -> walkedHead + walkedTail
+        }
+    }
 
     override fun unifyCustomTermImpl(
         walkedOther: CustomTerm<LogicList<T>>,
@@ -92,6 +106,18 @@ operator fun <T : Term<T>> Term<T>.plus(other: Term<T>): LogicList<T> = Cons(thi
 operator fun <T : Term<T>> Term<T>.plus(list: LogicList<T>): LogicList<T> = Cons(this, list.cast())
 @JvmName("termPlusTermList")
 operator fun <T : Term<T>> Term<T>.plus(list: Term<LogicList<T>>): LogicList<T> = Cons(this, list.cast())
+@JvmName("termListPlusTerm")
+operator fun <T : Term<T>> Term<LogicList<T>>.plus(list: Term<T>): LogicList<T> =
+    when (this) {
+        is Var<*> -> Cons(this.cast(), list.cast())
+        else -> (this as LogicList<T>) + list
+    }
+@JvmName("listPlusTerm")
+operator fun <T : Term<T>> LogicList<T>.plus(term: Term<T>): LogicList<T> =
+    when (this) {
+        is Nil -> Cons(term, nilLogicList().cast())
+        is Cons -> Cons(head, (tail + term).cast())
+    }
 @JvmName("termListPlusTermList")
 operator fun <T : Term<T>> Term<LogicList<T>>.plus(list: Term<LogicList<T>>): LogicList<T> =
     when (this) {

@@ -174,7 +174,7 @@ class InequalityTest {
     @Test
     fun testOnlyOneConstraintIsEnoughExample1() {
         val goals = arrayOf(
-            listX `===` listY + listZ,
+            listX `===` listY + z,
             listY `===` `5` + a,
             listX `!==` recursiveListOf(`5`, `7`, `3`),
         )
