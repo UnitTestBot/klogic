@@ -79,11 +79,13 @@ data class InequalityConstraint internal constructor(
     override fun toString(): String = simplifiedConstraints.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
     companion object {
-        fun <T : Term<T>> of(variable: Var<T>, term: T): InequalityConstraint = of(variable to term)
+        fun <T : Term<T>> of(variable: Var<T>, term: Term<T>): InequalityConstraint = unsafeOf(variable to term)
 
-        fun <T : Term<T>> of(vararg pairs: Pair<Var<T>, T>): InequalityConstraint {
+        // This method does not check that variable type equals to type of corresponding term,
+        // as it has to be in SingleInequalityConstraint, so it should be used very carefully
+        private fun unsafeOf(vararg pairs: Pair<Var<out Term<*>>, Term<*>>): InequalityConstraint {
             val singleInequalityConstraints = pairs.map {
-                SingleInequalityConstraint(it.first, it.second)
+                SingleInequalityConstraint(it.first, it.second.cast())
             }
 
             return InequalityConstraint(singleInequalityConstraints)

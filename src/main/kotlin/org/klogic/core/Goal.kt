@@ -19,7 +19,7 @@ fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
  *
  * @see [delay], [State.freshTypedVar].
  */
-fun <T : Term<T>> freshTypedVar(f: (Var<T>) -> Goal): Goal = delay {
+fun <T : Term<T>> freshTypedVar(f: (Term<T>) -> Goal): Goal = delay {
     { st: State -> f(st.freshTypedVar())(st) }
 }
 
@@ -53,13 +53,26 @@ fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>): List<Reifi
  */
 // TODO pass user mapper function to stream.
 fun <T : Term<T>> run(count: Int, term: Term<T>, goal: Goal, vararg nextGoals: Goal): List<ReifiedTerm<T>> =
+    unreifiedRun(count, goal, *nextGoals).reify(term)
+
+fun unreifiedRun(count: Int, goals: Array<Goal>): List<State> {
+    require(goals.isNotEmpty()) {
+        "Could not `unreifiedRun` with empty goals"
+    }
+
+    return unreifiedRun(count, goals.first(), *goals.drop(1).toTypedArray())
+}
+
+fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal): List<State> =
     nextGoals
         .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(State.empty)
         .take(count)
-        // TODO add simplify:
-        // 1) Remove irrelevant constraints
-        // 2) Remove subsumed constraints
-        .map { ReifiedTerm(term.walk(it.substitution), it.constraints) }
+
+// TODO add simplify:
+// 1) Remove irrelevant constraints
+// 2) Remove subsumed constraints
+fun <T : Term<T>> State.reify(term: Term<T>): ReifiedTerm<T> = ReifiedTerm(term.walk(substitution), constraints)
+fun <T : Term<T>> Iterable<State>.reify(term: Term<T>): List<ReifiedTerm<T>> = map { it.reify(term) }
 
 /**
  * Creates a [ReifiedTerm] with [this] as [ReifiedTerm.term] and empty [ReifiedTerm.constraints].
