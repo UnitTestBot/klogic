@@ -45,16 +45,18 @@ fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>): List<Reifi
 }
 
 /**
- * Collects all passed goals to one conjunction, producing one [RecursiveStream],
- * takes at most [count] [State]s,
- * and returns list of [ReifiedTerm] by walking passed [term].
+ * Runs [unreifiedRun] with and reifies the passed [term].
  *
- * For more details, see [ReifiedTerm] docs.
+ * @see [unreifiedRun], [State.reify] and [ReifiedTerm].
  */
 // TODO pass user mapper function to stream.
 fun <T : Term<T>> run(count: Int, term: Term<T>, goal: Goal, vararg nextGoals: Goal): List<ReifiedTerm<T>> =
     unreifiedRun(count, goal, *nextGoals).reify(term)
 
+/**
+ * Returns a result of invoking [unreifiedRun] overloading with first passed goal and the rest goals.
+ * NOTE: [goals] must not be empty.
+ */
 fun unreifiedRun(count: Int, goals: Array<Goal>): List<State> {
     require(goals.isNotEmpty()) {
         "Could not `unreifiedRun` with empty goals"
@@ -63,6 +65,10 @@ fun unreifiedRun(count: Int, goals: Array<Goal>): List<State> {
     return unreifiedRun(count, goals.first(), *goals.drop(1).toTypedArray())
 }
 
+/**
+ * Collects all passed goals to one conjunction, producing one [RecursiveStream],
+ * and returns at most [count] [State]s.
+ */
 fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal): List<State> =
     nextGoals
         .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(State.empty)
@@ -71,7 +77,16 @@ fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal): List<State> =
 // TODO add simplify:
 // 1) Remove irrelevant constraints
 // 2) Remove subsumed constraints
+/**
+ * Reifies passed [term] with [State.constraints] according to the current [State.substitution].
+ */
 fun <T : Term<T>> State.reify(term: Term<T>): ReifiedTerm<T> = ReifiedTerm(term.walk(substitution), constraints)
+
+/**
+ * Reifies passed [term] with each [State.substitution] from [this] states.
+ *
+ * @see [State.reify].
+ */
 fun <T : Term<T>> Iterable<State>.reify(term: Term<T>): List<ReifiedTerm<T>> = map { it.reify(term) }
 
 /**

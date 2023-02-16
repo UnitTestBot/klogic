@@ -9,7 +9,7 @@ import org.klogic.unify.UnificationState
 
 /**
  * Represents logic list with elements of the specified logic type that can contain in the same time
- * elements of this type, or variables of this type, or another lists of this type.
+ * elements of this type, or variables of this type.
  */
 sealed class LogicList<T : Term<T>> : CustomTerm<LogicList<T>>
 
@@ -47,14 +47,6 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
         walkedOther: CustomTerm<LogicList<T>>,
         unificationState: UnificationState
     ): UnificationState? {
-        /*// This branch means we need to unify the whole current list with only one element - it can only happen
-        // if the head equals to this element and the tail is Nil.
-        if (walkedOther !is LogicList) {
-            return head.unify(walkedOther.cast(), unificationState)?.let {
-                tail.unify(nilLogicList().cast(), it)
-            }
-        }*/
-
         if (walkedOther is Nil) {
             return null
         }
@@ -77,41 +69,12 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
                 return nilLogicList()
             }
 
-            /*// Hack(?) for testOnlyOneConstraintIsEnoughExample1
-            if (terms.size == 2) {
-                return terms.first() + terms.last()
-            }*/
-
             return Cons(terms.first(), logicListOf(*terms.drop(1).toTypedArray()).cast())
         }
     }
 }
 
 operator fun <T : Term<T>> Term<T>.plus(list: Term<LogicList<T>>): LogicList<T> = Cons(this, list)
+infix fun <T : Term<T>> Term<T>.cons(list: Term<LogicList<T>>): LogicList<T> = this + list
 
 fun <T : Term<T>> Term<T>.toLogicList(): LogicList<T> = Cons(this, nilLogicList())
-
-/*@JvmName("termPlusTerm")
-operator fun <T : Term<T>> Term<T>.plus(other: Term<T>): LogicList<T> = Cons(this, other)
-@JvmName("termPlusList")
-operator fun <T : Term<T>> Term<T>.plus(list: LogicList<T>): LogicList<T> = Cons(this, list.cast())
-@JvmName("termPlusTermList")
-operator fun <T : Term<T>> Term<T>.plus(list: Term<LogicList<T>>): LogicList<T> = Cons(this, list.cast())
-@JvmName("termListPlusTermList")
-operator fun <T : Term<T>> Term<LogicList<T>>.plus(list: Term<LogicList<T>>): LogicList<T> =
-    when (this) {
-        is Var<*> -> Cons(this.cast(), list.cast())
-        else -> (this as LogicList<T>) + list
-    }
-@JvmName("listPlusList")
-operator fun <T : Term<T>> LogicList<T>.plus(list: LogicList<T>): LogicList<T> {
-    if (this is Nil) {
-        return list
-    }
-
-    if (list is Nil) {
-        return this
-    }
-
-    return (this as Cons).head + (tail + list)
-}*/

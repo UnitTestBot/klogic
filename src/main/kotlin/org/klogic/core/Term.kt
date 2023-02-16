@@ -5,9 +5,11 @@ import org.klogic.core.RecursiveStream.Companion.single
 import org.klogic.unify.UnificationState
 
 /**
- * Represents a logic object.
+ * Represents a logic object. It has only one direct implementor - [Var], user terms have to implement [CustomTerm].
+ *
+ * NOTE: sealed to prevent extending this interface by users.
  */
-interface Term<T : Term<T>> {
+sealed interface Term<T : Term<T>> {
     /**
      * Checks whether [variable] occurs in this term.
      */
@@ -95,9 +97,8 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
             if (this == walkedOther) {
                 unificationState
             } else {
-                val newAssociation: Pair<Var<T>, Var<T>> = this to walkedOther
-
-                unificationState.substitutionDifference[newAssociation.first.cast()] = newAssociation.second.cast()
+                val newAssociation = this to walkedOther
+                unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
 
                 unificationState.copy(substitution = unificationState.substitution + newAssociation)
             }
@@ -106,7 +107,7 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
                 null
             } else {
                 val newAssociation = this to walkedOther
-                unificationState.substitutionDifference[newAssociation.first] = newAssociation.second.cast()
+                unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
 
                 unificationState.copy(substitution = unificationState.substitution + newAssociation)
             }
@@ -129,6 +130,7 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
 interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
         if (walkedOther !is CustomTerm) {
+            // This branch means that walkedOther is Var
             return walkedOther.unify(this, unificationState)
         }
 

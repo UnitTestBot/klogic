@@ -9,7 +9,6 @@ import org.klogic.terms.Nil.nilLogicList
 import org.klogic.terms.LogicList
 import org.klogic.terms.plus
 
-@Suppress("RemoveExplicitTypeArguments")
 fun <T : Term<T>> appendo(x: Term<LogicList<T>>, y: Term<LogicList<T>>, xy: Term<LogicList<T>>): Goal =
     ((x `===` nilLogicList())) `&&&` (y `===` xy) `|||`
             freshTypedVar<T> { head ->
