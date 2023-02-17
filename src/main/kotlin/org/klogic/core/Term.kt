@@ -174,17 +174,15 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
         var currentUnificationState: UnificationState? = unificationState
 
         subtreesToUnify.zip(walkedOther.subtreesToUnify).forEach { (curSubtree, otherSubtree) ->
-            if (currentUnificationState == null) {
-                return null
-            }
-
-            // Terms should be unified, non-logic types should be checked for equality
-            currentUnificationState = if (curSubtree is Term<*>) {
-                // Cannot use non-static method here because of type inference error
-                Term.unify(curSubtree, (otherSubtree as Term<*>).cast(), currentUnificationState!!)
-            } else {
-                currentUnificationState.takeIf { curSubtree == otherSubtree }
-            }
+            currentUnificationState = currentUnificationState?.let {
+                // Terms should be unified, non-logic types should be checked for equality
+                if (curSubtree is Term<*>) {
+                    // Cannot use non-static method here because of type inference error
+                    Term.unify(curSubtree, (otherSubtree as Term<*>).cast(), it)
+                } else {
+                    currentUnificationState.takeIf { curSubtree == otherSubtree }
+                }
+            } ?: return null
         }
 
         return currentUnificationState
