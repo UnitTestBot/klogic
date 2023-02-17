@@ -37,14 +37,15 @@ interface Constraint<out T : Constraint<T>> {
  * Represents an inequality constraint that contains some [SingleInequalityConstraint]s.
  * The standard operation that applies this constraint is [Term.ineq].
  */
-data class InequalityConstraint(val simplifiedConstraints: List<SingleInequalityConstraint>) : Constraint<InequalityConstraint> {
-    constructor(variable: Var, term: Term) : this(listOf(SingleInequalityConstraint(variable, term)))
-    constructor(vararg pairs: Pair<Var, Term>) : this(pairs.map {
-        SingleInequalityConstraint(it.first, it.second) }
-    )
+data class InequalityConstraint internal constructor(
+    private val simplifiedConstraints: List<SingleInequalityConstraint<*>>
+) : Constraint<InequalityConstraint> {
+    override fun verify(substitution: Substitution): ConstraintVerificationResult<InequalityConstraint> {
+        if (simplifiedConstraints.isEmpty()) {
+            return RedundantConstraintResult
+        }
 
-    override fun verify(substitution: Substitution): ConstraintVerificationResult<InequalityConstraint> =
-        substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
+        return substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
             val delta = unificationResult.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
             // it means that this constraint is violated.
@@ -52,30 +53,50 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
                 return ViolatedConstraintResult
             }
 
-            val simplifiedConstraints = delta.map { SingleInequalityConstraint(it.key, it.value) }
+            // Simplify this inequality constraint according to difference in substitutions
+            val simplifiedConstraints = delta.entries.map {
+                SingleInequalityConstraint(it.key, it.value.cast())
+            }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
             singleConstraint.toSatisfiedConstraintResult()
         } ?: RedundantConstraintResult
+    }
 
-    private fun UnificationState.verify(remainingSimplifiedConstraints: List<SingleInequalityConstraint>): UnificationState? {
+    private fun UnificationState.verify(
+        remainingSimplifiedConstraints: List<SingleInequalityConstraint<*>>
+    ): UnificationState? {
         if (remainingSimplifiedConstraints.isEmpty()) {
             return this
         }
 
         val firstSingleConstraint = remainingSimplifiedConstraints.first()
 
-        return unify(firstSingleConstraint.variable, firstSingleConstraint.term)
+        return unify(firstSingleConstraint.variable, firstSingleConstraint.term.cast())
             ?.verify(remainingSimplifiedConstraints.subList(1, remainingSimplifiedConstraints.size))
     }
 
     override fun toString(): String = simplifiedConstraints.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
+    companion object {
+        fun <T : Term<T>> of(variable: Var<T>, term: Term<T>): InequalityConstraint = unsafeOf(variable to term)
+
+        // This method does not check that variable type equals to type of corresponding term,
+        // as it has to be in SingleInequalityConstraint, so it should be used very carefully
+        private fun unsafeOf(vararg pairs: Pair<Var<out Term<*>>, Term<*>>): InequalityConstraint {
+            val singleInequalityConstraints = pairs.map {
+                SingleInequalityConstraint(it.first, it.second.cast())
+            }
+
+            return InequalityConstraint(singleInequalityConstraints)
+        }
+    }
+
 
     /**
-     * Represents a simple inequality constraint - [variable] cannot be equal to [term].
+     * Represents a simple inequality constraint - [variable] cannot be equal to [term] of the same type.
      */
-    data class SingleInequalityConstraint(val variable: Var, val term: Term) {
+    data class SingleInequalityConstraint<T : Term<T>>(val variable: Var<T>, val term: Term<T>) {
         override fun toString(): String = "$variable !== $term"
     }
 }
@@ -83,4 +104,5 @@ data class InequalityConstraint(val simplifiedConstraints: List<SingleInequality
 /**
  * Creates a [SatisfiableConstraintResult] from [this].
  */
-fun <T : Constraint<T>> T.toSatisfiedConstraintResult(): SatisfiableConstraintResult<T> = SatisfiableConstraintResult(this)
+fun <T : Constraint<T>> T.toSatisfiedConstraintResult(): SatisfiableConstraintResult<T> =
+    SatisfiableConstraintResult(this)

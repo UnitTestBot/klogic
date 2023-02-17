@@ -2,19 +2,18 @@ package org.klogic.core.unify
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.Nil.nil
 import org.klogic.core.Substitution.Companion.of
-import org.klogic.core.Var.Companion.toVar
-import org.klogic.core.toTerm
-import org.klogic.unify.walk
+import org.klogic.terms.Nil.nilLogicList
+import org.klogic.terms.Symbol
+import org.klogic.utils.x
 
 class WalkTest {
     @Test
     fun testWalk() {
-        val substitution = of(0.toVar() to nil)
-        val term = walk(0.toTerm(), substitution)
+        val substitution = of(x to nilLogicList<Symbol>())
+        val term = x.walk(substitution)
 
-        val expected = nil
+        val expected = nilLogicList<Symbol>()
         assertEquals(expected, term)
     }
 }

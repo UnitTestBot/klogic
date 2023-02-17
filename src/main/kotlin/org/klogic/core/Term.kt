@@ -2,20 +2,44 @@ package org.klogic.core
 
 import org.klogic.core.RecursiveStream.Companion.nil
 import org.klogic.core.RecursiveStream.Companion.single
+import org.klogic.unify.UnificationState
 
 /**
- * Represents a logic object.
+ * Represents a logic object. It has only one direct implementor - [Var], user terms have to implement [CustomTerm].
+ *
+ * NOTE: sealed to prevent extending this interface by users.
  */
-sealed interface Term {
-    operator fun plus(other: Term): Cons = Cons(this, other)
+sealed interface Term<T : Term<T>> {
+    /**
+     * Checks whether [variable] occurs in this term.
+     */
+    fun <R : Term<R>> occurs(variable: Var<R>): Boolean
 
     /**
-     * Tries to unify this term to [other]. If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a
-     * corresponding [Substitution], and a goal with the [nil] stream otherwise.
+     * Substitutes all occurrences of this term to its value in [substitution].
+     */
+    fun walk(substitution: Substitution): Term<T>
+
+    /**
+     * Tries to unify this term and [other] term with the same type using passed [unificationState].
+     */
+    fun unify(other: Term<T>, unificationState: UnificationState): UnificationState? {
+        val walkedThis = walk(unificationState.substitution)
+        val walkedOther = other.walk(unificationState.substitution)
+
+        return walkedThis.unifyImpl(walkedOther, unificationState)
+    }
+
+    fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState?
+
+    /**
+     * Tries to unify this term to [other] term of the same type.
+     * If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a corresponding [Substitution],
+     * and a goal with the [nil] stream otherwise.
      *
      * @see [State.unifyWithConstraintsVerification] for details.
      */
-    infix fun unify(other: Term): Goal = { st: State ->
+    infix fun unify(other: Term<T>): Goal = { st: State ->
         st.unifyWithConstraintsVerification(this, other)?.let {
             single(it)
         } ?: nil()
@@ -23,14 +47,14 @@ sealed interface Term {
 
     /**
      * Returns a goal that contains one of the following:
-     * - Copy of the passed state with an [InequalityConstraint] of this term and [other], if this constraint can be
-     * satisfied somehow;
+     * - Copy of the passed state with an [InequalityConstraint] of this term and [other] term of the same type,
+     * if this constraint can be satisfied somehow;
      * - Passed state (the same reference), if the mentioned above constraint can never be violated (i.e., it is redundant);
      * - No state at all, if this constraint is violated.
      *
      * @see [Substitution.ineq] for details.
      */
-    infix fun ineq(other: Term): Goal = { st: State ->
+    infix fun ineq(other: Term<T>): Goal = { st: State ->
         st.substitution.ineq(this, other).let {
             when (it) {
                 ViolatedConstraintResult -> nil()
@@ -45,59 +69,133 @@ sealed interface Term {
         }
     }
 
-    infix fun `===`(other: Term): Goal = this unify other
-    infix fun `!==`(other: Term): Goal = this ineq other
-}
+    /**
+     * Unsafely casts this term to the term of the passed type.
+     *
+     * NOTE: this API is NOT safe and should be used very carefully.
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <R : Term<R>> cast(): Term<R> = this as Term<R>
 
-/**
- * Represents a simple string constant.
- */
-@JvmInline
-value class Symbol(private val name: String) : Term {
-    override fun toString(): String = name
+    infix fun `===`(other: Term<T>): Goal = this unify other
+    infix fun `!==`(other: Term<T>): Goal = this ineq other
 
     companion object {
-        fun String.toSymbol(): Symbol = Symbol(this)
+        /**
+         * Unifies [left] with [right] by invoking non-static method.
+         */
+        internal fun <T : Term<T>> unify(left: Term<T>, right: Term<T>, unificationState: UnificationState): UnificationState? =
+            left.unify(right, unificationState)
     }
 }
 
 /**
- * Represents classic recursive lists.
- */
-sealed class RecursiveList : Term
-
-/**
- * Represents an empty [RecursiveList].
- */
-object Nil : RecursiveList() {
-    val empty: RecursiveList = this
-    val nil: RecursiveList = this
-
-    override fun toString(): String = "Nil"
-}
-
-/**
- * Represents a [RecursiveList] consisting of element [head] at the beginning and [tail] as the rest.
- */
-data class Cons(val head: Term, val tail: Term) : RecursiveList() {
-    override fun toString(): String = "($head ++ $tail)"
-}
-
-/**
- * Represents a symbolic term that can be equal to any other [Term].
+ * Represents a symbolic term with the specified term that can be equal to any other [Term] of the same type.
  */
 @JvmInline
-value class Var(val index: Int) : Term {
+value class Var<T : Term<T>>(val index: Int) : Term<T> {
+    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = this == variable
+
+    override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
+        (it.walk(substitution))
+    } ?: this
+
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        return if (walkedOther is Var<T>) {
+            if (this == walkedOther) {
+                unificationState
+            } else {
+                val newAssociation = this to walkedOther
+                unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
+
+                unificationState.copy(substitution = unificationState.substitution + newAssociation)
+            }
+        } else {
+            if (walkedOther.occurs(this)) {
+                null
+            } else {
+                val newAssociation = this to walkedOther
+                unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
+
+                unificationState.copy(substitution = unificationState.substitution + newAssociation)
+            }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T2 : Term<T2>> cast(): Var<T2> = this as Var<T2>
+
     override fun toString(): String = "_.$index"
 
     companion object {
-        fun Int.toVar(): Var = Var(this)
+        fun <T :Term<T>> Int.createTypedVar(): Var<T> = Var(this)
     }
 }
 
-fun Any.toTerm(): Term = when (this) {
-    is Int -> Var(this)
-    is String -> Symbol(this)
-    is Term -> this
-    else -> error("Could not transform $this to term")
+/**
+ * Represents a custom (i.e., defined by user) term.
+ */
+interface CustomTerm<T : CustomTerm<T>> : Term<T> {
+    /**
+     * Returns a sequence of subtrees (of any types) that should be used in unification process.
+     */
+    val subtreesToUnify: Sequence<*>
+    /**
+     * Returns a sequence of subtrees (of any types) that should be used in substituting variables.
+     * Walked subtrees will be used for constructing an instance of this class.
+     *
+     * NOTE: for most of the classes equals to [subtreesToUnify], so by default has the same value.
+     */
+    val subtreesToWalk: Sequence<*>
+        get() = subtreesToUnify
+
+    override fun walk(substitution: Substitution): CustomTerm<T> {
+        val walkedSubtrees = subtreesToWalk.map {
+            if (it is Term<*>) it.walk(substitution) else it
+        }
+
+        return constructFromSubtrees(walkedSubtrees.toList())
+    }
+
+    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = subtreesToUnify.any {
+        if (it is Term<*>) it.occurs(variable) else false
+    }
+
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        if (walkedOther !is CustomTerm) {
+            // This branch means that walkedOther is Var
+            return walkedOther.unify(this, unificationState)
+        }
+
+        if (!(this isUnifiableWith walkedOther)) {
+            return null
+        }
+
+        var currentUnificationState: UnificationState? = unificationState
+
+        subtreesToUnify.zip(walkedOther.subtreesToUnify).forEach { (curSubtree, otherSubtree) ->
+            currentUnificationState = currentUnificationState?.let {
+                // Terms should be unified, non-logic types should be checked for equality
+                if (curSubtree is Term<*>) {
+                    // Cannot use non-static method here because of type inference error
+                    Term.unify(curSubtree, (otherSubtree as Term<*>).cast(), it)
+                } else {
+                    currentUnificationState.takeIf { curSubtree == otherSubtree }
+                }
+            } ?: return null
+        }
+
+        return currentUnificationState
+    }
+
+    /**
+     * Constructs an instance of this term using passed [subtrees].
+     */
+    fun constructFromSubtrees(subtrees: List<*>): CustomTerm<T>
+
+    /**
+     * Checks whether this term can be unified with [other] term. For example, different branches of the same sealed term
+     * often cannot be unified - for instance, a not empty list cannot be unified with an empty list.
+     */
+    infix fun isUnifiableWith(other: CustomTerm<T>): Boolean = true
 }
