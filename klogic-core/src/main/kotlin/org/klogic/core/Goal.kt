@@ -9,6 +9,43 @@ infix fun Goal.and(other: Goal): Goal = { st: State -> this(st) bind other }
 infix fun Goal.`|||`(other: Goal): Goal = this or other
 infix fun Goal.`&&&`(other: Goal): Goal = this and other
 
+// TODO docs
+// Right association!
+fun conde(vararg goals: Goal): Goal {
+    require(goals.isNotEmpty()) {
+        "Expected at least one goal for conde but got 0"
+    }
+
+    return goals.reduceRight(Goal::or)
+}
+
+fun and(vararg goals: Goal): Goal {
+    require(goals.isNotEmpty()) {
+        "Expected at least one goal for `and` but got 0"
+    }
+
+//    return goals.reduce(Goal::and)
+    return { state: State ->
+        val firstGoal = goals.first()
+        val firstStream = firstGoal(state)
+        if (goals.size == 1) {
+            firstStream
+        } else {
+            var result = firstStream
+
+            val otherGoals = goals.drop(1)
+            for (goal in otherGoals) {
+                result = result bind goal
+            }
+
+            result
+        }
+//
+//        return goals.fold({ state: State -> firstGoal(state) }) { acc: Goal, g: Goal -> acc bind g }
+    }
+
+}
+
 /**
  * Creates a lazy [Goal] by passed goal generator [f].
  */
@@ -19,8 +56,32 @@ fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
  *
  * @see [delay], [State.freshTypedVar].
  */
-fun <T : Term<T>> freshTypedVar(f: (Term<T>) -> Goal): Goal = delay {
+fun <T : Term<T>> freshTypedVars(f: (Term<T>) -> Goal): Goal = delay {
     { st: State -> f(st.freshTypedVar())(st) }
+}
+
+fun <T1 : Term<T1>, T2 : Term<T2>> freshTypedVars(f: (Term<T1>, Term<T2>) -> Goal): Goal = delay {
+    { st: State -> f(st.freshTypedVar(), st.freshTypedVar())(st) }
+}
+
+fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>) -> Goal): Goal = delay {
+    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+}
+
+fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>) -> Goal): Goal = delay {
+    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+}
+
+fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>) -> Goal): Goal = delay {
+    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+}
+
+fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6: Term<T6>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>) -> Goal): Goal = delay {
+    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+}
+
+fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6: Term<T6>, T7: Term<T7>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>) -> Goal): Goal = delay {
+    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
 }
 
 /**

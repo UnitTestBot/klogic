@@ -80,6 +80,8 @@ sealed interface Term<T : Term<T>> {
     infix fun `===`(other: Term<T>): Goal = this unify other
     infix fun `!==`(other: Term<T>): Goal = this ineq other
 
+    fun isVar(): Boolean = this is Var<*>
+
     companion object {
         /**
          * Unifies [left] with [right] by invoking non-static method.
@@ -100,8 +102,8 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
         (it.walk(substitution))
     } ?: this
 
-    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
-        return if (walkedOther is Var<T>) {
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? =
+        if (walkedOther is Var<T>) {
             if (this == walkedOther) {
                 unificationState
             } else {
@@ -120,7 +122,6 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
                 unificationState.copy(substitution = unificationState.substitution + newAssociation)
             }
         }
-    }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T2 : Term<T2>> cast(): Var<T2> = this as Var<T2>
@@ -164,7 +165,7 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
         if (walkedOther !is CustomTerm) {
             // This branch means that walkedOther is Var
-            return walkedOther.unify(this, unificationState)
+            return walkedOther.unifyImpl(this, unificationState)
         }
 
         if (!(this isUnifiableWith walkedOther)) {

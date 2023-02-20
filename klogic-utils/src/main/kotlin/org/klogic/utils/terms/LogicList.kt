@@ -1,14 +1,23 @@
-package org.klogic.utils.terms.logiclist
+@file:Suppress("FunctionName", "NonAsciiCharacters")
 
+package org.klogic.utils.terms
+
+import org.klogic.core.`&&&`
 import org.klogic.core.CustomTerm
+import org.klogic.core.Goal
 import org.klogic.core.Term
-import org.klogic.utils.terms.logiclist.Nil.nilLogicList
+import org.klogic.core.Var
+import org.klogic.core.freshTypedVars
+import org.klogic.core.`|||`
+import org.klogic.utils.terms.Nil.nilLogicList
 
 /**
  * Represents logic list with elements of the specified logic type that can contain in the same time
  * elements of this type, or variables of this type.
  */
-sealed class LogicList<T : Term<T>> : CustomTerm<LogicList<T>>
+sealed class LogicList<T : Term<T>> : CustomTerm<LogicList<T>> {
+    fun isEmpty(): Boolean = this is Nil
+}
 
 /**
  * Represents an empty [LogicList].
@@ -26,7 +35,7 @@ object Nil : LogicList<Nothing>() {
     // Nil cannot be unified with a not empty list
     override fun isUnifiableWith(other: CustomTerm<LogicList<Nothing>>): Boolean = other is Nil
 
-    override fun toString(): String = "Nil"
+    override fun toString(): String = "()"
 }
 
 /**
@@ -49,7 +58,16 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
     // A not empty list cannot be unified with an empty list
     override fun isUnifiableWith(other: CustomTerm<LogicList<T>>): Boolean = other is Cons
 
-    override fun toString(): String = "($head ++ $tail)"
+    override fun toString(): String {
+        fun Term<LogicList<T>>.mapToString(): List<String> =
+            when (this) {
+                is Nil -> emptyList()
+                is Var<*> -> listOf(this.toString())
+                else -> listOf((this as Cons<T>).head.toString()) + tail.mapToString()
+            }
+
+        return mapToString().joinToString(", ", prefix = "(", postfix = ")")
+    }
 
     companion object {
         /**
@@ -75,3 +93,19 @@ infix fun <T : Term<T>> Term<T>.cons(list: Term<LogicList<T>>): LogicList<T> = t
  * Constructs [LogicList] consisting of only [this] element.
  */
 fun <T : Term<T>> Term<T>.toLogicList(): LogicList<T> = Cons(this, nilLogicList())
+
+fun <T : Term<T>> appendᴼ(x: Term<LogicList<T>>, y: Term<LogicList<T>>, xy: Term<LogicList<T>>): Goal =
+    ((x `===` nilLogicList())) `&&&` (y `===` xy) `|||`
+            freshTypedVars<T, LogicList<T>, LogicList<T>> { head, tail, rest ->
+                (x `===` head + tail) `&&&` (xy `===` head + rest) `&&&` appendᴼ(tail, y, rest)
+            }
+
+fun <T : Term<T>> reversᴼ(x: Term<LogicList<T>>, reversed: Term<LogicList<T>>): Goal =
+    ((x `===` nilLogicList()) `&&&` (reversed `===` nilLogicList())) `|||`
+            freshTypedVars<T, LogicList<T>, LogicList<T>> { head, tail, rest ->
+                (x `===` head + tail) `&&&` reversᴼ(tail, rest) `&&&` appendᴼ(
+                    rest,
+                    head + nilLogicList(),
+                    reversed
+                )
+            }

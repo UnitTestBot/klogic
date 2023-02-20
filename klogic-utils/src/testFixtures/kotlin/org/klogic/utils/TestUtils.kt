@@ -9,7 +9,7 @@ import org.klogic.core.Term
 import org.klogic.core.ThunkStream
 import org.klogic.core.Var
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.utils.terms.logiclist.LogicList
+import org.klogic.utils.terms.LogicList
 import org.klogic.utils.terms.Symbol
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
 

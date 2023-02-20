@@ -13,12 +13,12 @@ import org.klogic.core.reify
 import org.klogic.core.run
 import org.klogic.core.unreifiedRun
 import org.klogic.core.`|||`
-import org.klogic.utils.terms.logiclist.Cons.Companion.logicListOf
-import org.klogic.utils.terms.logiclist.LogicList
-import org.klogic.utils.terms.logiclist.Nil.nilLogicList
+import org.klogic.utils.terms.Cons.Companion.logicListOf
+import org.klogic.utils.terms.LogicList
+import org.klogic.utils.terms.Nil.nilLogicList
 import org.klogic.utils.terms.Symbol
-import org.klogic.utils.terms.logiclist.plus
-import org.klogic.utils.terms.logiclist.toLogicList
+import org.klogic.utils.terms.plus
+import org.klogic.utils.terms.toLogicList
 import org.klogic.utils.*
 
 // Some tests are taken from faster-minikanren

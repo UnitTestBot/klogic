@@ -3,7 +3,7 @@ package org.klogic.core.unify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.klogic.core.Substitution.Companion.of
-import org.klogic.utils.terms.logiclist.Nil.nilLogicList
+import org.klogic.utils.terms.Nil.nilLogicList
 import org.klogic.utils.terms.Symbol
 import org.klogic.utils.x
 
