@@ -8,3 +8,12 @@ dependencies{
     testImplementation(project(":klogic-utils"))
     testImplementation(testFixtures(project(":klogic-utils")))
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            artifact(tasks["kotlinSourcesJar"])
+        }
+    }
+}

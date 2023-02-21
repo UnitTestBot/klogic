@@ -2,7 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
+    `maven-publish`
 }
+
+group = "org.klogic"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -29,4 +33,14 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    systemProperty("junit.jupiter.execution.parallel.enabled", true)
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "releaseDir"
+            url = uri(layout.buildDirectory.dir("release"))
+        }
+    }
 }
