@@ -35,4 +35,4 @@ jobs:
         if: always()
         with:
           name: klogic-tests-report
-          path: ./**/build/reports/tests/test/
+          path: klogic-test-results/build/reports/tests/unit-test/aggregated-results
