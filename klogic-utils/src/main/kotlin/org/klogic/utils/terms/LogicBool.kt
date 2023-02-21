@@ -1,4 +1,4 @@
-@file:Suppress("ClassName", "NonAsciiCharacters")
+@file:Suppress("ClassName", "NonAsciiCharacters", "ObjectPropertyName")
 
 package org.klogic.utils.terms
 

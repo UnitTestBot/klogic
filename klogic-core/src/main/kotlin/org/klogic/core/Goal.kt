@@ -9,8 +9,11 @@ infix fun Goal.and(other: Goal): Goal = { st: State -> this(st) bind other }
 infix fun Goal.`|||`(other: Goal): Goal = this or other
 infix fun Goal.`&&&`(other: Goal): Goal = this and other
 
-// TODO docs
-// Right association!
+/**
+ * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a non-empty list of goals.
+ *
+ * NOTE: right association!
+ */
 fun conde(vararg goals: Goal): Goal {
     require(goals.isNotEmpty()) {
         "Expected at least one goal for conde but got 0"
@@ -19,29 +22,17 @@ fun conde(vararg goals: Goal): Goal {
     return goals.reduceRight(Goal::or)
 }
 
+/**
+ * Calculates g1 &&& (g2 &&& (g3 &&& ... gn)) for a non-empty list of goals.
+ *
+ * NOTE: right association!
+ */
 fun and(vararg goals: Goal): Goal {
     require(goals.isNotEmpty()) {
         "Expected at least one goal for `and` but got 0"
     }
 
-    return goals.reduce(Goal::and)
-    /*return { state: State ->
-        val firstGoal = goals.first()
-        val firstStream = firstGoal(state)
-        if (goals.size == 1) {
-            firstStream
-        } else {
-            var result = firstStream
-
-            val otherGoals = goals.drop(1)
-            for (goal in otherGoals) {
-                result = result bind goal
-            }
-
-            result
-        }
-    }*/
-
+    return goals.reduceRight(Goal::and)
 }
 
 /**

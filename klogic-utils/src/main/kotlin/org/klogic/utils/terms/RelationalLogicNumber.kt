@@ -16,6 +16,9 @@ import org.klogic.utils.terms.Nil.nilLogicList
 import org.klogic.utils.terms.RelationalLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
 
+/**
+ * Represents classic Peano numbers.
+ */
 sealed class RelationalLogicNumber : CustomTerm<RelationalLogicNumber> {
     abstract fun toInt(): Int
 

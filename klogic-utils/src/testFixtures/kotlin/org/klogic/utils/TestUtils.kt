@@ -2,22 +2,14 @@
 
 package org.klogic.utils
 
-import org.klogic.core.ConsStream
 import org.klogic.core.Constraint
 import org.klogic.core.ReifiedTerm
 import org.klogic.core.Term
-import org.klogic.core.ThunkStream
 import org.klogic.core.Var
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.terms.LogicList
 import org.klogic.utils.terms.Symbol
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
-
-fun <T> repeat(element: T): ThunkStream<T> = ThunkStream {
-    ConsStream(element, repeat(element))
-}
-
-fun ones(): ThunkStream<Int> = repeat(1)
 
 private val digitSymbols: List<Symbol> = (0..9).map { it.toString() }.map { it.toSymbol() }
 

@@ -77,6 +77,9 @@ sealed interface Term<T : Term<T>> {
     @Suppress("UNCHECKED_CAST")
     fun <R : Term<R>> cast(): Term<R> = this as Term<R>
 
+    @Suppress("UNCHECKED_CAST")
+    fun asReified(): T = this as T
+
     infix fun `===`(other: Term<T>): Goal = this unify other
     infix fun `!==`(other: Term<T>): Goal = this ineq other
 
@@ -125,6 +128,8 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T2 : Term<T2>> cast(): Var<T2> = this as Var<T2>
+
+    override fun asReified(): T = error("Variable $this is not reified")
 
     override fun toString(): String = "_.$index"
 
