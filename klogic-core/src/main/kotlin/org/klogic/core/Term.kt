@@ -77,6 +77,9 @@ sealed interface Term<T : Term<T>> {
     @Suppress("UNCHECKED_CAST")
     fun <R : Term<R>> cast(): Term<R> = this as Term<R>
 
+    /**
+     * Considers this term as already reified.
+     */
     @Suppress("UNCHECKED_CAST")
     fun asReified(): T = this as T
 

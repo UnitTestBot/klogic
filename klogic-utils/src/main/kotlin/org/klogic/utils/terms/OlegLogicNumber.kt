@@ -9,14 +9,13 @@ import org.klogic.core.and
 import org.klogic.core.conde
 import org.klogic.core.delay
 import org.klogic.core.freshTypedVars
-import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
-import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
-import org.klogic.utils.terms.OlegLogicNumber.Companion.numberOne
-import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
-import org.klogic.utils.terms.OlegLogicNumber.Companion.toLogicNumber
-import org.klogic.utils.terms.Symbol.Companion.toSymbol
 import org.klogic.utils.terms.Cons.Companion.logicListOf
 import org.klogic.utils.terms.Nil.nilLogicList
+import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
+import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
+import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
+import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
+import org.klogic.utils.terms.Symbol.Companion.toSymbol
 
 typealias Digit = Symbol
 
@@ -36,15 +35,14 @@ data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : CustomTerm<Oleg
     override fun toString(): String = digits.toString()
 
     companion object {
-        val digitZero: Digit = "0".toSymbol()
-        val digitOne: Digit = "1".toSymbol()
+        internal val digitZero: Digit = "0".toSymbol()
+        internal val digitOne: Digit = "1".toSymbol()
 
-        val numberZero: OlegLogicNumber = nilLogicList<Digit>().toLogicNumber()
-        val numberOne: OlegLogicNumber = digitOne.toLogicList().toLogicNumber()
+        val numberZero: OlegLogicNumber = nilLogicList<Digit>().toOlegLogicNumber()
 
-        fun UInt.toLogicNumber(): OlegLogicNumber = OlegLogicNumber(toLogicList())
+        fun UInt.toOlegLogicNumber(): OlegLogicNumber = OlegLogicNumber(toLogicList())
 
-        fun Term<LogicList<Digit>>.toLogicNumber(): OlegLogicNumber = OlegLogicNumber(this)
+        fun Term<LogicList<Digit>>.toOlegLogicNumber(): OlegLogicNumber = OlegLogicNumber(this)
 
         private fun UInt.toLogicList(): LogicList<Digit> =
             when {
@@ -55,11 +53,13 @@ data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : CustomTerm<Oleg
     }
 }
 
+internal val numberOne: OlegLogicNumber = digitOne.toLogicList().toOlegLogicNumber()
+
 /**
  * Checks whether the [number] is positive.
  */
 fun posᴼ(number: Term<OlegLogicNumber>): Goal = freshTypedVars<Digit, LogicList<Digit>> { head, tail ->
-    number `===` (head + tail).toLogicNumber()
+    number `===` (head + tail).toOlegLogicNumber()
 }
 
 /**
@@ -67,7 +67,7 @@ fun posᴼ(number: Term<OlegLogicNumber>): Goal = freshTypedVars<Digit, LogicLis
  */
 fun greaterThen1ᴼ(number: Term<OlegLogicNumber>): Goal =
     freshTypedVars<Digit, Digit, LogicList<Digit>> { head, tailHead, tail ->
-        number `===` (head + (tailHead + tail)).toLogicNumber()
+        number `===` (head + (tailHead + tail)).toOlegLogicNumber()
     }
 
 /**
@@ -94,7 +94,7 @@ fun adderᴼ(d: Term<Digit>, n: Term<OlegLogicNumber>, m: Term<OlegLogicNumber>,
     (digitOne `===` d) and (n `===` numberZero) and posᴼ(m) and delay { adderᴼ(digitZero, m, numberOne, r) },
     and(
         (n `===` numberOne), (m `===` numberOne), freshTypedVars<Digit, Digit> { a, c ->
-            (logicListOf(a, c).toLogicNumber() `===` r) and fullAdderᴼ(d, digitOne, digitOne, a, c)
+            (logicListOf(a, c).toOlegLogicNumber() `===` r) and fullAdderᴼ(d, digitOne, digitOne, a, c)
         }
     ),
     (n `===` numberOne) and genAdderᴼ(d, n, m, r),
@@ -107,14 +107,14 @@ fun adderᴼ(d: Term<Digit>, n: Term<OlegLogicNumber>, m: Term<OlegLogicNumber>,
  */
 fun genAdderᴼ(d: Term<Digit>, n: Term<OlegLogicNumber>, m: Term<OlegLogicNumber>, r: Term<OlegLogicNumber>): Goal =
     freshTypedVars<Digit, Digit, Digit, Digit, LogicList<Digit>, LogicList<Digit>, LogicList<Digit>> { a, b, c, e, x, y, z ->
-        val numberX = x.toLogicNumber()
-        val numberY = y.toLogicNumber()
-        val numberZ = z.toLogicNumber()
+        val numberX = x.toOlegLogicNumber()
+        val numberY = y.toOlegLogicNumber()
+        val numberZ = z.toOlegLogicNumber()
 
-        ((a + x).toLogicNumber() `===` n) and
-                ((b + y).toLogicNumber() `===` m) and
+        ((a + x).toOlegLogicNumber() `===` n) and
+                ((b + y).toOlegLogicNumber() `===` m) and
                 posᴼ(numberY) and
-                ((c + z).toLogicNumber() `===` r) and
+                ((c + z).toOlegLogicNumber() `===` r) and
                 posᴼ(numberZ) and
                 (fullAdderᴼ(d, a, b, c, e)) and
                 (adderᴼ(e, numberX, numberY, numberZ))

@@ -1,4 +1,4 @@
-@file:Suppress("NonAsciiCharacters", "TestFunctionName")
+@file:Suppress("NonAsciiCharacters", "ClassName", "TestFunctionName")
 
 package org.klogic.utils.terms.logiclist
 

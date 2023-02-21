@@ -5,7 +5,6 @@ package org.klogic.utils.terms
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.klogic.core.CustomTerm
 import org.klogic.core.ReifiedTerm
 import org.klogic.core.Term
 import org.klogic.core.Var
@@ -14,19 +13,18 @@ import org.klogic.core.and
 import org.klogic.core.reified
 import org.klogic.core.run
 import org.klogic.utils.singleReifiedTerm
-import org.klogic.utils.terms.OlegLogicNumber.Companion.numberOne
-import org.klogic.utils.terms.OlegLogicNumber.Companion.toLogicNumber
 import org.klogic.utils.terms.Cons.Companion.logicListOf
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
+import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
 
 class OlegLogicNumberTest {
     @Test
     fun testTruePosᴼ() {
         val x = (-1).createTypedVar<OlegLogicNumber>()
 
-        val positiveNumber = 1u.toLogicNumber()
+        val positiveNumber = 1u.toOlegLogicNumber()
 
         val goal = posᴼ(positiveNumber)
 
@@ -39,7 +37,7 @@ class OlegLogicNumberTest {
     fun testFalsePosᴼ() {
         val x = (-1).createTypedVar<OlegLogicNumber>()
 
-        val zero = 0u.toLogicNumber()
+        val zero = 0u.toOlegLogicNumber()
 
         val goal = posᴼ(zero)
 
@@ -52,7 +50,7 @@ class OlegLogicNumberTest {
     fun testTrueGreaterThan1ᴼ() {
         val x = (-1).createTypedVar<OlegLogicNumber>()
 
-        val number2 = 2u.toLogicNumber()
+        val number2 = 2u.toOlegLogicNumber()
 
         val goal = greaterThen1ᴼ(number2)
 
@@ -88,9 +86,9 @@ class OlegLogicNumberTest {
 
         fun Term<OlegLogicNumber>.reifiedDigits(): List<Term<Digit>> = asReified().digits.asReified().toList()
 
-        val numberTwo = 2u.toLogicNumber()
-        val numberThree = 3u.toLogicNumber()
-        val numberFour = 4u.toLogicNumber()
+        val numberTwo = 2u.toOlegLogicNumber()
+        val numberThree = 3u.toOlegLogicNumber()
+        val numberFour = 4u.toOlegLogicNumber()
 
         /*
         ReifiedTerm(term=(_.-3, (), _.-3), constraints=[])
@@ -152,15 +150,15 @@ class OlegLogicNumberTest {
 
     @Test
     fun minusTest() {
-        val x = 8u.toLogicNumber()
+        val x = 8u.toOlegLogicNumber()
         val y = (-1).createTypedVar<OlegLogicNumber>()
-        val q = 3u.toLogicNumber()
+        val q = 3u.toOlegLogicNumber()
 
         val goal = minusᴼ(x, y, q)
 
         val run = run(9, y, goal)
 
-        val expectedTerms = listOf(5u.toLogicNumber())
+        val expectedTerms = listOf(5u.toOlegLogicNumber())
 
         assertEquals(expectedTerms.reified(), run)
     }

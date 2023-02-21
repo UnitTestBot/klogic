@@ -8,7 +8,6 @@ import org.klogic.core.Goal
 import org.klogic.core.Term
 import org.klogic.core.Var
 import org.klogic.core.freshTypedVars
-import org.klogic.core.reified
 import org.klogic.core.`|||`
 import org.klogic.utils.terms.Nil.nilLogicList
 

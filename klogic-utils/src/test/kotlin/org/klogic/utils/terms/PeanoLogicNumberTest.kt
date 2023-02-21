@@ -13,17 +13,18 @@ import org.klogic.core.run
 import org.klogic.core.unreifiedRun
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.Cons.Companion.logicListOf
-import org.klogic.utils.terms.RelationalLogicNumber.Companion.succ
+import org.klogic.utils.terms.PeanoLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
+import kotlin.system.measureTimeMillis
 
-class RelationalLogicNumberTest {
-    private val three: SuccNaturalNumber = succ(two)
-    private val four: SuccNaturalNumber = succ(three)
+class PeanoLogicNumberTest {
+    private val three: PositiveNaturalNumber = succ(two)
+    private val four: PositiveNaturalNumber = succ(three)
 
     @Test
     @DisplayName("0 + 1 == q -> q == 1")
     fun testAddᴼ1() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = addᴼ(Z, one, q)
 
@@ -37,7 +38,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("1 + 1 == q -> q == 2")
     fun testAddᴼ2() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = addᴼ(one, one, q)
 
@@ -51,7 +52,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("q + 1 == 1 -> q == 0")
     fun testAddᴼ3() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = addᴼ(q, one, one)
 
@@ -65,7 +66,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("1 + q == 1 -> q == 0")
     fun testAddᴼ4() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = addᴼ(one, q, one)
 
@@ -79,8 +80,8 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("q + r == 4")
     fun testAddᴼ5() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
-        val r = (-2).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        val r = (-2).createTypedVar<PeanoLogicNumber>()
 
         val goal = addᴼ(q, r, four)
 
@@ -102,7 +103,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("0 * 1 == q -> q == 0")
     fun testMulᴼ1() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = mulᴼ(Z, one, q)
 
@@ -116,7 +117,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("2 * 2 == q -> q == 4")
     fun testMulᴼ2() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = mulᴼ(two, two, q)
 
@@ -130,7 +131,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("q * 2 == 2 -> q == 1")
     fun testMulᴼ3() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = mulᴼ(q, two, two)
 
@@ -144,7 +145,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("q * 2 == 3 -> no answer")
     fun testMulᴼ4() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = mulᴼ(q, two, three)
 
@@ -156,7 +157,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("2 * q == 2 -> q == 1")
     fun testMulᴼ5() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
 
         val goal = mulᴼ(two, q, two)
 
@@ -170,8 +171,8 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("q * 1 == r")
     fun testMulᴼ6() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
-        val r = (-2).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        val r = (-2).createTypedVar<PeanoLogicNumber>()
 
         val goal = mulᴼ(q, one, r)
 
@@ -180,7 +181,7 @@ class RelationalLogicNumberTest {
         val reifiedTerms = unreifiedRun.reify(q).zip(unreifiedRun.reify(r))
 
         val expectedTerms = (0..9).map { int ->
-            int.toRelationalLogicNumber().reified().let { it to it }
+            int.toPeanoLogicNumber().reified().let { it to it }
         }
 
         assertEquals(expectedTerms, reifiedTerms)
@@ -189,11 +190,11 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("minmax(5, 6) == minmax(6, 5) = (5, 6)")
     fun testMinMaxᴼ() {
-        val q = (-1).createTypedVar<RelationalLogicNumber>()
-        val r = (-2).createTypedVar<RelationalLogicNumber>()
+        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        val r = (-2).createTypedVar<PeanoLogicNumber>()
 
-        val five = 5.toRelationalLogicNumber()
-        val six = 6.toRelationalLogicNumber()
+        val five = 5.toPeanoLogicNumber()
+        val six = 6.toPeanoLogicNumber()
         val goal = minMaxᴼ(q, r, five, six)
 
         val unreifiedRun = unreifiedRun(10, goal)
@@ -211,7 +212,7 @@ class RelationalLogicNumberTest {
     @Test
     @DisplayName("all permutations of [1, 2, 3]")
     fun testAllPermutations() {
-        val unsortedList = (-1).createTypedVar<LogicList<RelationalLogicNumber>>()
+        val unsortedList = (-1).createTypedVar<LogicList<PeanoLogicNumber>>()
 
         val sortedList = logicListOf(one, two, three)
 
