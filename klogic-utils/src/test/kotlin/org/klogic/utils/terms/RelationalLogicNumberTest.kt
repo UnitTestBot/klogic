@@ -12,6 +12,7 @@ import org.klogic.core.reify
 import org.klogic.core.run
 import org.klogic.core.unreifiedRun
 import org.klogic.utils.singleReifiedTerm
+import org.klogic.utils.terms.Cons.Companion.logicListOf
 import org.klogic.utils.terms.RelationalLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
 
@@ -183,5 +184,50 @@ class RelationalLogicNumberTest {
         }
 
         assertEquals(expectedTerms, reifiedTerms)
+    }
+
+    @Test
+    @DisplayName("minmax(5, 6) == minmax(6, 5) = (5, 6)")
+    fun testMinMaxᴼ() {
+        val q = (-1).createTypedVar<RelationalLogicNumber>()
+        val r = (-2).createTypedVar<RelationalLogicNumber>()
+
+        val five = 5.toRelationalLogicNumber()
+        val six = 6.toRelationalLogicNumber()
+        val goal = minMaxᴼ(q, r, five, six)
+
+        val unreifiedRun = unreifiedRun(10, goal)
+
+        val reifiedTerms = unreifiedRun.reify(q).zip(unreifiedRun.reify(r))
+
+        val expectedTerms = listOf(
+            five to six,
+            six to five
+        ).map { it.first.reified() to it.second.reified() }
+
+        assertEquals(expectedTerms, reifiedTerms)
+    }
+
+    @Test
+    @DisplayName("all permutations of [1, 2, 3]")
+    fun testAllPermutations() {
+        val unsortedList = (-1).createTypedVar<LogicList<RelationalLogicNumber>>()
+
+        val sortedList = logicListOf(one, two, three)
+
+        val goal = sortᴼ(unsortedList, sortedList)
+
+        val run = run(7, unsortedList, goal)
+
+        val expectedTerms = listOf(
+            logicListOf(one, two, three),
+            logicListOf(two, one, three),
+            logicListOf(one, three, two),
+            logicListOf(two, three, one),
+            logicListOf(three, one, two),
+            logicListOf(three, two, one),
+        ).map { it.reified() }
+
+        assertEquals(expectedTerms, run)
     }
 }

@@ -24,8 +24,8 @@ fun and(vararg goals: Goal): Goal {
         "Expected at least one goal for `and` but got 0"
     }
 
-//    return goals.reduce(Goal::and)
-    return { state: State ->
+    return goals.reduce(Goal::and)
+    /*return { state: State ->
         val firstGoal = goals.first()
         val firstStream = firstGoal(state)
         if (goals.size == 1) {
@@ -40,9 +40,7 @@ fun and(vararg goals: Goal): Goal {
 
             result
         }
-//
-//        return goals.fold({ state: State -> firstGoal(state) }) { acc: Goal, g: Goal -> acc bind g }
-    }
+    }*/
 
 }
 

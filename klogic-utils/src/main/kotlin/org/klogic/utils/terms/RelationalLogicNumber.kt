@@ -1,4 +1,4 @@
-@file:Suppress("TestFunctionName", "NonAsciiCharacters")
+@file:Suppress("NonAsciiCharacters", "FunctionName")
 
 package org.klogic.utils.terms
 
@@ -9,6 +9,10 @@ import org.klogic.core.Var
 import org.klogic.core.and
 import org.klogic.core.conde
 import org.klogic.core.freshTypedVars
+import org.klogic.utils.terms.Cons.Companion.logicListOf
+import org.klogic.utils.terms.LogicFalsᴼ.falsᴼ
+import org.klogic.utils.terms.LogicTruᴼ.truᴼ
+import org.klogic.utils.terms.Nil.nilLogicList
 import org.klogic.utils.terms.RelationalLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
 
@@ -76,5 +80,75 @@ fun mulᴼ(x: Term<RelationalLogicNumber>, y: Term<RelationalLogicNumber>, z: Te
     (x `===` Z) and (z `===` Z),
     freshTypedVars<RelationalLogicNumber, RelationalLogicNumber> { a, b ->
         (x `===` succ(a)) and addᴼ(y, b, z) and mulᴼ(a, y, b)
+    }
+)
+
+fun lessThanOrEqualᴼ(
+    x: Term<RelationalLogicNumber>,
+    y: Term<RelationalLogicNumber>,
+    b: Term<LogicBool>
+): Goal = conde(
+    (x `===` Z) and (b `===` truᴼ),
+    (x ineq Z) and (y `===` Z) and (b `===` falsᴼ),
+    freshTypedVars<RelationalLogicNumber, RelationalLogicNumber> { x1, y1 ->
+        (x `===` succ(x1)) and (y `===` succ(y1)) and lessThanOrEqualᴼ(x1, y1, b)
+    }
+)
+
+fun greaterThanOrEqualᴼ(
+    x: Term<RelationalLogicNumber>,
+    y: Term<RelationalLogicNumber>,
+    b: Term<LogicBool>
+): Goal = lessThanOrEqualᴼ(y, x, b)
+
+fun greaterThanᴼ(
+    x: Term<RelationalLogicNumber>,
+    y: Term<RelationalLogicNumber>,
+    b: Term<LogicBool>
+): Goal = conde(
+    (x ineq Z) and (y `===` Z) and (b `===` truᴼ),
+    (x `===` Z) and (b `===` falsᴼ),
+    freshTypedVars<RelationalLogicNumber, RelationalLogicNumber> { x1, y1 ->
+        (x `===` succ(x1)) and (y `===` succ(y1)) and greaterThanᴼ(x1, y1, b)
+    }
+)
+
+fun lessThanᴼ(
+    x: Term<RelationalLogicNumber>,
+    y: Term<RelationalLogicNumber>,
+    b: Term<LogicBool>
+): Goal = greaterThanᴼ(y, x, b)
+
+fun minMaxᴼ(
+    a: Term<RelationalLogicNumber>,
+    b: Term<RelationalLogicNumber>,
+    min: Term<RelationalLogicNumber>,
+    max: Term<RelationalLogicNumber>
+): Goal = conde(
+    (min `===` a) and (max `===` b) and lessThanOrEqualᴼ(a, b, truᴼ),
+    (min `===` b) and (max `===` a) and greaterThanᴼ(a, b, truᴼ),
+)
+
+fun smallestᴼ(
+    nonEmptyList: Term<LogicList<RelationalLogicNumber>>,
+    smallestElement: Term<RelationalLogicNumber>,
+    otherElements: Term<LogicList<RelationalLogicNumber>>
+): Goal = conde(
+    (nonEmptyList `===` logicListOf(smallestElement)) and (otherElements `===` nilLogicList()),
+    freshTypedVars<RelationalLogicNumber, LogicList<RelationalLogicNumber>, RelationalLogicNumber, LogicList<RelationalLogicNumber>, RelationalLogicNumber> { head, tail, smallest1, tail1, max ->
+        (otherElements `===` max + tail1) and
+                (nonEmptyList `===` head + tail) and
+                minMaxᴼ(head, smallest1, smallestElement, max) and
+                smallestᴼ(tail, smallest1, tail1)
+    }
+)
+
+fun sortᴼ(
+    unsortedList: Term<LogicList<RelationalLogicNumber>>,
+    sortedList: Term<LogicList<RelationalLogicNumber>>
+): Goal = conde(
+    (unsortedList `===` nilLogicList()) and (sortedList `===` nilLogicList()),
+    freshTypedVars<RelationalLogicNumber, LogicList<RelationalLogicNumber>, LogicList<RelationalLogicNumber>> { smallest, unsortedOthers, sortedTail ->
+        (sortedList `===` smallest + sortedTail) and sortᴼ(unsortedOthers, sortedTail) and smallestᴼ(unsortedList, smallest, unsortedOthers)
     }
 )
