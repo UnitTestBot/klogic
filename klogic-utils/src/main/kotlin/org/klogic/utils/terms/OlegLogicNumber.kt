@@ -23,11 +23,10 @@ typealias Digit = Symbol
  * Logic number represented by list of [Digit]s, from the last digit to the first.
  */
 data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : CustomTerm<OlegLogicNumber> {
-    override val subtreesToUnify: Sequence<*>
-        get() = sequenceOf(digits)
+    override val subtreesToUnify: Sequence<*> = sequenceOf(digits)
 
     @Suppress("UNCHECKED_CAST")
-    override fun constructFromSubtrees(subtrees: List<*>): CustomTerm<OlegLogicNumber> =
+    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<OlegLogicNumber> =
         OlegLogicNumber(subtrees.single() as Term<LogicList<Digit>>)
 
     operator fun get(index: Int): Term<Digit> = (digits as LogicList<Digit>)[index]

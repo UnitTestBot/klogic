@@ -108,26 +108,20 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
         (it.walk(substitution))
     } ?: this
 
-    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? =
-        if (walkedOther is Var<T>) {
-            if (this == walkedOther) {
-                unificationState
-            } else {
-                val newAssociation = this to walkedOther
-                unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
-
-                unificationState.copy(substitution = unificationState.substitution + newAssociation)
-            }
-        } else {
-            if (walkedOther.occurs(this)) {
-                null
-            } else {
-                val newAssociation = this to walkedOther
-                unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
-
-                unificationState.copy(substitution = unificationState.substitution + newAssociation)
-            }
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        if (walkedOther is Var<T> && this == walkedOther) {
+            return unificationState
         }
+
+        if (walkedOther !is Var<T> && walkedOther.occurs(this)) {
+            return null
+        }
+
+        val newAssociation = this to walkedOther
+        unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
+
+        return unificationState.copy(substitution = unificationState.substitution + newAssociation)
+    }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T2 : Term<T2>> cast(): Var<T2> = this as Var<T2>
@@ -160,10 +154,10 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
 
     override fun walk(substitution: Substitution): CustomTerm<T> {
         val walkedSubtrees = subtreesToWalk.map {
-            if (it is Term<*>) it.walk(substitution) else it
+            (it as? Term<*>)?.walk(substitution) ?: it
         }
 
-        return constructFromSubtrees(walkedSubtrees.toList())
+        return constructFromSubtrees(walkedSubtrees.asIterable())
     }
 
     override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = subtreesToUnify.any {
@@ -200,7 +194,7 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     /**
      * Constructs an instance of this term using passed [subtrees].
      */
-    fun constructFromSubtrees(subtrees: List<*>): CustomTerm<T>
+    fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<T>
 
     /**
      * Checks whether this term can be unified with [other] term. For example, different branches of the same sealed term

@@ -10,7 +10,7 @@ value class Symbol(private val name: String) : CustomTerm<Symbol> {
     override val subtreesToUnify: Sequence<*>
         get() = sequenceOf(name)
 
-    override fun constructFromSubtrees(subtrees: List<*>): CustomTerm<Symbol> =
+    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<Symbol> =
         // A performance optimization - a symbol never changes, so we can omit arguments
         this
 
