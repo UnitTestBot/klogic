@@ -4,6 +4,9 @@ package org.klogic.core
  * Stream type to represent an infinite sequence of results for a relational query.
  */
 sealed class RecursiveStream<out T> {
+    /**
+     * Returns the list of first [n] elements of this stream.
+     */
     @Suppress("NAME_SHADOWING")
     infix fun take(n: Int): List<T> {
         val result = mutableListOf<T>()
@@ -25,6 +28,9 @@ sealed class RecursiveStream<out T> {
         return result
     }
 
+    /**
+     * Concatenates two streams, the resulting stream contains elements of both input streams in an interleaved order.
+     */
     infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> {
         return when (this) {
             NilStream -> other()
@@ -37,6 +43,9 @@ sealed class RecursiveStream<out T> {
         }
     }
 
+    /**
+     * Maps function [f] over values of this stream, obtaining a stream of streams, and then flattens this stream.
+     */
     infix fun <R> bind(f: (T) -> RecursiveStream<R>): RecursiveStream<R> =
         when (this) {
             NilStream -> NilStream
