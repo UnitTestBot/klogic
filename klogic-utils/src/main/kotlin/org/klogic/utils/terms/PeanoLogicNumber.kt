@@ -30,10 +30,9 @@ sealed class PeanoLogicNumber : CustomTerm<PeanoLogicNumber> {
 object ZeroNaturalNumber : PeanoLogicNumber() {
     val Z: ZeroNaturalNumber = ZeroNaturalNumber
 
-    override val subtreesToUnify: Sequence<*>
-        get() = emptySequence<Any?>()
+    override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
 
-    override fun constructFromSubtrees(subtrees: List<*>): CustomTerm<PeanoLogicNumber> = this
+    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<PeanoLogicNumber> = this
 
     override fun isUnifiableWith(other: CustomTerm<PeanoLogicNumber>): Boolean = other is ZeroNaturalNumber
 
@@ -43,11 +42,10 @@ object ZeroNaturalNumber : PeanoLogicNumber() {
 }
 
 data class PositiveNaturalNumber(val previous: Term<PeanoLogicNumber>) : PeanoLogicNumber() {
-    override val subtreesToUnify: Sequence<*>
-        get() = sequenceOf(previous)
+    override val subtreesToUnify: Sequence<*> = sequenceOf(previous)
 
     @Suppress("UNCHECKED_CAST")
-    override fun constructFromSubtrees(subtrees: List<*>): CustomTerm<PeanoLogicNumber> =
+    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<PeanoLogicNumber> =
         PositiveNaturalNumber(subtrees.single() as Term<PeanoLogicNumber>)
 
     override fun isUnifiableWith(other: CustomTerm<PeanoLogicNumber>): Boolean = other is PositiveNaturalNumber

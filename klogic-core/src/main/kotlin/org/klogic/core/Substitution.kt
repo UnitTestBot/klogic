@@ -54,10 +54,13 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Ter
 
     fun isEmpty(): Boolean = innerSubstitution.isEmpty()
 
-    operator fun plus(pair: Pair<Var<*>, Term<*>>): Substitution = (innerSubstitution + pair).toSubstitution()
+    operator fun plus(pair: Pair<Var<*>, Term<*>>): Substitution =
+        (innerSubstitution.put(pair.first, pair.second)).toSubstitution()
 
     operator fun minus(other: Substitution): Substitution =
-        (innerSubstitution - other.innerSubstitution.keys).toSubstitution()
+        other.innerSubstitution.keys.fold(innerSubstitution) { acc, key ->
+            acc.remove(key)
+        }.toSubstitution()
 
     override fun toString(): String = innerSubstitution.toString()
 

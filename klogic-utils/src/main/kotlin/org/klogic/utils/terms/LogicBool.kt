@@ -23,10 +23,9 @@ sealed class LogicBool : CustomTerm<LogicBool> {
 object LogicFalsᴼ : LogicBool() {
     val falsᴼ: LogicFalsᴼ = this
 
-    override val subtreesToUnify: Sequence<*>
-        get() = emptySequence<Any?>()
+    override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
 
-    override fun constructFromSubtrees(subtrees: List<*>): CustomTerm<LogicBool> = this
+    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicBool> = this
 
     override fun isUnifiableWith(other: CustomTerm<LogicBool>): Boolean = other is LogicFalsᴼ
 
@@ -36,10 +35,9 @@ object LogicFalsᴼ : LogicBool() {
 object LogicTruᴼ : LogicBool() {
     val truᴼ: LogicTruᴼ = this
 
-    override val subtreesToUnify: Sequence<*>
-        get() = emptySequence<Any?>()
+    override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
 
-    override fun constructFromSubtrees(subtrees: List<*>): CustomTerm<LogicBool> = this
+    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicBool> = this
 
     override fun isUnifiableWith(other: CustomTerm<LogicBool>): Boolean = other is LogicTruᴼ
 

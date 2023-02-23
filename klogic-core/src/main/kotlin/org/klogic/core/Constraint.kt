@@ -63,7 +63,7 @@ data class InequalityConstraint internal constructor(
         } ?: RedundantConstraintResult
     }
 
-    private fun UnificationState.verify(
+    private tailrec fun UnificationState.verify(
         remainingSimplifiedConstraints: List<SingleInequalityConstraint<*>>
     ): UnificationState? {
         if (remainingSimplifiedConstraints.isEmpty()) {
@@ -79,7 +79,8 @@ data class InequalityConstraint internal constructor(
     override fun toString(): String = simplifiedConstraints.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
     companion object {
-        fun <T : Term<T>> of(variable: Var<T>, term: Term<T>): InequalityConstraint = unsafeOf(variable to term)
+        fun <T : Term<T>> of(variable: Var<T>, term: Term<T>): InequalityConstraint =
+            InequalityConstraint(listOf(SingleInequalityConstraint(variable, term)))
 
         // This method does not check that variable type equals to type of corresponding term,
         // as it has to be in SingleInequalityConstraint, so it should be used very carefully
