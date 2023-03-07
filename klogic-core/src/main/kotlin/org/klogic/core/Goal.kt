@@ -1,5 +1,8 @@
 package org.klogic.core
 
+import org.klogic.core.RecursiveStream.Companion.nil
+import org.klogic.core.RecursiveStream.Companion.single
+
 typealias Goal = (State) -> RecursiveStream<State>
 
 infix fun Goal.or(other: Goal): Goal = { st: State -> this(st) mplus ThunkStream { other(st) } }
@@ -8,6 +11,15 @@ infix fun Goal.and(other: Goal): Goal = { st: State -> this(st) bind other }
 @Suppress("DANGEROUS_CHARACTERS")
 infix fun Goal.`|||`(other: Goal): Goal = this or other
 infix fun Goal.`&&&`(other: Goal): Goal = this and other
+
+/**
+ * Represents a [Goal] that always succeeds.
+ */
+val success: Goal = { st: State -> single(st) }
+/**
+ * Represents a [Goal] that always fails.
+ */
+val failure: Goal = { _: State -> nil() }
 
 /**
  * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a non-empty list of goals.
