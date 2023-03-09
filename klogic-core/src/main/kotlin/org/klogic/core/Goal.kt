@@ -1,5 +1,8 @@
 package org.klogic.core
 
+import org.klogic.core.RecursiveStream.Companion.nil
+import org.klogic.core.RecursiveStream.Companion.single
+
 typealias Goal = (State) -> RecursiveStream<State>
 
 infix fun Goal.or(other: Goal): Goal = { st: State -> this(st) mplus ThunkStream { other(st) } }
@@ -8,6 +11,15 @@ infix fun Goal.and(other: Goal): Goal = { st: State -> this(st) bind other }
 @Suppress("DANGEROUS_CHARACTERS")
 infix fun Goal.`|||`(other: Goal): Goal = this or other
 infix fun Goal.`&&&`(other: Goal): Goal = this and other
+
+/**
+ * Represents a [Goal] that always succeeds.
+ */
+val success: Goal = { st: State -> single(st) }
+/**
+ * Represents a [Goal] that always fails.
+ */
+val failure: Goal = { _: State -> nil() }
 
 /**
  * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a non-empty list of goals.
@@ -20,6 +32,16 @@ fun conde(vararg goals: Goal): Goal {
     }
 
     return goals.reduceRight(Goal::or)
+}
+
+/**
+ * Invokes [this] [Goal]. If it succeeds, returns a [RecursiveStream] with its result.
+ * Otherwise, returns a [Goal] with result of invoking [second] [Goal].
+ */
+infix fun Goal.condo2(second: Goal): Goal = { st: State ->
+    this(st).msplit()?.let {
+        ConsStream(it.first, it.second)
+    } ?: second(st)
 }
 
 /**
@@ -39,6 +61,20 @@ fun and(vararg goals: Goal): Goal {
  * Creates a lazy [Goal] by passed goal generator [f].
  */
 fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
+
+/**
+ * Reifies walked [term] using the passed [reifier] and returns a Goal from the passed [callBack].
+ */
+fun <T : Term<T>> debugVar(
+    term: Term<T>,
+    reifier: (Term<T>) -> ReifiedTerm<T>,
+    callBack: (ReifiedTerm<T>) -> Goal
+): Goal = { st: State ->
+    val walkedTerm = term.walk(st.substitution)
+    val reified = reifier(walkedTerm)
+
+    callBack(reified)(st)
+}
 
 /**
  * Creates a lazy [Goal] by passed goal generator [f] with a fresh variable with the specified type.
@@ -83,15 +119,36 @@ fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, 
 data class ReifiedTerm<T : Term<T>>(val term: Term<T>, val constraints: Set<Constraint<*>> = emptySet())
 
 /**
+ * Returns a result of invoking [run] overloading with goals for the new fresh variable created using the passed [state].
+ * NOTE: [goals] must not be empty.
+ */
+fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
+    val term = state.freshTypedVar<T>()
+    val goalsWithCreatedFreshVar = goals.map { it(term) }.toTypedArray()
+
+    return run(count, term, goalsWithCreatedFreshVar, state)
+}
+
+/**
+ * Returns a result of invoking [run] overloading with passed goals.
+ */
+fun <T : Term<T>> run(
+    count: Int,
+    goal: (Term<T>) -> Goal,
+    vararg nextGoals: (Term<T>) -> Goal,
+    state: State = State.empty
+): List<ReifiedTerm<T>> = run(count, arrayOf(goal, *nextGoals), state)
+
+/**
  * Returns a result of invoking [run] overloading with first passed goal and the rest goals.
  * NOTE: [goals] must not be empty.
  */
-fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>): List<ReifiedTerm<T>> {
+fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
     require(goals.isNotEmpty()) {
         "Could not `run` with empty goals"
     }
 
-    return run(count, term, goals.first(), *goals.drop(1).toTypedArray())
+    return run(count, term, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
 }
 
 /**
@@ -100,28 +157,33 @@ fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>): List<Reifi
  * @see [unreifiedRun], [State.reify] and [ReifiedTerm].
  */
 // TODO pass user mapper function to stream.
-fun <T : Term<T>> run(count: Int, term: Term<T>, goal: Goal, vararg nextGoals: Goal): List<ReifiedTerm<T>> =
-    unreifiedRun(count, goal, *nextGoals).reify(term)
+fun <T : Term<T>> run(
+    count: Int,
+    term: Term<T>,
+    goal: Goal,
+    vararg nextGoals: Goal,
+    state: State = State.empty
+): List<ReifiedTerm<T>> = unreifiedRun(count, goal, nextGoals = nextGoals, state).reify(term)
 
 /**
  * Returns a result of invoking [unreifiedRun] overloading with first passed goal and the rest goals.
  * NOTE: [goals] must not be empty.
  */
-fun unreifiedRun(count: Int, goals: Array<Goal>): List<State> {
+fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): List<State> {
     require(goals.isNotEmpty()) {
         "Could not `unreifiedRun` with empty goals"
     }
 
-    return unreifiedRun(count, goals.first(), *goals.drop(1).toTypedArray())
+    return unreifiedRun(count, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
 }
 
 /**
- * Collects all passed goals to one conjunction, producing one [RecursiveStream],
+ * Collects all passed goals to one conjunction in the context of the passed [state] and producing one [RecursiveStream],
  * and returns at most [count] [State]s.
  */
-fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal): List<State> =
+fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal, state: State = State.empty): List<State> =
     nextGoals
-        .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(State.empty)
+        .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(state)
         .take(count)
 
 // TODO add simplify:

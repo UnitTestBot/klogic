@@ -31,37 +31,24 @@ sealed class RecursiveStream<out T> {
     /**
      * Concatenates two streams, the resulting stream contains elements of both input streams in an interleaved order.
      */
-    infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> {
-        return when (this) {
-            NilStream -> other()
-            is ConsStream<T> -> {
-                ConsStream(head, ThunkStream { other() mplus tail })
-            }
-            is ThunkStream -> {
-                ThunkStream { other() mplus this }
-            }
-        }
-    }
+    abstract infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T>
 
     /**
      * Maps function [f] over values of this stream, obtaining a stream of streams, and then flattens this stream.
      */
-    infix fun <R> bind(f: (T) -> RecursiveStream<R>): RecursiveStream<R> =
-        when (this) {
-            NilStream -> NilStream
-            is ConsStream<T> -> {
-                f(head) mplus ThunkStream { tail() bind f }
-            }
-            is ThunkStream<T> -> ThunkStream { elements() bind f }
-        }
+    abstract infix fun <R> bind(f: (T) -> RecursiveStream<R>): RecursiveStream<R>
 
-    private fun force(): RecursiveStream<T> =
-        when (this) {
-            is ThunkStream -> elements()
-            is ConsStream, NilStream -> this
-        }
+    /**
+     * Forces calculating elements of this Stream.
+     */
+    abstract fun force(): RecursiveStream<T>
 
-    private operator fun invoke(): RecursiveStream<T> = force()
+    /**
+     * Splits this stream to head and tail, if possible, and returns null otherwise.
+     */
+    abstract fun msplit(): Pair<T, RecursiveStream<T>>?
+
+    operator fun invoke(): RecursiveStream<T> = force()
 
     operator fun plus(head: @UnsafeVariance T): RecursiveStream<T> = ConsStream(head, this)
 
@@ -85,14 +72,41 @@ sealed class RecursiveStream<out T> {
 /**
  * Represents an empty [RecursiveStream].
  */
-private object NilStream : RecursiveStream<Nothing>()
+private object NilStream : RecursiveStream<Nothing>() {
+    override infix fun mplus(other: RecursiveStream<Nothing>): RecursiveStream<Nothing> = other.force()
+
+    override infix fun <R> bind(f: (Nothing) -> RecursiveStream<R>): RecursiveStream<R> = NilStream
+
+    override fun force(): RecursiveStream<Nothing> = this
+
+    override fun msplit(): Pair<Nothing, RecursiveStream<Nothing>>? = null
+}
 
 /**
  * Represents a [RecursiveStream], consisting of first element [head] and other elements in stream [tail].
  */
-data class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveStream<T>()
+data class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveStream<T>() {
+    override infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> =
+        ConsStream(head, ThunkStream { other() mplus tail })
+
+    override infix fun <R> bind(f: (T) -> RecursiveStream<R>): RecursiveStream<R> =
+        f(head) mplus ThunkStream { tail() bind f }
+
+    override fun force(): RecursiveStream<T> = this
+
+    override fun msplit(): Pair<T, RecursiveStream<T>> = head to tail
+}
 
 /**
  * Represents not already evaluated [RecursiveStream].
  */
-data class ThunkStream<T>(val elements: () -> RecursiveStream<T>) : RecursiveStream<T>()
+data class ThunkStream<T>(val elements: () -> RecursiveStream<T>) : RecursiveStream<T>() {
+    override infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> =
+        ThunkStream { other() mplus this }
+
+    override infix fun <R> bind(f: (T) -> RecursiveStream<R>): RecursiveStream<R> = ThunkStream { elements() bind f }
+
+    override fun force(): RecursiveStream<T> = elements()
+
+    override fun msplit(): Pair<T, RecursiveStream<T>>? = force().msplit()
+}

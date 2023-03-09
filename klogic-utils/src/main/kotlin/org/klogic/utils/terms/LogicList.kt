@@ -62,8 +62,17 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
     override fun isEmpty(): Boolean = false
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicList<T>> {
+        // We use by-hand iteration here to avoid losing performance.
+        val iterator = subtrees.iterator()
+        val head = iterator.next()
+        val tail = iterator.next()
+
+        require(!iterator.hasNext()) {
+            "Expected only head and tail for constructing Cons but got more elements"
+        }
+
         @Suppress("UNCHECKED_CAST")
-        return subtrees.first() as Term<T> + (subtrees.last() as Term<LogicList<T>>)
+        return Cons(head as Term<T>, tail as Term<LogicList<T>>)
     }
 
     // A not empty list cannot be unified with an empty list
