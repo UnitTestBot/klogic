@@ -25,6 +25,7 @@ data class LogicPair<A : Term<A>, B : Term<B>>(val first: Term<A>, val second: T
 }
 
 /**
- * Constructs [LogicPair] from [this] as [LogicPair.first] element and [that] as [LogicPair.second] element.
+ * Constructs [LogicPair] from [this] as [LogicPair.first] element and [that] as [LogicPair.second] element,
+ * just like [Pair.to] does.
  */
 infix fun <A : Term<A>, B : Term<B>> Term<A>.logicTo(that: Term<B>): LogicPair<A, B> = LogicPair(this, that)
