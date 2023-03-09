@@ -35,6 +35,16 @@ fun conde(vararg goals: Goal): Goal {
 }
 
 /**
+ * Invokes [this] [Goal]. If it succeeds, returns a [RecursiveStream] with its result.
+ * Otherwise, returns a [Goal] with result of invoking [second] [Goal].
+ */
+infix fun Goal.condo2(second: Goal): Goal = { st: State ->
+    this(st).msplit()?.let {
+        ConsStream(it.first, it.second)
+    } ?: second(st)
+}
+
+/**
  * Calculates g1 &&& (g2 &&& (g3 &&& ... gn)) for a non-empty list of goals.
  *
  * NOTE: right association!
