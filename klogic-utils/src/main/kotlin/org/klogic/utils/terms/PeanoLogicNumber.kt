@@ -9,7 +9,7 @@ import org.klogic.core.Var
 import org.klogic.core.and
 import org.klogic.core.conde
 import org.klogic.core.freshTypedVars
-import org.klogic.utils.terms.Cons.Companion.logicListOf
+import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.LogicFalsᴼ.falsᴼ
 import org.klogic.utils.terms.LogicTruᴼ.truᴼ
 import org.klogic.utils.terms.Nil.nilLogicList

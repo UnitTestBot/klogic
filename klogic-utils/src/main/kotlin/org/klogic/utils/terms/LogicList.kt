@@ -21,6 +21,20 @@ sealed class LogicList<T : Term<T>> : CustomTerm<LogicList<T>> {
     abstract fun isEmpty(): Boolean
     abstract operator fun get(index: Int): Term<T>
     abstract fun toList(): List<Term<T>>
+
+
+    companion object {
+        /**
+         * Constructs [LogicList] of the specified type from passed [terms].
+         */
+        fun <T : Term<T>> logicListOf(vararg terms: Term<T>): LogicList<T> {
+            if (terms.isEmpty()) {
+                return nilLogicList()
+            }
+
+            return Cons(terms.first(), logicListOf(*terms.drop(1).toTypedArray()))
+        }
+    }
 }
 
 /**
@@ -116,19 +130,6 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
             }
 
         return mapToString().joinToString(", ", prefix = "(", postfix = ")")
-    }
-
-    companion object {
-        /**
-         * Constructs [LogicList] of the specified type from passed [terms].
-         */
-        fun <T : Term<T>> logicListOf(vararg terms: Term<T>): LogicList<T> {
-            if (terms.isEmpty()) {
-                return nilLogicList()
-            }
-
-            return Cons(terms.first(), logicListOf(*terms.drop(1).toTypedArray()))
-        }
     }
 }
 

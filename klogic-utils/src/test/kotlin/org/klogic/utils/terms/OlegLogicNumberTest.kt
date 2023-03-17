@@ -13,7 +13,7 @@ import org.klogic.core.and
 import org.klogic.core.reified
 import org.klogic.core.run
 import org.klogic.utils.singleReifiedTerm
-import org.klogic.utils.terms.Cons.Companion.logicListOf
+import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
