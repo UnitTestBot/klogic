@@ -200,5 +200,5 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
      * Checks whether this term can be unified with [other] term. For example, different branches of the same sealed term
      * often cannot be unified - for instance, a not empty list cannot be unified with an empty list.
      */
-    infix fun isUnifiableWith(other: CustomTerm<T>): Boolean = true
+    infix fun isUnifiableWith(other: CustomTerm<T>): Boolean = javaClass == other.javaClass
 }

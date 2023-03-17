@@ -53,9 +53,6 @@ object Nil : LogicList<Nothing>() {
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicList<Nothing>> = this
 
-    // Nil cannot be unified with a not empty list
-    override fun isUnifiableWith(other: CustomTerm<LogicList<Nothing>>): Boolean = other is Nil
-
     override fun get(index: Int): Nothing = throw IndexOutOfBoundsException("This list is empty")
 
     override fun toList(): List<Term<Nothing>> = emptyList()
@@ -88,9 +85,6 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
         @Suppress("UNCHECKED_CAST")
         return Cons(head as Term<T>, tail as Term<LogicList<T>>)
     }
-
-    // A not empty list cannot be unified with an empty list
-    override fun isUnifiableWith(other: CustomTerm<LogicList<T>>): Boolean = other is Cons
 
     @Suppress("UNCHECKED_CAST")
     override fun get(index: Int): Term<T> {

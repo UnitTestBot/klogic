@@ -34,8 +34,6 @@ object ZeroNaturalNumber : PeanoLogicNumber() {
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<PeanoLogicNumber> = this
 
-    override fun isUnifiableWith(other: CustomTerm<PeanoLogicNumber>): Boolean = other is ZeroNaturalNumber
-
     override fun toInt(): Int = 0
 
     override fun toString(): String = "0"
@@ -47,8 +45,6 @@ data class PositiveNaturalNumber(val previous: Term<PeanoLogicNumber>) : PeanoLo
     @Suppress("UNCHECKED_CAST")
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<PeanoLogicNumber> =
         PositiveNaturalNumber(subtrees.single() as Term<PeanoLogicNumber>)
-
-    override fun isUnifiableWith(other: CustomTerm<PeanoLogicNumber>): Boolean = other is PositiveNaturalNumber
 
     override fun toInt(): Int {
         require(previous !is Var) {

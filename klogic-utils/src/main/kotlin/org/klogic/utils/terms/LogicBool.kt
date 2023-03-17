@@ -27,8 +27,6 @@ object LogicFalsᴼ : LogicBool() {
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicBool> = this
 
-    override fun isUnifiableWith(other: CustomTerm<LogicBool>): Boolean = other is LogicFalsᴼ
-
     override fun toBool(): Boolean = false
 }
 
@@ -38,8 +36,6 @@ object LogicTruᴼ : LogicBool() {
     override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicBool> = this
-
-    override fun isUnifiableWith(other: CustomTerm<LogicBool>): Boolean = other is LogicTruᴼ
 
     override fun toBool(): Boolean = true
 }
