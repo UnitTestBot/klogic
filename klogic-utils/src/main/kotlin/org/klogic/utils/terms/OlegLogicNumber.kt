@@ -2,7 +2,6 @@
 
 package org.klogic.utils.terms
 
-import org.klogic.core.CustomTerm
 import org.klogic.core.Goal
 import org.klogic.core.Term
 import org.klogic.core.and
@@ -22,12 +21,9 @@ typealias Digit = Symbol
 /**
  * Logic number represented by list of [Digit]s, from the last digit to the first.
  */
-data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : CustomTerm<OlegLogicNumber> {
-    override val subtreesToUnify: Sequence<*> = sequenceOf(digits)
-
-    @Suppress("UNCHECKED_CAST")
-    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<OlegLogicNumber> =
-        OlegLogicNumber(subtrees.single() as Term<LogicList<Digit>>)
+data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : UnaryTerm<OlegLogicNumber, Term<LogicList<Digit>>>() {
+    override val value: Term<LogicList<Digit>> = digits
+    override val constructor: (Term<LogicList<Digit>>) -> OlegLogicNumber = ::OlegLogicNumber
 
     operator fun get(index: Int): Term<Digit> = (digits as LogicList<Digit>)[index]
 
