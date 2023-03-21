@@ -1,6 +1,6 @@
 package org.klogic.core
 
-import org.klogic.core.RecursiveStream.Companion.nil
+import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
 
 typealias Goal = (State) -> RecursiveStream<State>
@@ -19,20 +19,14 @@ val success: Goal = { st: State -> single(st) }
 /**
  * Represents a [Goal] that always fails.
  */
-val failure: Goal = { _: State -> nil() }
+val failure: Goal = { _: State -> nilStream() }
 
 /**
- * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a non-empty list of goals.
+ * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a sequence of goals.
  *
  * NOTE: right association!
  */
-fun conde(vararg goals: Goal): Goal {
-    require(goals.isNotEmpty()) {
-        "Expected at least one goal for conde but got 0"
-    }
-
-    return goals.reduceRight(Goal::or)
-}
+fun conde(goal: Goal, vararg goals: Goal): Goal = goal or goals.reduceRight(Goal::or)
 
 /**
  * Invokes [this] [Goal]. If it succeeds, returns a [RecursiveStream] with its result.
@@ -45,17 +39,11 @@ infix fun Goal.condo2(second: Goal): Goal = { st: State ->
 }
 
 /**
- * Calculates g1 &&& (g2 &&& (g3 &&& ... gn)) for a non-empty list of goals.
+ * Calculates g1 &&& (g2 &&& (g3 &&& ... gn)) for a sequence of goals.
  *
  * NOTE: right association!
  */
-fun and(vararg goals: Goal): Goal {
-    require(goals.isNotEmpty()) {
-        "Expected at least one goal for `and` but got 0"
-    }
-
-    return goals.reduceRight(Goal::and)
-}
+fun and(goal: Goal, vararg goals: Goal): Goal = goal and goals.reduceRight(Goal::and)
 
 /**
  * Creates a lazy [Goal] by passed goal generator [f].

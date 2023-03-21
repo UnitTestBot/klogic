@@ -53,14 +53,15 @@ sealed class RecursiveStream<out T> {
     operator fun plus(head: @UnsafeVariance T): RecursiveStream<T> = ConsStream(head, this)
 
     companion object {
-        fun <T> nil(): RecursiveStream<T> = NilStream
+        fun <T> nilStream(): RecursiveStream<T> = NilStream
+        fun <T> emptyStream(): RecursiveStream<T> = nilStream()
 
-        fun <T> of(vararg elements: T): RecursiveStream<T> {
+        fun <T> streamOf(vararg elements: T): RecursiveStream<T> {
             if (elements.isEmpty()) {
                 return NilStream
             }
 
-            return elements.fold(nil()) { acc, e ->
+            return elements.fold(nilStream()) { acc, e ->
                 ConsStream(e, acc)
             }
         }

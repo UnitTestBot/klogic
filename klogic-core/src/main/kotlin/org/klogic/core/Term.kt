@@ -1,6 +1,6 @@
 package org.klogic.core
 
-import org.klogic.core.RecursiveStream.Companion.nil
+import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
 import org.klogic.unify.UnificationState
 
@@ -35,14 +35,14 @@ sealed interface Term<T : Term<T>> {
     /**
      * Tries to unify this term to [other] term of the same type.
      * If succeeds, returns a [Goal] with [RecursiveStream] containing single [State] with a corresponding [Substitution],
-     * and a goal with the [nil] stream otherwise.
+     * and a goal with the [nilStream] stream otherwise.
      *
      * @see [State.unifyWithConstraintsVerification] for details.
      */
     infix fun unify(other: Term<T>): Goal = { st: State ->
         st.unifyWithConstraintsVerification(this, other)?.let {
             single(it)
-        } ?: nil()
+        } ?: nilStream()
     }
 
     /**
@@ -57,7 +57,7 @@ sealed interface Term<T : Term<T>> {
     infix fun ineq(other: Term<T>): Goal = { st: State ->
         st.substitution.ineq(this, other).let {
             when (it) {
-                ViolatedConstraintResult -> nil()
+                ViolatedConstraintResult -> nilStream()
                 RedundantConstraintResult -> single(st)
                 is SatisfiableConstraintResult -> {
                     val newConstraint = it.simplifiedConstraint
@@ -200,5 +200,5 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
      * Checks whether this term can be unified with [other] term. For example, different branches of the same sealed term
      * often cannot be unified - for instance, a not empty list cannot be unified with an empty list.
      */
-    infix fun isUnifiableWith(other: CustomTerm<T>): Boolean = true
+    infix fun isUnifiableWith(other: CustomTerm<T>): Boolean = javaClass == other.javaClass
 }

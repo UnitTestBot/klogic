@@ -12,7 +12,7 @@ import org.klogic.core.reify
 import org.klogic.core.run
 import org.klogic.core.unreifiedRun
 import org.klogic.utils.singleReifiedTerm
-import org.klogic.utils.terms.Cons.Companion.logicListOf
+import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.PeanoLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
 import kotlin.system.measureTimeMillis

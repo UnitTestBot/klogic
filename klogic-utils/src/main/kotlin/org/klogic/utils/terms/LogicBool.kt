@@ -2,7 +2,6 @@
 
 package org.klogic.utils.terms
 
-import org.klogic.core.CustomTerm
 import org.klogic.core.Goal
 import org.klogic.core.Term
 import org.klogic.core.and
@@ -10,7 +9,7 @@ import org.klogic.core.conde
 import org.klogic.utils.terms.LogicFalsᴼ.falsᴼ
 import org.klogic.utils.terms.LogicTruᴼ.truᴼ
 
-sealed class LogicBool : CustomTerm<LogicBool> {
+sealed class LogicBool : EmptyTerm<LogicBool>() {
     abstract fun toBool(): Boolean
 
     override fun toString(): String = toBool().toString()
@@ -23,23 +22,11 @@ sealed class LogicBool : CustomTerm<LogicBool> {
 object LogicFalsᴼ : LogicBool() {
     val falsᴼ: LogicFalsᴼ = this
 
-    override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
-
-    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicBool> = this
-
-    override fun isUnifiableWith(other: CustomTerm<LogicBool>): Boolean = other is LogicFalsᴼ
-
     override fun toBool(): Boolean = false
 }
 
 object LogicTruᴼ : LogicBool() {
     val truᴼ: LogicTruᴼ = this
-
-    override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
-
-    override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicBool> = this
-
-    override fun isUnifiableWith(other: CustomTerm<LogicBool>): Boolean = other is LogicTruᴼ
 
     override fun toBool(): Boolean = true
 }

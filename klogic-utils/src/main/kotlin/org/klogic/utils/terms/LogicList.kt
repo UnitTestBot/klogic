@@ -21,6 +21,20 @@ sealed class LogicList<T : Term<T>> : CustomTerm<LogicList<T>> {
     abstract fun isEmpty(): Boolean
     abstract operator fun get(index: Int): Term<T>
     abstract fun toList(): List<Term<T>>
+
+
+    companion object {
+        /**
+         * Constructs [LogicList] of the specified type from passed [terms].
+         */
+        fun <T : Term<T>> logicListOf(vararg terms: Term<T>): LogicList<T> {
+            if (terms.isEmpty()) {
+                return nilLogicList()
+            }
+
+            return Cons(terms.first(), logicListOf(*terms.drop(1).toTypedArray()))
+        }
+    }
 }
 
 /**
@@ -38,9 +52,6 @@ object Nil : LogicList<Nothing>() {
     override val subtreesToUnify: Sequence<Term<*>> = emptySequence()
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicList<Nothing>> = this
-
-    // Nil cannot be unified with a not empty list
-    override fun isUnifiableWith(other: CustomTerm<LogicList<Nothing>>): Boolean = other is Nil
 
     override fun get(index: Int): Nothing = throw IndexOutOfBoundsException("This list is empty")
 
@@ -74,9 +85,6 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
         @Suppress("UNCHECKED_CAST")
         return Cons(head as Term<T>, tail as Term<LogicList<T>>)
     }
-
-    // A not empty list cannot be unified with an empty list
-    override fun isUnifiableWith(other: CustomTerm<LogicList<T>>): Boolean = other is Cons
 
     @Suppress("UNCHECKED_CAST")
     override fun get(index: Int): Term<T> {
@@ -116,19 +124,6 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
             }
 
         return mapToString().joinToString(", ", prefix = "(", postfix = ")")
-    }
-
-    companion object {
-        /**
-         * Constructs [LogicList] of the specified type from passed [terms].
-         */
-        fun <T : Term<T>> logicListOf(vararg terms: Term<T>): LogicList<T> {
-            if (terms.isEmpty()) {
-                return nilLogicList()
-            }
-
-            return Cons(terms.first(), logicListOf(*terms.drop(1).toTypedArray()))
-        }
     }
 }
 
