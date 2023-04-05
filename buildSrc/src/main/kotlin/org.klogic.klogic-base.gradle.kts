@@ -36,18 +36,6 @@ tasks.withType<Test> {
     systemProperty("junit.jupiter.execution.parallel.enabled", true)
 }
 
-configurations.asMap.let { configurationsMap ->
-    with(components["java"] as AdhocComponentWithVariants) {
-        listOf("testFixturesApiElements", "testFixturesRuntimeElements").forEach {
-            configurationsMap[it]?.let {
-                withVariantsFromConfiguration(it) {
-                    skip()
-                }
-            }
-        }
-    }
-}
-
 publishing {
     repositories {
         maven {
