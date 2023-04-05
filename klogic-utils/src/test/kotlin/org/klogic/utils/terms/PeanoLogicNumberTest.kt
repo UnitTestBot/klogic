@@ -7,19 +7,14 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.core.reified
-import org.klogic.core.reify
-import org.klogic.core.run
-import org.klogic.core.unreifiedRun
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.PeanoLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
-import kotlin.system.measureTimeMillis
 
 class PeanoLogicNumberTest {
-    private val three: PositiveNaturalNumber = succ(two)
-    private val four: PositiveNaturalNumber = succ(three)
+    private val three: NextNaturalNumber = succ(two)
+    private val four: NextNaturalNumber = succ(three)
 
     @Test
     @DisplayName("0 + 1 == q -> q == 1")

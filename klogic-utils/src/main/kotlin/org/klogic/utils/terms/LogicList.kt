@@ -37,6 +37,8 @@ sealed class LogicList<T : Term<T>> : CustomTerm<LogicList<T>> {
     }
 }
 
+private typealias ListTerm<T> = Term<LogicList<T>>
+
 /**
  * Represents an empty [LogicList].
  */
@@ -86,7 +88,6 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
         return Cons(head as Term<T>, tail as Term<LogicList<T>>)
     }
 
-    @Suppress("UNCHECKED_CAST")
     override fun get(index: Int): Term<T> {
         require(index >= 0) {
             "Index $index is negative"
@@ -116,7 +117,7 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
     }
 
     override fun toString(): String {
-        fun Term<LogicList<T>>.mapToString(): List<String> =
+        fun ListTerm<T>.mapToString(): List<String> =
             when (this) {
                 is Nil -> emptyList()
                 is Var<*> -> listOf(this.toString())
@@ -130,21 +131,21 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
 /**
  * Constructs [LogicList] using [this] term as a [Cons.head] and [list] as a [Cons.tail].
  */
-operator fun <T : Term<T>> Term<T>.plus(list: Term<LogicList<T>>): LogicList<T> = Cons(this, list)
-infix fun <T : Term<T>> Term<T>.cons(list: Term<LogicList<T>>): LogicList<T> = this + list
+operator fun <T : Term<T>> Term<T>.plus(list: ListTerm<T>): LogicList<T> = Cons(this, list)
+infix fun <T : Term<T>> Term<T>.cons(list: ListTerm<T>): LogicList<T> = this + list
 
 /**
  * Constructs [LogicList] consisting of only [this] element.
  */
 fun <T : Term<T>> Term<T>.toLogicList(): LogicList<T> = Cons(this, nilLogicList())
 
-fun <T : Term<T>> appendᴼ(x: Term<LogicList<T>>, y: Term<LogicList<T>>, xy: Term<LogicList<T>>): Goal =
-    ((x `===` nilLogicList())) `&&&` (y `===` xy) `|||`
+fun <T : Term<T>> appendᴼ(x: ListTerm<T>, y: ListTerm<T>, xy: ListTerm<T>): Goal =
+    ((x `===` nilLogicList()) `&&&` (y `===` xy)) `|||`
             freshTypedVars<T, LogicList<T>, LogicList<T>> { head, tail, rest ->
                 (x `===` head + tail) `&&&` (xy `===` head + rest) `&&&` appendᴼ(tail, y, rest)
             }
 
-fun <T : Term<T>> reversᴼ(x: Term<LogicList<T>>, reversed: Term<LogicList<T>>): Goal =
+fun <T : Term<T>> reversᴼ(x: ListTerm<T>, reversed: ListTerm<T>): Goal =
     ((x `===` nilLogicList()) `&&&` (reversed `===` nilLogicList())) `|||`
             freshTypedVars<T, LogicList<T>, LogicList<T>> { head, tail, rest ->
                 (x `===` head + tail) `&&&` reversᴼ(tail, rest) `&&&` appendᴼ(
