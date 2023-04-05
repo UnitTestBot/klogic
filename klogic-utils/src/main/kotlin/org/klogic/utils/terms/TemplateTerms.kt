@@ -5,7 +5,6 @@ import org.klogic.core.CustomTerm
 /**
  * A template for any [CustomTerm] that does not store any values - e.g., objects like [LogicBool].
  */
-@Suppress("RedundantModalityModifier")
 abstract class EmptyTerm<Term : CustomTerm<Term>> : CustomTerm<Term> {
     override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
 
