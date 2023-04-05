@@ -6,11 +6,16 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
+import org.klogic.utils.terms.LogicTruᴼ.truᴼ
 import org.klogic.utils.terms.PeanoLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
+import kotlin.system.measureTimeMillis
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
 
 class PeanoLogicNumberTest {
     private val three: NextNaturalNumber = succ(two)
@@ -225,5 +230,65 @@ class PeanoLogicNumberTest {
         ).map { it.reified() }
 
         assertEquals(expectedTerms, run)
+    }
+
+    @OptIn(ExperimentalTime::class)
+    @Test
+    fun testWithoutIncrementality() {
+        val number = (-1).createTypedVar<PeanoLogicNumber>()
+
+        var greaterThanOrEqualGoal = success
+        val timeouts = mutableListOf<Long>()
+
+        measureTimeMillis {
+            for (i in 0..150) {
+                val lowerBound = i.toPeanoLogicNumber()
+
+                greaterThanOrEqualGoal = greaterThanOrEqualGoal and greaterThanOrEqualᴼ(number, lowerBound, truᴼ)
+
+                val run = measureTimedValue { run(2, number, greaterThanOrEqualGoal) }
+                timeouts += run.duration.inWholeMilliseconds
+            }
+        }.let {
+            println("Without: $it ms")
+        }
+
+        timeouts.forEachIndexed { i, time ->
+            println("$i: $time ms")
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    @Test
+    fun testWithIncrementality() {
+        val number = (-1).createTypedVar<PeanoLogicNumber>()
+
+//        val greaterThanOrEqualGoal = success
+        var states = listOf(State.empty)
+        val timeouts = mutableListOf<Long>()
+        val values = mutableListOf<Term<PeanoLogicNumber>>()
+
+        measureTimeMillis {
+            for (i in 0..150) {
+                val lowerBound = i.toPeanoLogicNumber()
+
+                val run = measureTimedValue {
+                    val stream = and(states, greaterThanOrEqualᴼ(number, lowerBound, truᴼ))
+                    states = stream.take(2)
+                    values += states.map { it.reify(number) }.single().term
+                }
+                timeouts += run.duration.inWholeMilliseconds
+            }
+        }.let {
+            println("With: $it ms")
+        }
+
+        timeouts.forEachIndexed { i, time ->
+            println("$i: $time ms")
+        }
+
+        values.forEachIndexed { i, value ->
+            println("$i: $value")
+        }
     }
 }

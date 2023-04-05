@@ -2,6 +2,7 @@ package org.klogic.core
 
 import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
+import org.klogic.core.RecursiveStream.Companion.streamOf
 
 typealias Goal = (State) -> RecursiveStream<State>
 
@@ -164,6 +165,9 @@ fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): Li
 
     return unreifiedRun(count, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
 }
+
+fun and(stream: Collection<State>, goal: Goal): RecursiveStream<State> = streamOf(*stream.toTypedArray()).bind(goal)
+//fun or(stream: RecursiveStream<State>, goal: Goal): RecursiveStream<State> = TODO("Is it possible?")
 
 /**
  * Collects all passed goals to one conjunction in the context of the passed [state] and producing one [RecursiveStream],
