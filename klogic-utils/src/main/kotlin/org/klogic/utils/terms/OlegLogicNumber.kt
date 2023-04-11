@@ -25,8 +25,10 @@ private typealias DigitTerm = Term<Digit>
  * Logic number represented by list of [Digit]s, from the last digit to the first.
  */
 data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : UnaryTerm<OlegLogicNumber, Term<LogicList<Digit>>>() {
-    override val value: Term<LogicList<Digit>> = digits
-    override val constructor: (Term<LogicList<Digit>>) -> OlegLogicNumber = ::OlegLogicNumber
+    override val value: Term<LogicList<Digit>>
+        get() = digits
+    override val constructor: (Term<LogicList<Digit>>) -> OlegLogicNumber
+        get() = ::OlegLogicNumber
 
     operator fun get(index: Int): DigitTerm = (digits as LogicList<Digit>)[index]
 

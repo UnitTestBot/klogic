@@ -32,7 +32,7 @@ private typealias PeanoTerm = Term<PeanoLogicNumber>
 object ZeroNaturalNumber : PeanoLogicNumber() {
     val Z: ZeroNaturalNumber = ZeroNaturalNumber
 
-    override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
+    override val subtreesToUnify: Array<*> = emptyArray<Any?>()
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<PeanoLogicNumber> = this
 
@@ -42,7 +42,8 @@ object ZeroNaturalNumber : PeanoLogicNumber() {
 }
 
 data class NextNaturalNumber(val previous: PeanoTerm) : PeanoLogicNumber() {
-    override val subtreesToUnify: Sequence<*> = sequenceOf(previous)
+    override val subtreesToUnify: Array<*>
+        get() = arrayOf(previous)
 
     @Suppress("UNCHECKED_CAST")
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<PeanoLogicNumber> =

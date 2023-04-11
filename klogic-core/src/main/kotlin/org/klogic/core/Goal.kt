@@ -20,7 +20,7 @@ val success: Goal = { st: State -> single(st) }
 /**
  * Represents a [Goal] that always fails.
  */
-val failure: Goal = { _: State -> nilStream() }
+val failure: Goal = { nilStream() }
 
 /**
  * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a sequence of goals.
@@ -166,7 +166,18 @@ fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): Li
     return unreifiedRun(count, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
 }
 
-fun and(stream: Collection<State>, goal: Goal): RecursiveStream<State> = streamOf(*stream.toTypedArray()).bind(goal)
+fun and(states: Collection<State>, vararg goals: Goal): RecursiveStream<State> {
+    val initialStream = streamOf(*states.toTypedArray())
+
+    return goals.fold(initialStream) { stream, goal -> stream.bind(goal) }
+}
+
+/**
+ * TODO docs
+ */
+fun RecursiveStream<State>.withGoals(vararg goals: Goal, deeplyForceStream: Boolean = false): RecursiveStream<State> =
+    goals.fold(if (deeplyForceStream) forceDeeply() else this) { stream, goal -> stream.bind(goal) }
+
 //fun or(stream: RecursiveStream<State>, goal: Goal): RecursiveStream<State> = TODO("Is it possible?")
 
 /**

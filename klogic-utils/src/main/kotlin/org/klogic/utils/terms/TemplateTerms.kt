@@ -6,7 +6,7 @@ import org.klogic.core.CustomTerm
  * A template for any [CustomTerm] that does not store any values - e.g., objects like [LogicBool].
  */
 abstract class EmptyTerm<Term : CustomTerm<Term>> : CustomTerm<Term> {
-    override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
+    override val subtreesToUnify: Array<*> = emptyArray<Any?>()
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<Term> = this
 }
@@ -18,8 +18,8 @@ abstract class UnaryTerm<Term : CustomTerm<Term>, Value> : CustomTerm<Term> {
     abstract val value: Value
     abstract val constructor: (Value) -> UnaryTerm<Term, Value>
 
-    override val subtreesToUnify: Sequence<*>
-        get() = sequenceOf(value)
+    override val subtreesToUnify: Array<*>
+        get() = arrayOf<Any?>(value)
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<Term> {
         val value = subtrees.iterator().next()
@@ -38,8 +38,8 @@ abstract class BinaryTerm<Term : CustomTerm<Term>, FirstValue, SecondValue> : Cu
     abstract val second: SecondValue
     abstract val constructor: (FirstValue, SecondValue) -> BinaryTerm<Term, FirstValue, SecondValue>
 
-    override val subtreesToUnify: Sequence<*>
-        get() = sequenceOf(first, second)
+    override val subtreesToUnify: Array<*>
+        get() = arrayOf(first, second)
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<Term> {
         val (first, second) = subtrees.takeFirstAndSecondElements()
