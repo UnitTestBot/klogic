@@ -22,7 +22,6 @@ sealed class LogicList<T : Term<T>> : CustomTerm<LogicList<T>> {
     abstract operator fun get(index: Int): Term<T>
     abstract fun toList(): List<Term<T>>
 
-
     companion object {
         /**
          * Constructs [LogicList] of the specified type from passed [terms].
@@ -51,7 +50,8 @@ object Nil : LogicList<Nothing>() {
 
     override fun isEmpty(): Boolean = true
 
-    override val subtreesToUnify: Sequence<Term<*>> = emptySequence()
+    override val subtreesToUnify: Array<Term<*>>
+        get() = emptyArray()
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<LogicList<Nothing>> = this
 
@@ -67,7 +67,8 @@ object Nil : LogicList<Nothing>() {
  * and [tail] as the rest part of this list.
  */
 data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : LogicList<T>() {
-    override val subtreesToUnify: Sequence<Term<*>> = sequenceOf(head, tail)
+    override val subtreesToUnify: Array<Term<*>>
+        get() = arrayOf(head, tail)
 
     override val size: Int
         get() = 1 + tail.asReified().size

@@ -92,8 +92,11 @@ sealed interface Term<T : Term<T>> {
         /**
          * Unifies [left] with [right] by invoking non-static method.
          */
-        internal fun <T : Term<T>> unify(left: Term<T>, right: Term<T>, unificationState: UnificationState): UnificationState? =
-            left.unify(right, unificationState)
+        internal fun <T : Term<T>> unify(
+            left: Term<T>,
+            right: Term<T>,
+            unificationState: UnificationState
+        ): UnificationState? = left.unify(right, unificationState)
     }
 }
 
@@ -142,14 +145,14 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     /**
      * Returns a sequence of subtrees (of any types) that should be used in unification process.
      */
-    val subtreesToUnify: Sequence<*>
+    val subtreesToUnify: Array<*>
     /**
      * Returns a sequence of subtrees (of any types) that should be used in substituting variables.
      * Walked subtrees will be used for constructing an instance of this class.
      *
      * NOTE: for most of the classes equals to [subtreesToUnify], so by default has the same value.
      */
-    val subtreesToWalk: Sequence<*>
+    val subtreesToWalk: Array<*>
         get() = subtreesToUnify
 
     override fun walk(substitution: Substitution): CustomTerm<T> {
