@@ -43,6 +43,8 @@ sealed interface Term<T : Term<T>> {
         st.unifyWithConstraintsVerification(this, other)?.let {
             single(it)
         } ?: nilStream()
+    }.also {
+        unificationCounter++
     }
 
     /**
@@ -89,6 +91,8 @@ sealed interface Term<T : Term<T>> {
     fun isVar(): Boolean = this is Var<*>
 
     companion object {
+        var unificationCounter: Long = 0
+
         /**
          * Unifies [left] with [right] by invoking non-static method.
          */
@@ -134,7 +138,9 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
     override fun toString(): String = "_.$index"
 
     companion object {
-        fun <T :Term<T>> Int.createTypedVar(): Var<T> = Var(this)
+        var creatingCounter: Long = 0
+
+        fun <T :Term<T>> Int.createTypedVar(): Var<T> = Var<T>(this).also { creatingCounter++ }
     }
 }
 

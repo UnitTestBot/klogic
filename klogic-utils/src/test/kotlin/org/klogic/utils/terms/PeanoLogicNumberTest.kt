@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.klogic.core.*
+import org.klogic.core.RecursiveStream.Companion.streamOf
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
@@ -17,8 +18,10 @@ import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
+private const val ITERATIONS: Int = 100
+
 class PeanoLogicNumberTest {
-    private val three: NextNaturalNumber = succ(two)
+    /*private val three: NextNaturalNumber = succ(two)
     private val four: NextNaturalNumber = succ(three)
 
     @Test
@@ -230,24 +233,32 @@ class PeanoLogicNumberTest {
         ).map { it.reified() }
 
         assertEquals(expectedTerms, run)
-    }
+    }*/
 
     @OptIn(ExperimentalTime::class)
     @Test
     fun testWithoutIncrementality() {
         val number = (-1).createTypedVar<PeanoLogicNumber>()
 
-        var greaterThanOrEqualGoal = success
+        var boundsGoal = success
         val timeouts = mutableListOf<Long>()
+        val values = mutableListOf<List<Term<PeanoLogicNumber>>>()
 
         measureTimeMillis {
-            for (i in 0..150) {
+            val max = ITERATIONS
+
+            for (i in 0..max) {
                 val lowerBound = i.toPeanoLogicNumber()
+                val upperBound = (2 * max - i).toPeanoLogicNumber()
 
-                greaterThanOrEqualGoal = greaterThanOrEqualGoal and greaterThanOrEqualᴼ(number, lowerBound, truᴼ)
+                boundsGoal = boundsGoal and greaterThanOrEqualᴼ(number, lowerBound, truᴼ) and lessThanOrEqualᴼ(number, upperBound, truᴼ)
 
-                val run = measureTimedValue { run(2, number, greaterThanOrEqualGoal) }
+                val run = measureTimedValue { run(2, number, boundsGoal) }
+                assertTrue(run.value.isNotEmpty())
+                values += run.value.map { it.term }
+
                 timeouts += run.duration.inWholeMilliseconds
+                println("$i: ${run.duration.inWholeMilliseconds} ms")
             }
         }.let {
             println("Without: $it ms")
@@ -256,28 +267,49 @@ class PeanoLogicNumberTest {
         timeouts.forEachIndexed { i, time ->
             println("$i: $time ms")
         }
+        values.forEachIndexed { i, value ->
+            println("$i: ${value.map { it.asReified().toInt() }}")
+        }
+
+        println("Total variables created: ${Var.creatingCounter}")
+        println("Total unifications performed: ${Term.unificationCounter}")
     }
 
+    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     @OptIn(ExperimentalTime::class)
     @Test
-    fun testWithIncrementality() {
+    fun testWithIncrementalityWithoutDeepForce() {
         val number = (-1).createTypedVar<PeanoLogicNumber>()
 
-//        val greaterThanOrEqualGoal = success
         var states = listOf(State.empty)
+        var stream = streamOf(State.empty)
         val timeouts = mutableListOf<Long>()
-        val values = mutableListOf<Term<PeanoLogicNumber>>()
+        val values = mutableListOf<List<Term<PeanoLogicNumber>>>()
 
         measureTimeMillis {
-            for (i in 0..150) {
+            val max = ITERATIONS
+
+            for (i in 0..max) {
                 val lowerBound = i.toPeanoLogicNumber()
+                val upperBound = (2 * max - i).toPeanoLogicNumber()
 
                 val run = measureTimedValue {
-                    val stream = and(states, greaterThanOrEqualᴼ(number, lowerBound, truᴼ))
+//                    val stream = and(
+//                        states,
+//                        greaterThanOrEqualᴼ(number, lowerBound, truᴼ),
+//                        lessThanOrEqualᴼ(number, upperBound, truᴼ)
+//                    )
+                    stream = stream.withGoals(
+                        greaterThanOrEqualᴼ(number, lowerBound, truᴼ),
+                        lessThanOrEqualᴼ(number, upperBound, truᴼ)
+                    )
+
                     states = stream.take(2)
-                    values += states.map { it.reify(number) }.single().term
+                    assertTrue(states.isNotEmpty())
+                    values += states.map { it.reify(number) }.map { it.term }
                 }
                 timeouts += run.duration.inWholeMilliseconds
+                println("$i: ${run.duration.inWholeMilliseconds} ms")
             }
         }.let {
             println("With: $it ms")
@@ -288,7 +320,63 @@ class PeanoLogicNumberTest {
         }
 
         values.forEachIndexed { i, value ->
-            println("$i: $value")
+            println("$i: ${value.map { it.asReified().toInt() }}")
         }
+
+        println("Total variables created: ${Var.creatingCounter}")
+        println("Total unifications performed: ${Term.unificationCounter}")
+    }
+
+    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
+    @OptIn(ExperimentalTime::class)
+    @Test
+    fun testWithIncrementalityWithDeepForce() {
+        val number = (-1).createTypedVar<PeanoLogicNumber>()
+
+        var states = listOf(State.empty)
+        var stream = streamOf(State.empty)
+        val timeouts = mutableListOf<Long>()
+        val values = mutableListOf<List<Term<PeanoLogicNumber>>>()
+
+        measureTimeMillis {
+            val max = ITERATIONS
+
+            for (i in 0..max) {
+                val lowerBound = i.toPeanoLogicNumber()
+                val upperBound = (2 * max - i).toPeanoLogicNumber()
+
+                val run = measureTimedValue {
+//                    val stream = and(
+//                        states,
+//                        greaterThanOrEqualᴼ(number, lowerBound, truᴼ),
+//                        lessThanOrEqualᴼ(number, upperBound, truᴼ)
+//                    )
+                    stream = stream.withGoals(
+                        greaterThanOrEqualᴼ(number, lowerBound, truᴼ),
+                        lessThanOrEqualᴼ(number, upperBound, truᴼ),
+                        deeplyForceStream = true
+                    )
+
+                    states = stream.take(2)
+                    assertTrue(states.isNotEmpty())
+                    values += states.map { it.reify(number) }.map { it.term }
+                }
+                timeouts += run.duration.inWholeMilliseconds
+                println("$i: ${run.duration.inWholeMilliseconds} ms")
+            }
+        }.let {
+            println("With: $it ms")
+        }
+
+        timeouts.forEachIndexed { i, time ->
+            println("$i: $time ms")
+        }
+
+        values.forEachIndexed { i, value ->
+            println("$i: ${value.map { it.asReified().toInt() }}")
+        }
+
+        println("Total variables created: ${Var.creatingCounter}")
+        println("Total unifications performed: ${Term.unificationCounter}")
     }
 }

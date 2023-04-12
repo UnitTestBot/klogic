@@ -52,6 +52,19 @@ sealed interface RecursiveStream<out T> {
 
     operator fun plus(head: @UnsafeVariance T): RecursiveStream<T> = ConsStream(head, this)
 
+    /**
+     * TODO
+     */
+    fun forceDeeply(): RecursiveStream<T> {
+        var forced = force()
+
+        while (forced is ThunkStream) {
+            forced = forced.force()
+        }
+
+        return forced
+    }
+
     companion object {
         fun <T> nilStream(): RecursiveStream<T> = NilStream
         fun <T> emptyStream(): RecursiveStream<T> = nilStream()
