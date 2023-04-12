@@ -6,22 +6,23 @@ import org.klogic.unify.toUnificationState
 /**
  * Represents a result of invoking [Constraint.verify].
  */
-sealed class ConstraintVerificationResult<out T : Constraint<*>>
+sealed interface ConstraintVerificationResult<out T : Constraint<*>>
 
 /**
  * Represents a successful [Constraint.verify] result, with [simplifiedConstraint] as a simplified passed constraint.
  */
-class SatisfiableConstraintResult<out T : Constraint<*>>(val simplifiedConstraint: T) : ConstraintVerificationResult<T>()
+@JvmInline
+value class SatisfiableConstraintResult<out T : Constraint<*>>(val simplifiedConstraint: T) : ConstraintVerificationResult<T>
 
 /**
  * Represents a [Constraint.verify] result that indicates that constraint can never be violated, i.e., it is redundant.
  */
-object RedundantConstraintResult : ConstraintVerificationResult<Nothing>()
+object RedundantConstraintResult : ConstraintVerificationResult<Nothing>
 
 /**
  * Represents a failed [Constraint.verify] result — means that constraint is violated.
  */
-object ViolatedConstraintResult : ConstraintVerificationResult<Nothing>()
+object ViolatedConstraintResult : ConstraintVerificationResult<Nothing>
 
 /**
  * Represents any constraint that could be applied for the current [Goal].
