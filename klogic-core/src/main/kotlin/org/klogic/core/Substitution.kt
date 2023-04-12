@@ -9,7 +9,8 @@ import org.klogic.unify.toUnificationState
 /**
  * Represents an immutable association of [Var]s with arbitrary types and bounded [Term]s with corresponding types.
  */
-data class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Term<*>> = persistentHashMapOf()) {
+@JvmInline
+value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Term<*>> = persistentHashMapOf()) {
     constructor(map: Map<Var<*>, Term<*>>) : this(map.toPersistentHashMap())
 
     /**
@@ -45,7 +46,7 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Ter
 
     operator fun contains(key: Var<*>): Boolean = containsKey(key)
 
-    fun containsKey(key: Var<*>): Boolean = innerSubstitution.containsKey(key)
+    private fun containsKey(key: Var<*>): Boolean = innerSubstitution.containsKey(key)
 
     fun containsValue(value: Term<*>): Boolean = innerSubstitution.containsValue(value)
 
@@ -65,7 +66,6 @@ data class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Ter
     override fun toString(): String = innerSubstitution.toString()
 
     companion object {
-        @Suppress("PrivatePropertyName")
         private val EMPTY_SUBSTITUTION = Substitution()
 
         val empty: Substitution = EMPTY_SUBSTITUTION

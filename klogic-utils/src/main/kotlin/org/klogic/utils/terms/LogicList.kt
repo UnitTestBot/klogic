@@ -140,6 +140,11 @@ infix fun <T : Term<T>> Term<T>.cons(list: ListTerm<T>): LogicList<T> = this + l
  */
 fun <T : Term<T>> Term<T>.toLogicList(): LogicList<T> = Cons(this, nilLogicList())
 
+/**
+ * Constructs a [LogicList] from the elements of [this] [Collection].
+ */
+fun <T : Term<T>> Collection<Term<T>>.toLogicList(): LogicList<T> = LogicList.logicListOf(*this.toTypedArray())
+
 fun <T : Term<T>> appendᴼ(x: ListTerm<T>, y: ListTerm<T>, xy: ListTerm<T>): Goal =
     ((x `===` nilLogicList()) `&&&` (y `===` xy)) `|||`
             freshTypedVars<T, LogicList<T>, LogicList<T>> { head, tail, rest ->

@@ -33,6 +33,10 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+
+    // TODO use it only for huge tests
+    maxHeapSize = "4096m"
+
     systemProperty("junit.jupiter.execution.parallel.enabled", true)
 }
 

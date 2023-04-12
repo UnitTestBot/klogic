@@ -3,7 +3,7 @@ package org.klogic.core
 /**
  * Stream type to represent an infinite sequence of results for a relational query.
  */
-sealed class RecursiveStream<out T> {
+sealed interface RecursiveStream<out T> {
     /**
      * Returns the list of first [n] elements of this stream.
      */
@@ -31,22 +31,22 @@ sealed class RecursiveStream<out T> {
     /**
      * Concatenates two streams, the resulting stream contains elements of both input streams in an interleaved order.
      */
-    abstract infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T>
+    infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T>
 
     /**
      * Maps function [f] over values of this stream, obtaining a stream of streams, and then flattens this stream.
      */
-    abstract infix fun <R> bind(f: (T) -> RecursiveStream<R>): RecursiveStream<R>
+    infix fun <R> bind(f: (T) -> RecursiveStream<R>): RecursiveStream<R>
 
     /**
      * Forces calculating elements of this Stream.
      */
-    abstract fun force(): RecursiveStream<T>
+    fun force(): RecursiveStream<T>
 
     /**
      * Splits this stream to head and tail, if possible, and returns null otherwise.
      */
-    abstract fun msplit(): Pair<T, RecursiveStream<T>>?
+    fun msplit(): Pair<T, RecursiveStream<T>>?
 
     operator fun invoke(): RecursiveStream<T> = force()
 
@@ -73,7 +73,7 @@ sealed class RecursiveStream<out T> {
 /**
  * Represents an empty [RecursiveStream].
  */
-private object NilStream : RecursiveStream<Nothing>() {
+private object NilStream : RecursiveStream<Nothing> {
     override infix fun mplus(other: RecursiveStream<Nothing>): RecursiveStream<Nothing> = other.force()
 
     override infix fun <R> bind(f: (Nothing) -> RecursiveStream<R>): RecursiveStream<R> = NilStream
@@ -86,7 +86,7 @@ private object NilStream : RecursiveStream<Nothing>() {
 /**
  * Represents a [RecursiveStream], consisting of first element [head] and other elements in stream [tail].
  */
-data class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveStream<T>() {
+data class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveStream<T> {
     override infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> =
         ConsStream(head, ThunkStream { other() mplus tail })
 
@@ -101,7 +101,8 @@ data class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveS
 /**
  * Represents not already evaluated [RecursiveStream].
  */
-data class ThunkStream<T>(val elements: () -> RecursiveStream<T>) : RecursiveStream<T>() {
+@JvmInline
+value class ThunkStream<T>(val elements: () -> RecursiveStream<T>) : RecursiveStream<T> {
     override infix fun mplus(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> =
         ThunkStream { other() mplus this }
 
