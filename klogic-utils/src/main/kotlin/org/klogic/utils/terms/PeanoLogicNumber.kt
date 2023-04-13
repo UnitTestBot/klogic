@@ -23,14 +23,16 @@ sealed class PeanoLogicNumber : CustomTerm<PeanoLogicNumber> {
     abstract fun toInt(): Int
 
     companion object {
-        fun succ(number: Term<PeanoLogicNumber>): PositiveNaturalNumber = PositiveNaturalNumber(number)
+        fun succ(number: PeanoTerm): NextNaturalNumber = NextNaturalNumber(number)
     }
 }
+
+private typealias PeanoTerm = Term<PeanoLogicNumber>
 
 object ZeroNaturalNumber : PeanoLogicNumber() {
     val Z: ZeroNaturalNumber = ZeroNaturalNumber
 
-    override val subtreesToUnify: Sequence<*> = emptySequence<Any?>()
+    override val subtreesToUnify: Array<*> = emptyArray<Any?>()
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<PeanoLogicNumber> = this
 
@@ -39,12 +41,13 @@ object ZeroNaturalNumber : PeanoLogicNumber() {
     override fun toString(): String = "0"
 }
 
-data class PositiveNaturalNumber(val previous: Term<PeanoLogicNumber>) : PeanoLogicNumber() {
-    override val subtreesToUnify: Sequence<*> = sequenceOf(previous)
+data class NextNaturalNumber(val previous: PeanoTerm) : PeanoLogicNumber() {
+    override val subtreesToUnify: Array<*>
+        get() = arrayOf(previous)
 
     @Suppress("UNCHECKED_CAST")
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<PeanoLogicNumber> =
-        PositiveNaturalNumber(subtrees.single() as Term<PeanoLogicNumber>)
+        NextNaturalNumber(subtrees.single() as PeanoTerm)
 
     override fun toInt(): Int {
         require(previous !is Var) {
@@ -63,69 +66,48 @@ internal val two: PeanoLogicNumber = succ(one)
 
 fun Int.toPeanoLogicNumber(): PeanoLogicNumber = if (this <= 0) Z else succ((this - 1).toPeanoLogicNumber())
 
-fun addᴼ(x: Term<PeanoLogicNumber>, y: Term<PeanoLogicNumber>, z: Term<PeanoLogicNumber>): Goal = conde(
-    (x `===` Z) and (z `===` y),
+fun addᴼ(x: PeanoTerm, y: PeanoTerm, result: PeanoTerm): Goal = conde(
+    (x `===` Z) and (result `===` y),
     freshTypedVars<PeanoLogicNumber, PeanoLogicNumber> { a, b ->
-        (x `===` succ(a)) and (z `===` succ(b)) and addᴼ(a, y, b)
+        (x `===` succ(a)) and (result `===` succ(b)) and addᴼ(a, y, b)
     }
 )
 
-fun mulᴼ(x: Term<PeanoLogicNumber>, y: Term<PeanoLogicNumber>, z: Term<PeanoLogicNumber>): Goal = conde(
-    (x `===` Z) and (z `===` Z),
+fun mulᴼ(x: PeanoTerm, y: PeanoTerm, result: PeanoTerm): Goal = conde(
+    (x `===` Z) and (result `===` Z),
     freshTypedVars<PeanoLogicNumber, PeanoLogicNumber> { a, b ->
-        (x `===` succ(a)) and addᴼ(y, b, z) and mulᴼ(a, y, b)
+        (x `===` succ(a)) and addᴼ(y, b, result) and mulᴼ(a, y, b)
     }
 )
 
-fun lessThanOrEqualᴼ(
-    x: Term<PeanoLogicNumber>,
-    y: Term<PeanoLogicNumber>,
-    b: Term<LogicBool>
-): Goal = conde(
-    (x `===` Z) and (b `===` truᴼ),
-    (x ineq Z) and (y `===` Z) and (b `===` falsᴼ),
+fun lessThanOrEqualᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = conde(
+    (x `===` Z) and (result `===` truᴼ),
+    (x ineq Z) and (y `===` Z) and (result `===` falsᴼ),
     freshTypedVars<PeanoLogicNumber, PeanoLogicNumber> { x1, y1 ->
-        (x `===` succ(x1)) and (y `===` succ(y1)) and lessThanOrEqualᴼ(x1, y1, b)
+        (x `===` succ(x1)) and (y `===` succ(y1)) and lessThanOrEqualᴼ(x1, y1, result)
     }
 )
 
-fun greaterThanOrEqualᴼ(
-    x: Term<PeanoLogicNumber>,
-    y: Term<PeanoLogicNumber>,
-    b: Term<LogicBool>
-): Goal = lessThanOrEqualᴼ(y, x, b)
+fun greaterThanOrEqualᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = lessThanOrEqualᴼ(y, x, result)
 
-fun greaterThanᴼ(
-    x: Term<PeanoLogicNumber>,
-    y: Term<PeanoLogicNumber>,
-    b: Term<LogicBool>
-): Goal = conde(
-    (x ineq Z) and (y `===` Z) and (b `===` truᴼ),
-    (x `===` Z) and (b `===` falsᴼ),
+fun greaterThanᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = conde(
+    (x ineq Z) and (y `===` Z) and (result `===` truᴼ),
+    (x `===` Z) and (result `===` falsᴼ),
     freshTypedVars<PeanoLogicNumber, PeanoLogicNumber> { x1, y1 ->
-        (x `===` succ(x1)) and (y `===` succ(y1)) and greaterThanᴼ(x1, y1, b)
+        (x `===` succ(x1)) and (y `===` succ(y1)) and greaterThanᴼ(x1, y1, result)
     }
 )
 
-fun lessThanᴼ(
-    x: Term<PeanoLogicNumber>,
-    y: Term<PeanoLogicNumber>,
-    b: Term<LogicBool>
-): Goal = greaterThanᴼ(y, x, b)
+fun lessThanᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = greaterThanᴼ(y, x, result)
 
-fun minMaxᴼ(
-    a: Term<PeanoLogicNumber>,
-    b: Term<PeanoLogicNumber>,
-    min: Term<PeanoLogicNumber>,
-    max: Term<PeanoLogicNumber>
-): Goal = conde(
+fun minMaxᴼ(a: PeanoTerm, b: PeanoTerm, min: PeanoTerm, max: PeanoTerm): Goal = conde(
     (min `===` a) and (max `===` b) and lessThanOrEqualᴼ(a, b, truᴼ),
     (min `===` b) and (max `===` a) and greaterThanᴼ(a, b, truᴼ),
 )
 
 fun smallestᴼ(
     nonEmptyList: Term<LogicList<PeanoLogicNumber>>,
-    smallestElement: Term<PeanoLogicNumber>,
+    smallestElement: PeanoTerm,
     otherElements: Term<LogicList<PeanoLogicNumber>>
 ): Goal = conde(
     (nonEmptyList `===` logicListOf(smallestElement)) and (otherElements `===` nilLogicList()),
@@ -137,10 +119,7 @@ fun smallestᴼ(
     }
 )
 
-fun sortᴼ(
-    unsortedList: Term<LogicList<PeanoLogicNumber>>,
-    sortedList: Term<LogicList<PeanoLogicNumber>>
-): Goal = conde(
+fun sortᴼ(unsortedList: Term<LogicList<PeanoLogicNumber>>, sortedList: Term<LogicList<PeanoLogicNumber>>): Goal = conde(
     (unsortedList `===` nilLogicList()) and (sortedList `===` nilLogicList()),
     freshTypedVars<PeanoLogicNumber, LogicList<PeanoLogicNumber>, LogicList<PeanoLogicNumber>> { smallest, unsortedOthers, sortedTail ->
         (sortedList `===` smallest + sortedTail) and sortᴼ(unsortedOthers, sortedTail) and smallestᴼ(unsortedList, smallest, unsortedOthers)

@@ -18,14 +18,19 @@ import org.klogic.utils.terms.Symbol.Companion.toSymbol
 
 typealias Digit = Symbol
 
+private typealias OlegTerm = Term<OlegLogicNumber>
+private typealias DigitTerm = Term<Digit>
+
 /**
  * Logic number represented by list of [Digit]s, from the last digit to the first.
  */
 data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : UnaryTerm<OlegLogicNumber, Term<LogicList<Digit>>>() {
-    override val value: Term<LogicList<Digit>> = digits
-    override val constructor: (Term<LogicList<Digit>>) -> OlegLogicNumber = ::OlegLogicNumber
+    override val value: Term<LogicList<Digit>>
+        get() = digits
+    override val constructor: (Term<LogicList<Digit>>) -> OlegLogicNumber
+        get() = ::OlegLogicNumber
 
-    operator fun get(index: Int): Term<Digit> = (digits as LogicList<Digit>)[index]
+    operator fun get(index: Int): DigitTerm = (digits as LogicList<Digit>)[index]
 
     override fun toString(): String = digits.toString()
 
@@ -53,14 +58,14 @@ internal val numberOne: OlegLogicNumber = digitOne.toLogicList().toOlegLogicNumb
 /**
  * Checks whether the [number] is positive.
  */
-fun posᴼ(number: Term<OlegLogicNumber>): Goal = freshTypedVars<Digit, LogicList<Digit>> { head, tail ->
+fun posᴼ(number: OlegTerm): Goal = freshTypedVars<Digit, LogicList<Digit>> { head, tail ->
     number `===` (head + tail).toOlegLogicNumber()
 }
 
 /**
  * Checks whether [number] is greater than 1.
  */
-fun greaterThen1ᴼ(number: Term<OlegLogicNumber>): Goal =
+fun greaterThen1ᴼ(number: OlegTerm): Goal =
     freshTypedVars<Digit, Digit, LogicList<Digit>> { head, tailHead, tail ->
         number `===` (head + (tailHead + tail)).toOlegLogicNumber()
     }
@@ -68,7 +73,7 @@ fun greaterThen1ᴼ(number: Term<OlegLogicNumber>): Goal =
 /**
  * Satisfies [b] + [x] + [y] = [r] + 2 * [c]
  */
-fun fullAdderᴼ(b: Term<Digit>, x: Term<Digit>, y: Term<Digit>, r: Term<Digit>, c: Term<Digit>): Goal = conde(
+fun fullAdderᴼ(b: DigitTerm, x: DigitTerm, y: DigitTerm, r: DigitTerm, c: DigitTerm): Goal = conde(
     (digitZero `===` b) and (digitZero `===` x) and (digitZero `===` y) and (digitZero `===` r) and (digitZero `===` c),
     (digitOne `===` b) and (digitZero `===` x) and (digitZero `===` y) and (digitOne `===` r) and (digitZero `===` c),
     (digitZero `===` b) and (digitOne `===` x) and (digitZero `===` y) and (digitOne `===` r) and (digitZero `===` c),
@@ -82,7 +87,7 @@ fun fullAdderᴼ(b: Term<Digit>, x: Term<Digit>, y: Term<Digit>, r: Term<Digit>,
 /**
  * Adds a carry-in bit [d] to arbitrarily large numbers [n] and [m] to produce a number [r].
  */
-fun adderᴼ(d: Term<Digit>, n: Term<OlegLogicNumber>, m: Term<OlegLogicNumber>, r: Term<OlegLogicNumber>): Goal = conde(
+fun adderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal = conde(
     (digitZero `===` d) and (m `===` numberZero) and (n `===` r),
     (digitZero `===` d) and (n `===` numberZero) and (m `===` r) and posᴼ(m),
     (digitOne `===` d) and (m `===` numberZero) and delay { adderᴼ(digitZero, n, numberOne, r) },
@@ -100,7 +105,7 @@ fun adderᴼ(d: Term<Digit>, n: Term<OlegLogicNumber>, m: Term<OlegLogicNumber>,
 /**
  * Satisfies [d] + [n] + [m] = [r], provided that [m] and [r] are greater than 1 and [n] is positive.
  */
-fun genAdderᴼ(d: Term<Digit>, n: Term<OlegLogicNumber>, m: Term<OlegLogicNumber>, r: Term<OlegLogicNumber>): Goal =
+fun genAdderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal =
     freshTypedVars<Digit, Digit, Digit, Digit, LogicList<Digit>, LogicList<Digit>, LogicList<Digit>> { a, b, c, e, x, y, z ->
         val numberX = x.toOlegLogicNumber()
         val numberY = y.toOlegLogicNumber()
@@ -115,7 +120,6 @@ fun genAdderᴼ(d: Term<Digit>, n: Term<OlegLogicNumber>, m: Term<OlegLogicNumbe
                 (adderᴼ(e, numberX, numberY, numberZ))
     }
 
-fun plusᴼ(n: Term<OlegLogicNumber>, m: Term<OlegLogicNumber>, k: Term<OlegLogicNumber>): Goal =
-    adderᴼ(digitZero, n, m, k)
+fun plusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal = adderᴼ(digitZero, n, m, result)
 
-fun minusᴼ(n: Term<OlegLogicNumber>, m: Term<OlegLogicNumber>, k: Term<OlegLogicNumber>): Goal = plusᴼ(m, k, n)
+fun minusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal = plusᴼ(m, result, n)

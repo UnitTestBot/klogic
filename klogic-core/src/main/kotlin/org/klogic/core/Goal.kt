@@ -19,7 +19,7 @@ val success: Goal = { st: State -> single(st) }
 /**
  * Represents a [Goal] that always fails.
  */
-val failure: Goal = { _: State -> nilStream() }
+val failure: Goal = { nilStream() }
 
 /**
  * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a sequence of goals.

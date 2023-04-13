@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.klogic"
-version = "0.1.3"
+version = "0.1.4"
 
 repositories {
     mavenCentral()
@@ -33,6 +33,10 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+
+    // TODO use it only for huge tests
+    maxHeapSize = "4096m"
+
     systemProperty("junit.jupiter.execution.parallel.enabled", true)
 }
 

@@ -19,6 +19,8 @@ sealed class LogicBool : EmptyTerm<LogicBool>() {
     }
 }
 
+private typealias BoolTerm = Term<LogicBool>
+
 object LogicFalsᴼ : LogicBool() {
     val falsᴼ: LogicFalsᴼ = this
 
@@ -36,14 +38,14 @@ fun notᴼ(x: Term<LogicBool>, y: Term<LogicBool>): Goal = conde(
     (y `===` falsᴼ) and (x `===` truᴼ),
 )
 
-fun orᴼ(x: Term<LogicBool>, y: Term<LogicBool>, z: Term<LogicBool>): Goal = conde(
+fun orᴼ(x: BoolTerm, y: BoolTerm, z: BoolTerm): Goal = conde(
     (x `===` falsᴼ) and (y `===` falsᴼ) and (z `===` falsᴼ),
     (x `===` falsᴼ) and (y `===` truᴼ) and (z `===` truᴼ),
     (x `===` truᴼ) and (y `===` falsᴼ) and (z `===` truᴼ),
     (x `===` truᴼ) and (y `===` truᴼ) and (z `===` truᴼ),
 )
 
-fun andᴼ(x: Term<LogicBool>, y: Term<LogicBool>, z: Term<LogicBool>): Goal = conde(
+fun andᴼ(x: BoolTerm, y: BoolTerm, z: BoolTerm): Goal = conde(
     (x `===` falsᴼ) and (y `===` falsᴼ) and (z `===` falsᴼ),
     (x `===` falsᴼ) and (y `===` truᴼ) and (z `===` falsᴼ),
     (x `===` truᴼ) and (y `===` falsᴼ) and (z `===` falsᴼ),
