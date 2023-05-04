@@ -3,6 +3,7 @@ package org.klogic.core
 import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
 import org.klogic.unify.UnificationState
+import org.klogic.unify.unify
 
 /**
  * Represents a logic object. It has only one direct implementor - [Var], user terms have to implement [CustomTerm].
@@ -19,16 +20,6 @@ sealed interface Term<T : Term<T>> {
      * Substitutes all occurrences of this term to its value in [substitution].
      */
     fun walk(substitution: Substitution): Term<T>
-
-    /**
-     * Tries to unify this term and [other] term with the same type using passed [unificationState].
-     */
-    fun unify(other: Term<T>, unificationState: UnificationState): UnificationState? {
-        val walkedThis = walk(unificationState.substitution)
-        val walkedOther = other.walk(unificationState.substitution)
-
-        return walkedThis.unifyImpl(walkedOther, unificationState)
-    }
 
     fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState?
 
@@ -92,15 +83,6 @@ sealed interface Term<T : Term<T>> {
 
     companion object {
         var unificationCounter: Long = 0
-
-        /**
-         * Unifies [left] with [right] by invoking non-static method.
-         */
-        internal fun <T : Term<T>> unify(
-            left: Term<T>,
-            right: Term<T>,
-            unificationState: UnificationState
-        ): UnificationState? = left.unify(right, unificationState)
     }
 }
 
@@ -189,8 +171,7 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
             currentUnificationState = currentUnificationState?.let {
                 // Terms should be unified, non-logic types should be checked for equality
                 if (curSubtree is Term<*>) {
-                    // Cannot use non-static method here because of type inference error
-                    Term.unify(curSubtree, (otherSubtree as Term<*>).cast(), it)
+                    unify(curSubtree, (otherSubtree as Term<*>).cast(), it)
                 } else {
                     currentUnificationState.takeIf { curSubtree == otherSubtree }
                 }

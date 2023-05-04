@@ -25,7 +25,7 @@ value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Te
      *
      * @see [UnificationState.unify] for details.
      */
-    fun <T : Term<T>> ineq(left: Term<T>, right: Term<T>): ConstraintVerificationResult<InequalityConstraint> {
+    internal fun <T : Term<T>> ineq(left: Term<T>, right: Term<T>): ConstraintVerificationResult<InequalityConstraint> {
         return toUnificationState().unify(left, right)?.let { unificationState ->
             val delta = unificationState.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
@@ -44,7 +44,7 @@ value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Te
         } ?: RedundantConstraintResult // Failed unification means this constraint is never violated, i.e., it is redundant.
     }
 
-    operator fun contains(key: Var<*>): Boolean = containsKey(key)
+    internal operator fun contains(key: Var<*>): Boolean = containsKey(key)
 
     private fun containsKey(key: Var<*>): Boolean = innerSubstitution.containsKey(key)
 
@@ -74,4 +74,4 @@ value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Te
     }
 }
 
-fun Map<Var<*>, Term<*>>.toSubstitution(): Substitution = Substitution(this)
+internal fun Map<Var<*>, Term<*>>.toSubstitution(): Substitution = Substitution(this)

@@ -5,8 +5,9 @@ import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.collections.immutable.toPersistentHashSet
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.unify.toUnificationState
+import org.klogic.unify.unify
 
-typealias InequalityConstraints = PersistentSet<InequalityConstraint>
+internal typealias InequalityConstraints = PersistentSet<InequalityConstraint>
 
 /**
  * Represents a current immutable state of current [run] expression with [substitution] for [Var]s,
@@ -31,7 +32,7 @@ data class State(
      * Returns a new variable [Var] of the specified type with [lastCreatedVariableIndex] as its [Var.index]
      * and increments [lastCreatedVariableIndex].
      */
-    fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
+    internal fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
 
     /**
      * Returns a new state with [substitution] extended with passed not already presented association
@@ -52,9 +53,9 @@ data class State(
      * If constraints verification succeeds, returns new [State] with unification substitution and verified simplified
      * constraints, and returns null otherwise.
      */
-    fun <T : Term<T>> unifyWithConstraintsVerification(left: Term<T>, right: Term<T>): State? {
+    internal fun <T : Term<T>> unifyWithConstraintsVerification(left: Term<T>, right: Term<T>): State? {
         val unificationState = toUnificationState()
-        val successfulUnificationState = left.unify(right, unificationState) ?: return null
+        val successfulUnificationState = unify(left, right, unificationState) ?: return null
 
         if (successfulUnificationState.substitutionDifference.isEmpty()) {
             // Empty difference allows us to not verify constraints as they should be already verified.
@@ -80,7 +81,7 @@ data class State(
  * Verifies [constraints] with passed [substitution] by invoking [Constraint.verify] - if any constraint is violated, returns null.
  * Otherwise, returns a [Collection] of new constraints simplified according to theirs [Constraint.verify].
  */
-fun <T : Constraint<T>> verify(substitution: Substitution, constraints: Collection<T>): Collection<T>? {
+private fun <T : Constraint<T>> verify(substitution: Substitution, constraints: Collection<T>): Collection<T>? {
     val simplifiedConstraints = mutableSetOf<T>()
 
     for (constraint in constraints) {

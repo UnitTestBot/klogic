@@ -1,9 +1,6 @@
 package org.klogic.unify
 
-import org.klogic.core.State
-import org.klogic.core.Substitution
-import org.klogic.core.Term
-import org.klogic.core.Var
+import org.klogic.core.*
 
 /**
  * Represents a mutable state of unification process.
@@ -18,12 +15,13 @@ data class UnificationState(
     /**
      * Tries to unify two terms of the same type [left] and [right] using [substitution].
      */
-    fun <T : Term<T>> unify(left: Term<T>, right: Term<T>): UnificationState? = left.unify(right, this)
+    fun <T : Term<T>> unify(left: Term<T>, right: Term<T>): UnificationState? = unify(left, right, this)
 
     companion object {
         private val EMPTY: UnificationState = UnificationState()
 
-        val empty: UnificationState = EMPTY
+        val empty: UnificationState
+            get() = EMPTY
     }
 }
 
@@ -48,3 +46,13 @@ fun <T : Term<T>> unifyWithConstraintsVerification(
     left: Term<T>,
     right: Term<T>
 ): State? = State.empty.unifyWithConstraintsVerification(left, right)
+
+/**
+ * Tries to unify [first] term and [second] terms of the same type using passed [unificationState].
+ */
+internal fun <T : Term<T>> unify(first: Term<T>, second: Term<T>, unificationState: UnificationState): UnificationState? {
+    val walkedThis = first.walk(unificationState.substitution)
+    val walkedOther = second.walk(unificationState.substitution)
+
+    return walkedThis.unifyImpl(walkedOther, unificationState)
+}
