@@ -18,6 +18,7 @@ import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
+import kotlin.math.pow
 
 class OlegLogicNumberTest {
     @Test
@@ -52,7 +53,7 @@ class OlegLogicNumberTest {
 
         val number2 = 2u.toOlegLogicNumber()
 
-        val goal = greaterThen1ᴼ(number2)
+        val goal = greaterThan1ᴼ(number2)
 
         val firstTenPositiveNumbers = run(10, x, goal)
 
@@ -63,7 +64,7 @@ class OlegLogicNumberTest {
     fun testFalseGreaterThan1ᴼ() {
         val x = (-1).createTypedVar<OlegLogicNumber>()
 
-        val goal = greaterThen1ᴼ(numberOne)
+        val goal = greaterThan1ᴼ(numberOne)
 
         val firstTenPositiveNumbers = run(10, x, goal)
 
@@ -161,5 +162,134 @@ class OlegLogicNumberTest {
         val expectedTerms = listOf(5u.toOlegLogicNumber())
 
         assertEquals(expectedTerms.reified(), run)
+    }
+
+    @Test
+    fun forwardMultiplicationTest() {
+        for (i in 0u until 5u) {
+            val first = i.toOlegLogicNumber()
+
+            for (j in 0u until 5u) {
+                val second = j.toOlegLogicNumber()
+                val result = (-1).createTypedVar<OlegLogicNumber>()
+
+                val run = run(10, result, mulᴼ(first, second, result))
+
+                val expectedResult = i * j
+                assertEquals(expectedResult, run.singleReifiedTerm.asReified().toUInt())
+            }
+        }
+    }
+
+    @Test
+    fun backwardFirstArgumentMultiplicationTest() {
+        for (i in 1u..5u) {
+            val first = (-1).createTypedVar<OlegLogicNumber>()
+
+            for (j in 1u..5u) {
+                val second = j.toOlegLogicNumber()
+                val result = (i * j).toOlegLogicNumber()
+
+                val run = run(10, first, mulᴼ(first, second, result))
+
+                assertEquals(i, run.singleReifiedTerm.asReified().toUInt())
+            }
+        }
+    }
+
+    @Test
+    fun backwardSecondArgumentMultiplicationTest() {
+        for (i in 1u..5u) {
+            val first = i.toOlegLogicNumber()
+
+            for (j in 1u..5u) {
+                val result = (i * j).toOlegLogicNumber()
+                val second = (-1).createTypedVar<OlegLogicNumber>()
+
+                val run = run(10, second, mulᴼ(first, second, result))
+
+                assertEquals(j, run.singleReifiedTerm.asReified().toUInt())
+            }
+        }
+    }
+
+    @Test
+    fun testFactors() {
+        val result = 12u.toOlegLogicNumber()
+        val firstFactor = (-1).createTypedVar<OlegLogicNumber>()
+        val secondFactor = (-2).createTypedVar<OlegLogicNumber>()
+
+        val run = run(10, firstFactor, mulᴼ(firstFactor, secondFactor, result))
+
+        val expectedTerms = listOf(1, 12, 2, 4, 3, 6).map { it.toUInt().toOlegLogicNumber().reified() }
+        assertEquals(expectedTerms, run)
+    }
+
+    @Test
+    fun testBackwardDivision() {
+        for (i in 1u..5u) {
+            val m = i.toOlegLogicNumber()
+            for (j in 1u..5u) {
+                val q = j.toOlegLogicNumber()
+                for (k in 0u until i) {
+                    val r = k.toOlegLogicNumber()
+
+                    val n = (-1).createTypedVar<OlegLogicNumber>()
+                    val run = run(10, n, divᴼ(n, m, q, r))
+
+                    val expectedN = i * j + k
+                    assertEquals(expectedN.toOlegLogicNumber(), run.singleReifiedTerm)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun forwardExponentTest() {
+        for (i in 1u..3u) {
+            val base = i.toOlegLogicNumber()
+
+            for (j in 1u..5u) {
+                val power = j.toOlegLogicNumber()
+                val result = (-1).createTypedVar<OlegLogicNumber>()
+
+                val run = run(10, result, expᴼ(base, power, result))
+
+                val expectedResult = i.toDouble().pow(j.toInt()).toUInt()
+                assertEquals(expectedResult, run.singleReifiedTerm.asReified().toUInt())
+            }
+        }
+    }
+
+    @Test
+    fun backwardFirstArgumentExponentTest() {
+        for (i in 1u..3u) {
+            val base = (-1).createTypedVar<OlegLogicNumber>()
+
+            for (j in 1u..5u) {
+                val power = j.toOlegLogicNumber()
+                val result = i.toDouble().pow(j.toInt()).toUInt().toOlegLogicNumber()
+
+                val run = run(10, base, expᴼ(base, power, result))
+
+                assertEquals(i, run.singleReifiedTerm.asReified().toUInt())
+            }
+        }
+    }
+
+    @Test
+    fun backwardSecondArgumentExponentTest() {
+        for (i in 2u..3u) {
+            val base = i.toOlegLogicNumber()
+
+            for (j in 1u..4u) {
+                val power = (-1).createTypedVar<OlegLogicNumber>()
+                val result = i.toDouble().pow(j.toInt()).toUInt().toOlegLogicNumber()
+
+                val run = run(10, power, expᴼ(base, power, result))
+
+                assertEquals(j, run.singleReifiedTerm.asReified().toUInt())
+            }
+        }
     }
 }

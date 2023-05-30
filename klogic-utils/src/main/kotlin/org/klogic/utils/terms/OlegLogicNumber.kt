@@ -2,12 +2,7 @@
 
 package org.klogic.utils.terms
 
-import org.klogic.core.Goal
-import org.klogic.core.Term
-import org.klogic.core.and
-import org.klogic.core.conde
-import org.klogic.core.delay
-import org.klogic.core.freshTypedVars
+import org.klogic.core.*
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.Nil.nilLogicList
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
@@ -32,6 +27,10 @@ data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : UnaryTerm<OlegL
 
     operator fun get(index: Int): DigitTerm = (digits as LogicList<Digit>)[index]
 
+    fun toUInt(): UInt = digits.asReified().toList().foldIndexed(0u) { i, accumulator, current ->
+        accumulator or (current.asReified().toString().toUInt() shl i)
+    }
+
     override fun toString(): String = digits.toString()
 
     companion object {
@@ -54,6 +53,8 @@ data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : UnaryTerm<OlegL
 }
 
 internal val numberOne: OlegLogicNumber = digitOne.toLogicList().toOlegLogicNumber()
+internal val numberTwo: OlegLogicNumber = (digitZero + digitOne.toLogicList()).toOlegLogicNumber()
+internal val numberThree: OlegLogicNumber = (digitOne + digitOne.toLogicList()).toOlegLogicNumber()
 
 /**
  * Checks whether the [number] is positive.
@@ -65,7 +66,7 @@ fun posᴼ(number: OlegTerm): Goal = freshTypedVars<Digit, LogicList<Digit>> { h
 /**
  * Checks whether [number] is greater than 1.
  */
-fun greaterThen1ᴼ(number: OlegTerm): Goal =
+fun greaterThan1ᴼ(number: OlegTerm): Goal =
     freshTypedVars<Digit, Digit, LogicList<Digit>> { head, tailHead, tail ->
         number `===` (head + (tailHead + tail)).toOlegLogicNumber()
     }
@@ -98,8 +99,8 @@ fun adderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal = conde(
         }
     ),
     (n `===` numberOne) and genAdderᴼ(d, n, m, r),
-    (m `===` numberOne) and greaterThen1ᴼ(n) and greaterThen1ᴼ(r) and delay { adderᴼ(d, numberOne, n, r) },
-    greaterThen1ᴼ(n) and genAdderᴼ(d, n, m, r)
+    (m `===` numberOne) and greaterThan1ᴼ(n) and greaterThan1ᴼ(r) and delay { adderᴼ(d, numberOne, n, r) },
+    greaterThan1ᴼ(n) and genAdderᴼ(d, n, m, r)
 )
 
 /**
@@ -123,3 +124,341 @@ fun genAdderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal =
 fun plusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal = adderᴼ(digitZero, n, m, result)
 
 fun minusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal = plusᴼ(m, result, n)
+
+// `=lo`
+fun hasTheSameLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
+    (n `===` numberZero) and (m `===` numberZero),
+    (n `===` numberOne) and (m `===` numberOne),
+    freshTypedVars<Digit, LogicList<Digit>, Digit, LogicList<Digit>> { a, x, b, y ->
+        val numberX = x.toOlegLogicNumber()
+        val numberY = y.toOlegLogicNumber()
+
+        ((a + x).toOlegLogicNumber() `===` n) and posᴼ(numberX) and
+        ((b + y).toOlegLogicNumber() `===` m) and posᴼ(numberY) and
+        hasTheSameLengthᴼ(numberX, numberY)
+    }
+)
+
+// `<lo`
+fun hasTheSmallerLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
+    (n `===` numberZero) and posᴼ(m),
+    (n `===` numberOne) and greaterThan1ᴼ(m),
+    freshTypedVars<Digit, LogicList<Digit>, Digit, LogicList<Digit>> { a, x, b, y ->
+        val numberX = x.toOlegLogicNumber()
+        val numberY = y.toOlegLogicNumber()
+
+        ((a + x).toOlegLogicNumber() `===` n) and posᴼ(numberX) and
+        ((b + y).toOlegLogicNumber() `===` m) and posᴼ(numberY) and
+        hasTheSmallerLengthᴼ(numberX, numberY)
+    }
+)
+
+// `<=lo`
+fun hasTheSmallerOrSameLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
+    hasTheSameLengthᴼ(n, m),
+    hasTheSmallerLengthᴼ(n, m)
+)
+
+// `<o`
+fun lessThanᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
+    hasTheSmallerLengthᴼ(n, m),
+    hasTheSameLengthᴼ(n, m) and freshTypedVars<OlegLogicNumber> { x -> posᴼ(x) and plusᴼ(n, x, m) }
+)
+
+// `<=o`
+fun lessThanOrEqualᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
+    n `===` m,
+    lessThanᴼ(n, m)
+)
+
+fun mulᴼ(n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = conde(
+    (n `===` numberZero) and (p `===` numberZero),
+    posᴼ(n) and (m `===` numberZero) and (p `===` numberZero),
+    (n `===` numberOne) and posᴼ(m) and (m `===` p),
+    greaterThan1ᴼ(n) and (m `===` numberOne) and (n `===` p),
+    freshTypedVars<LogicList<Digit>, LogicList<Digit>> { x, z ->
+        val numberX = x.toOlegLogicNumber()
+        val numberZ = z.toOlegLogicNumber()
+
+        and(
+            (n `===` (digitZero + x).toOlegLogicNumber()) and posᴼ(numberX),
+            (p `===` (digitZero + z).toOlegLogicNumber()) and posᴼ(numberZ),
+            greaterThan1ᴼ(m),
+            mulᴼ(numberX, m, numberZ)
+        )
+    },
+    freshTypedVars<LogicList<Digit>, LogicList<Digit>> { x, y ->
+        val numberX = x.toOlegLogicNumber()
+        val numberY = y.toOlegLogicNumber()
+
+        and(
+            (n `===` (digitOne + x).toOlegLogicNumber()) and posᴼ(numberX),
+            (m `===` (digitZero + y).toOlegLogicNumber()) and posᴼ(numberY),
+            mulᴼ(m, n, p)
+        )
+    },
+    freshTypedVars<LogicList<Digit>, LogicList<Digit>> { x, y ->
+        val numberX = x.toOlegLogicNumber()
+        val numberY = y.toOlegLogicNumber()
+
+        and(
+            (n `===` (digitOne + x).toOlegLogicNumber()) and posᴼ(numberX),
+            (m `===` (digitOne + y).toOlegLogicNumber()) and posᴼ(numberY),
+            oddMulᴼ(numberX, n, m, p)
+        )
+    }
+)
+
+fun oddMulᴼ(x: OlegTerm, n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = freshTypedVars<LogicList<Digit>> { q ->
+    val number = q.toOlegLogicNumber()
+
+    and(
+        boundMulᴼ(number, p, n, m),
+        mulᴼ(x, m, number),
+        plusᴼ((digitZero + q).toOlegLogicNumber(), m, p)
+    )
+}
+
+fun boundMulᴼ(q: OlegTerm, p: OlegTerm, n: OlegTerm, m: OlegTerm): Goal = conde(
+    (q `===` numberZero) and posᴼ(p),
+    freshTypedVars<Digit, Digit, Digit, Digit, LogicList<Digit>, LogicList<Digit>, LogicList<Digit>> { a0, a1, a2, a3, x, y, z ->
+        val numberX = x.toOlegLogicNumber()
+        val numberY = y.toOlegLogicNumber()
+        val numberZ = z.toOlegLogicNumber()
+
+        and(
+            q `===` (a0 + x).toOlegLogicNumber(),
+            p `===` (a1 + y).toOlegLogicNumber(),
+            conde(
+                and(
+                    n `===` numberZero,
+                    m `===` (a2 + z).toOlegLogicNumber(),
+                    boundMulᴼ(numberX, numberY, numberZ, numberZero)
+                ),
+                and(
+                    n `===` (a3 + z).toOlegLogicNumber(),
+                    boundMulᴼ(numberX, numberY, numberZ, m)
+                )
+            )
+        )
+    }
+)
+
+fun repeatedMulᴼ(n: OlegTerm, q: OlegTerm, nq: OlegTerm): Goal = conde(
+    posᴼ(n) and (q `===` numberZero) and (nq `===` numberOne),
+    (q `===` numberOne) and (n `===` nq),
+    and(
+        greaterThan1ᴼ(q),
+        freshTypedVars<OlegLogicNumber, OlegLogicNumber> { q1, nq1 ->
+            and(
+                plusᴼ(q1, numberOne, q),
+                repeatedMulᴼ(n, q1, nq1),
+                mulᴼ(nq1, n, nq)
+            )
+        }
+    )
+)
+
+/**
+ * Satisfies n = m * q + r, with 0 <= r < m.
+ */
+fun divᴼ(n: OlegTerm, m: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
+    (r `===` n) and (q `===` numberZero) and lessThanᴼ(n, m),
+    and(
+        (q `===` numberOne) and hasTheSameLengthᴼ(n, m) and plusᴼ(r, m, n),
+        lessThanᴼ(r, m)
+    ),
+    and(
+        hasTheSmallerLengthᴼ(m, n),
+        lessThanᴼ(r, m),
+        posᴼ(q),
+        freshTypedVars<LogicList<Digit>, OlegLogicNumber, LogicList<Digit>, OlegLogicNumber, OlegLogicNumber, OlegLogicNumber, OlegLogicNumber, LogicList<Digit>> { nh, nl, qh, ql, qlm, qlmr, rr, rh ->
+            val numberNh = nh.toOlegLogicNumber()
+            val numberQh = qh.toOlegLogicNumber()
+            val numberRh = rh.toOlegLogicNumber()
+
+            and(
+                splitᴼ(n, r, nl, nh),
+                splitᴼ(q, r, ql, qh),
+                conde(
+                    and(
+                        numberNh `===` numberZero,
+                        numberQh `===` numberZero,
+                        minusᴼ(nl, r, qlm),
+                        mulᴼ(ql, m, qlm)
+                    ),
+                    and(
+                        posᴼ(numberNh),
+                        mulᴼ(ql, m, qlm),
+                        plusᴼ(qlm, r, qlmr),
+                        minusᴼ(qlmr, nl, rr),
+                        splitᴼ(rr, r, numberZero, rh),
+                        divᴼ(numberNh, m, numberQh, numberRh)
+                    )
+                )
+            )
+        }
+    )
+)
+
+/**
+ *  Splits a binary numeral at a given length:
+ * (split o n r l h) holds if n = 2^{s+1} · l + h where s = ∥r∥ and h < 2^{s+1}.
+ */
+fun splitᴼ(n: OlegTerm, r: OlegTerm, l: OlegTerm, h: Term<LogicList<Digit>>): Goal = conde(
+    (n `===` numberZero) and (h `===` nilLogicList()) and (l `===` numberZero),
+    freshTypedVars<Digit, LogicList<Digit>> { b, n1 ->
+        val concatenation = b + n1
+
+        and(
+            n `===` (digitZero + concatenation).toOlegLogicNumber(),
+            r `===` numberZero,
+            h `===` concatenation,
+            l `===` numberZero
+        )
+    },
+    freshTypedVars<LogicList<Digit>> { n1 ->
+        and(
+            n `===` (digitOne + n1).toOlegLogicNumber(),
+            (r `===` numberZero),
+            (n1 `===` h),
+            (l `===` numberOne)
+        )
+    },
+    freshTypedVars<Digit, LogicList<Digit>, Digit, LogicList<Digit>> { b, n1, a, r1 ->
+        val concatenation = b + n1
+
+        and(
+            n `===` (digitZero + concatenation).toOlegLogicNumber(),
+            r `===` (a + r1).toOlegLogicNumber(),
+            l `===` numberZero,
+            splitᴼ(concatenation.toOlegLogicNumber(), r1.toOlegLogicNumber(), numberZero, h)
+        )
+    },
+    freshTypedVars<LogicList<Digit>, Digit, LogicList<Digit>> { n1, a, r1 ->
+        and(
+            n `===` (digitOne + n1).toOlegLogicNumber(),
+            r `===` (a + r1).toOlegLogicNumber(),
+            l `===` numberOne,
+            splitᴼ(n1.toOlegLogicNumber(), r1.toOlegLogicNumber(), numberZero, h)
+        )
+    },
+    freshTypedVars<Digit, LogicList<Digit>, Digit, LogicList<Digit>, LogicList<Digit>> { b, n1, a, r1, l1 ->
+        val numberL1 = l1.toOlegLogicNumber()
+
+        and(
+            n `===` (b + n1).toOlegLogicNumber(),
+            r `===` (a + r1).toOlegLogicNumber(),
+            l `===` (b + l1).toOlegLogicNumber(),
+            posᴼ(numberL1),
+            splitᴼ(n1.toOlegLogicNumber(), r1.toOlegLogicNumber(), numberL1, h)
+        )
+    },
+)
+
+@Suppress("NAME_SHADOWING")
+fun logᴼ(n: OlegTerm, b: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
+    (n `===` numberOne) and posᴼ(b) and (q `===` numberZero) and (r `===` numberZero),
+    (q `===` numberZero) and lessThanᴼ(n, b) and plusᴼ(r, numberOne, n),
+    (q `===` numberOne) and greaterThan1ᴼ(b) and hasTheSameLengthᴼ(n, b) and plusᴼ(r, b, n),
+    (b `===` numberOne) and posᴼ(q) and plusᴼ(r, numberOne, n),
+    (b `===` numberZero) and posᴼ(q) and (r `===` n),
+    (b `===` numberTwo) and freshTypedVars<Digit, Digit, LogicList<Digit>> { a, ad, dd ->
+        val numberDd = dd.toOlegLogicNumber()
+
+        and(
+            posᴼ(numberDd),
+            n `===` (a + (ad + dd)).toOlegLogicNumber(),
+            exp2ᴼ(n, nilLogicList(), q),
+            freshTypedVars<LogicList<Digit>> { s ->
+                splitᴼ(n, numberDd, r, s)
+            }
+        )
+    },
+    and(
+        freshTypedVars<Digit, Digit, Digit, LogicList<Digit>> { a, ad, add, ddd ->
+            conde(
+                b `===` numberThree,
+                b `===` (a + (ad + (add + ddd))).toOlegLogicNumber()
+            )
+        },
+        hasTheSmallerLengthᴼ(b, n),
+        freshTypedVars<OlegLogicNumber, OlegLogicNumber, OlegLogicNumber, OlegLogicNumber, OlegLogicNumber, OlegLogicNumber, OlegLogicNumber> { bw1, bw, nw, nw1, ql1, ql, s ->
+            and(
+                exp2ᴼ(b, nilLogicList(), bw1),
+                plusᴼ(bw1, numberOne, bw),
+                hasTheSmallerLengthᴼ(q, n),
+                freshTypedVars<OlegLogicNumber, OlegLogicNumber> { q1, bwq1 ->
+                    and(
+                        plusᴼ(q, numberOne, q1),
+                        mulᴼ(bw, q1, bwq1),
+                        lessThanᴼ(nw1, bwq1)
+                    )
+                },
+                exp2ᴼ(n, nilLogicList(), nw1),
+                plusᴼ(nw1, numberOne, nw),
+                divᴼ(nw, bw, ql1, s),
+                plusᴼ(ql, numberOne, ql1),
+                hasTheSmallerOrSameLengthᴼ(ql, q),
+                freshTypedVars<OlegLogicNumber, OlegLogicNumber, OlegLogicNumber, OlegLogicNumber, OlegLogicNumber> { bql, qh, s, qdh, qd ->
+                    and(
+                        repeatedMulᴼ(b, ql, bql),
+                        divᴼ(nw, bw1, qh, s),
+                        plusᴼ(ql, qdh, qh),
+                        plusᴼ(ql, qd, q),
+                        lessThanOrEqualᴼ(qd, qdh),
+                        freshTypedVars<OlegLogicNumber, OlegLogicNumber, OlegLogicNumber> { bqd, bq1, bq ->
+                            and(
+                                repeatedMulᴼ(b, qd, bqd),
+                                mulᴼ(bql, bqd, bq),
+                                mulᴼ(b, bq, bq1),
+                                plusᴼ(bq, r, n),
+                                lessThanᴼ(n, bq1)
+                            )
+                        }
+                    )
+                }
+            )
+        }
+    )
+)
+
+fun exp2ᴼ(n: OlegTerm, b: Term<LogicList<Digit>>, q: OlegTerm): Goal {
+    val numberB = b.toOlegLogicNumber()
+
+    return conde(
+        (n `===` numberOne) and (q `===` numberZero),
+        and(
+            greaterThan1ᴼ(n) and (q `===` numberOne),
+            freshTypedVars<OlegLogicNumber> { s ->
+                splitᴼ(n, numberB, s, logicListOf(digitOne))
+            }
+        ),
+        freshTypedVars<LogicList<Digit>, LogicList<Digit>> { q1, b2 ->
+            val numberQ1 = q1.toOlegLogicNumber()
+
+            and(
+                q `===` (digitZero + q1).toOlegLogicNumber(),
+                posᴼ(numberQ1),
+                hasTheSmallerLengthᴼ(numberB, n),
+                appendᴼ(b, digitOne + b, b2),
+                exp2ᴼ(n, b2, numberQ1)
+            )
+        },
+        freshTypedVars<LogicList<Digit>, LogicList<Digit>, LogicList<Digit>, OlegLogicNumber> { q1, nh, b2, s ->
+            val numberQ1 = q1.toOlegLogicNumber()
+            val numberNh = nh.toOlegLogicNumber()
+
+            and(
+                q `===` (digitOne + q1).toOlegLogicNumber(),
+                posᴼ(numberQ1),
+                posᴼ(numberNh),
+                splitᴼ(n, numberB, s, nh),
+                appendᴼ(b, digitOne + b, b2),
+                exp2ᴼ(numberNh, b2, numberQ1)
+            )
+        }
+    )
+}
+
+fun expᴼ(b: OlegTerm, q: OlegTerm, n: OlegTerm): Goal = logᴼ(n, b, q, numberZero)
