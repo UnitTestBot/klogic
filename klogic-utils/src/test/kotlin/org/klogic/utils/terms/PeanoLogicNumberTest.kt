@@ -6,11 +6,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.core.reified
-import org.klogic.core.reify
-import org.klogic.core.run
-import org.klogic.core.unreifiedRun
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.PeanoLogicNumber.Companion.succ
@@ -206,6 +203,16 @@ class PeanoLogicNumberTest {
         ).map { it.first.reified() to it.second.reified() }
 
         assertEquals(expectedTerms, reifiedTerms)
+    }
+
+    @Test
+    fun testSorting() {
+        val numbers = listOf(4, 3, 2, 1).map { it.toPeanoLogicNumber() }.toLogicList()
+
+        val run = run(1, { sorted: Term<LogicList<PeanoLogicNumber>> -> sortᴼ(numbers, sorted) })
+
+        val expected = (1..4).map { it.toPeanoLogicNumber() }.toLogicList().reified()
+        assertEquals(expected, run.single())
     }
 
     @Test
