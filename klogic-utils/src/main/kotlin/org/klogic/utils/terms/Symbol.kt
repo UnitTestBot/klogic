@@ -7,7 +7,7 @@ import org.klogic.core.CustomTerm
  */
 @JvmInline
 value class Symbol(private val name: String) : CustomTerm<Symbol> {
-    override val subtreesToUnify: Array<*>
+    override val subtreesToUnify: Array<String>
         get() = arrayOf(name)
 
     override fun constructFromSubtrees(subtrees: Iterable<*>): CustomTerm<Symbol> =

@@ -8,7 +8,7 @@ import org.klogic.utils.terms.logᴼ
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.infra.Blackhole
 
-open class LogarithmBenchmark : KlogicBenchmark() {
+open class LogarithmBenchmark : AbstractKlogicBenchmark() {
     @Benchmark
     fun benchmarkLogarithm(bh: Blackhole) {
         val n = 14u.toOlegLogicNumber()

@@ -8,4 +8,4 @@ import java.util.concurrent.TimeUnit
 @Fork(1)
 @Measurement(iterations = 10, timeUnit = TimeUnit.MILLISECONDS)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-abstract class KlogicBenchmark
+abstract class AbstractKlogicBenchmark

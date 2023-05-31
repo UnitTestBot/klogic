@@ -8,7 +8,7 @@ import org.klogic.utils.terms.expᴼ
 import org.openjdk.jmh.annotations.*
 import org.openjdk.jmh.infra.Blackhole
 
-open class ExponentBenchmark : KlogicBenchmark() {
+open class ExponentBenchmark : AbstractKlogicBenchmark() {
     @Benchmark
     fun benchmarkExponent(bh: Blackhole) {
         val base = 3u.toOlegLogicNumber()
