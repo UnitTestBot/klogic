@@ -220,12 +220,12 @@ class PeanoLogicNumberTest {
         val run = run(7, unsortedList, goal)
 
         val expectedTerms = listOf(
-            logicListOf(one, two, three),
             logicListOf(two, one, three),
-            logicListOf(one, three, two),
-            logicListOf(two, three, one),
+            logicListOf(one, two, three),
             logicListOf(three, one, two),
+            logicListOf(two, three, one),
             logicListOf(three, two, one),
+            logicListOf(one, three, two),
         ).map { it.reified() }
 
         assertEquals(expectedTerms, run)

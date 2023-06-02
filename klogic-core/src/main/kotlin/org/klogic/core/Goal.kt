@@ -5,7 +5,14 @@ import org.klogic.core.RecursiveStream.Companion.single
 
 typealias Goal = (State) -> RecursiveStream<State>
 
-infix fun Goal.or(other: Goal): Goal = { st: State -> this(st) mplus ThunkStream { other(st) } }
+private infix fun (Goal).disjunctionBase(other: Goal) = { st: State ->
+    this(st) mplus ThunkStream { other(st) }
+}
+
+infix fun Goal.or(other: Goal): Goal = { newState: State ->
+    ThunkStream{ disjunctionBase(other)(newState) }
+}
+
 infix fun Goal.and(other: Goal): Goal = { st: State -> this(st) bind other }
 
 @Suppress("DANGEROUS_CHARACTERS")
@@ -25,8 +32,26 @@ val failure: Goal = { nilStream() }
  * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a sequence of goals.
  *
  * NOTE: right association!
+ *
+ * Such implementation is taken from [OCanren](https://github.com/PLTools/OCanren/blob/b1a4cb7b2fb7fd22e026f4a010cc21ce79676705/src/core/Core.ml#L498)
  */
-fun conde(goal: Goal, vararg goals: Goal): Goal = goal or goals.reduceRight(Goal::or)
+fun conde(goal: Goal, vararg goals: Goal): Goal = { state: State ->
+    val allGoals = listOf(goal, *goals)
+
+    fun inner(innerGoals: List<Goal>): Goal = when {
+        innerGoals.size == 1 -> innerGoals.first()
+        innerGoals.size > 1 -> {
+            val nextGoals = innerGoals.subList(1, innerGoals.size)
+
+            innerGoals.first() disjunctionBase inner(nextGoals)
+        }
+        else -> error("Unexpected empty goals for inner disjunction in conde")
+    }
+
+    val innerResult = inner(allGoals)
+
+    ThunkStream { innerResult(state) }
+}
 
 /**
  * Invokes [this] [Goal]. If it succeeds, returns a [RecursiveStream] with its result.
