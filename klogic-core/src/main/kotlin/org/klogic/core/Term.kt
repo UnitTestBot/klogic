@@ -4,6 +4,8 @@ import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
 import org.klogic.unify.UnificationState
 
+var unificationCounter: Int = 0
+
 /**
  * Represents a logic object. It has only one direct implementor - [Var], user terms have to implement [CustomTerm].
  *

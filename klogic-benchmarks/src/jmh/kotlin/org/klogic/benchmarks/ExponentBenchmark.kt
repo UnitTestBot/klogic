@@ -2,6 +2,7 @@ package org.klogic.benchmarks
 
 import org.klogic.core.Term
 import org.klogic.core.run
+import org.klogic.core.unificationCounter
 import org.klogic.utils.terms.OlegLogicNumber
 import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
 import org.klogic.utils.terms.expᴼ
@@ -15,5 +16,6 @@ open class ExponentBenchmark : AbstractKlogicBenchmark() {
         val power = 5u.toOlegLogicNumber()
 
         bh.consume(run(10, { result: Term<OlegLogicNumber> -> expᴼ(base, power, result) }))
+        println(unificationCounter)
     }
 }
