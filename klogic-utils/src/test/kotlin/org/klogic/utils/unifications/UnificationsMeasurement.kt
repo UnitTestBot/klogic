@@ -15,19 +15,40 @@ class UnificationsMeasurement {
 
     @Test
     fun qwines() {
-        findQuines(1)
+        val quines = findQuines(1)
+
+        println(quines.first().term.asReified())
+        println(quines.first().constraints)
+
         println("Quines(1):$unificationCounter")
     }
 
     @Test
     fun twines() {
-        findTwines(1)
+        val twines = findTwines(1)
+
+        val term = twines.single().term.asReified()
+        term.let {
+            println(it.first)
+            println(it.second)
+            println(twines.single().constraints)
+        }
+
         println("Twines(1):$unificationCounter")
     }
 
     @Test
     fun thrines() {
-        findThrines(1)
+        val thrines = findThrines(1)
+
+        val term = thrines.single().term.asReified()
+        term.let {
+            println(it.first)
+            println(it.second)
+            println(it.third)
+            println(thrines.single().constraints)
+        }
+
         println("Thrines(1):$unificationCounter")
     }
 }

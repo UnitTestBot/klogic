@@ -85,7 +85,7 @@ sealed interface Term<T : Term<T>> {
     @Suppress("UNCHECKED_CAST")
     fun asReified(): T = this as T
 
-    infix fun `===`(other: Term<T>): Goal = this unify other
+    infix fun `===`(other: Term<T>): Goal = (this unify other).also { unificationCounter++ }
     infix fun `!==`(other: Term<T>): Goal = this ineq other
 
     fun isVar(): Boolean = this is Var<*>

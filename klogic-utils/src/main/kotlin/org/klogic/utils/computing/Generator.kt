@@ -1,6 +1,6 @@
 @file:Suppress("FunctionName", "NonAsciiCharacters")
 
-package org.klogic.utils.computing.utils
+package org.klogic.utils.computing
 
 import org.klogic.core.*
 import org.klogic.utils.terms.*
@@ -10,10 +10,12 @@ import org.klogic.utils.terms.Symbol.Companion.toSymbol
 
 // TODO docs
 
-sealed interface Gterm : CustomTerm<Gterm>
+sealed interface Gterm : CustomTerm<Gterm> {
+    abstract fun toList(): List<Term<Gterm>>
+}
 
 @JvmInline
-value class Symb(private val s: Term<Symbol>) : Gterm {
+value class Symb(val s: Term<Symbol>) : Gterm {
     override val subtreesToUnify: Array<Term<Symbol>>
         get() = arrayOf(s)
 
@@ -21,10 +23,14 @@ value class Symb(private val s: Term<Symbol>) : Gterm {
     override fun constructFromSubtrees(subtrees: Iterable<*>): Symb = Symb(subtrees.single() as Term<Symbol>)
 
     override fun toString(): String = s.toString()
+
+    override fun toList(): List<Term<Gterm>> = listOf(this)
 }
 
 @JvmInline
 value class Seq(private val xs: Term<LogicList<Gterm>>) : Gterm {
+    constructor(vararg terms: Term<Gterm>) : this(logicListOf(*terms))
+
     override val subtreesToUnify: Array<*>
         get() = arrayOf(xs)
 
@@ -32,6 +38,10 @@ value class Seq(private val xs: Term<LogicList<Gterm>>) : Gterm {
     override fun constructFromSubtrees(subtrees: Iterable<*>): Seq = Seq(subtrees.single() as Term<LogicList<Gterm>>)
 
     override fun toString(): String = xs.toString()
+
+    override fun toList(): List<Term<Gterm>> = xs.asReified().toList().flatMap {
+        if (it.isVar()) listOf(it) else it.asReified().toList()
+    }
 }
 
 
@@ -68,9 +78,9 @@ value class Val(private val t: Term<Gterm>) : Gresult {
     override fun constructFromSubtrees(subtrees: Iterable<*>): Val = Val(subtrees.single() as Term<Gterm>)
 }
 
-private val quoteSymbol: Symbol = "quote".toSymbol()
-private val listSymbol: Symbol = "list".toSymbol()
-private val lambdaSymbol: Symbol = "lambda".toSymbol()
+internal val quoteSymbol: Symbol = "quote".toSymbol()
+internal val listSymbol: Symbol = "list".toSymbol()
+internal val lambdaSymbol: Symbol = "lambda".toSymbol()
 
 fun lookupᴼ(x: Term<Symbol>, env: Term<Fenv>, t: Term<Gresult>): Goal =
     freshTypedVars<Symbol, Gresult, LogicList<LogicPair<Symbol, Gresult>>> { y, v, rest ->

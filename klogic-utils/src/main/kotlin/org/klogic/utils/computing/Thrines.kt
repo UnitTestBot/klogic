@@ -3,9 +3,6 @@
 package org.klogic.utils.computing
 
 import org.klogic.core.*
-import org.klogic.utils.computing.utils.Gterm
-import org.klogic.utils.computing.utils.Val
-import org.klogic.utils.computing.utils.evalᴼ
 import org.klogic.utils.terms.LogicTriple
 import org.klogic.utils.terms.Nil.nilLogicList
 
