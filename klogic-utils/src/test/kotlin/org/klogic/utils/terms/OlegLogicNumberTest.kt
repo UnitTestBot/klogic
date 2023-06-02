@@ -97,7 +97,7 @@ class OlegLogicNumberTest {
         ReifiedTerm(term=((1), (1), (0, 1)), constraints=[])
         ReifiedTerm(term=((1), (0, _.11, _.12), (1, _.11, _.12)), constraints=[])
         ReifiedTerm(term=((1), (1, 1), (0, 0, 1)), constraints=[])
-        ReifiedTerm(term=((0, 1), (0, 1), (0, 0, 1)), constraints=[])
+        ReifiedTerm(term=((0, _.17, _.18), (1), (1, _.17, _.18)), constraints=[])
         */
         (run[0].listTerm()).let {
             assertEquals(r, it[0])
@@ -143,9 +143,11 @@ class OlegLogicNumberTest {
             assertEquals(numberFour, it[2])
         }
         (run[5].listTerm()).let {
-            assertEquals(numberTwo, it[0])
-            assertEquals(numberTwo, it[1])
-            assertEquals(numberFour, it[2])
+            assertEquals(digitZero, it[0].reifiedDigits().first().asReified())
+            assertEquals(numberOne, it[1])
+            assertEquals(digitOne, it[2].reifiedDigits().first().asReified())
+
+            assertEquals(it[0].reifiedDigits().drop(1), it[2].reifiedDigits().drop(1))
         }
     }
 
