@@ -8,10 +8,8 @@ import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.Nil.nilLogicList
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
 
-// TODO docs
-
 sealed interface Gterm : CustomTerm<Gterm> {
-    abstract fun toList(): List<Term<Gterm>>
+    fun toList(): List<Term<Gterm>>
 }
 
 @JvmInline
@@ -47,9 +45,9 @@ value class Seq(private val xs: Term<LogicList<Gterm>>) : Gterm {
 
 sealed interface Gresult : CustomTerm<Gresult>
 
-typealias Fenv = LogicList<LogicPair<Symbol, Gresult>>
+typealias Environment = LogicList<LogicPair<Symbol, Gresult>>
 
-data class Closure(private val s: Term<Symbol>, private val t: Term<Gterm>, private val xs: Term<Fenv>) : Gresult {
+data class Closure(private val s: Term<Symbol>, private val t: Term<Gterm>, private val xs: Term<Environment>) : Gresult {
     override val subtreesToUnify: Array<*>
         get() = arrayOf(s, t, xs)
 
@@ -65,7 +63,7 @@ data class Closure(private val s: Term<Symbol>, private val t: Term<Gterm>, priv
             "Expected only three elements for constructing Closure but got more elements"
         }
 
-        return Closure(s as Term<Symbol>, t as Term<Gterm>, xs as Term<Fenv>)
+        return Closure(s as Term<Symbol>, t as Term<Gterm>, xs as Term<Environment>)
     }
 }
 
@@ -82,7 +80,10 @@ internal val quoteSymbol: Symbol = "quote".toSymbol()
 internal val listSymbol: Symbol = "list".toSymbol()
 internal val lambdaSymbol: Symbol = "lambda".toSymbol()
 
-fun lookupᴼ(x: Term<Symbol>, env: Term<Fenv>, t: Term<Gresult>): Goal =
+/**
+ * Searches an association of [x] in the [env].
+ */
+fun lookupᴼ(x: Term<Symbol>, env: Term<Environment>, t: Term<Gresult>): Goal =
     freshTypedVars<Symbol, Gresult, LogicList<LogicPair<Symbol, Gresult>>> { y, v, rest ->
         and(
             env `===` ((y logicTo v) + rest),
@@ -93,7 +94,10 @@ fun lookupᴼ(x: Term<Symbol>, env: Term<Fenv>, t: Term<Gresult>): Goal =
         )
     }
 
-fun notInEnvᴼ(x: Term<Symbol>, env: Term<Fenv>): Goal = conde(
+/**
+ * 'Checks' whether [x] is not in [env].
+ */
+fun notInEnvᴼ(x: Term<Symbol>, env: Term<Environment>): Goal = conde(
     freshTypedVars<Symbol, Gresult, LogicList<LogicPair<Symbol, Gresult>>> { y, v, rest ->
         and(
             env `===` ((y logicTo v) + rest),
@@ -104,7 +108,7 @@ fun notInEnvᴼ(x: Term<Symbol>, env: Term<Fenv>): Goal = conde(
     env `===` nilLogicList()
 )
 
-fun properListᴼ(es: Term<LogicList<Gterm>>, env: Term<Fenv>, rs: Term<LogicList<Gterm>>): Goal = conde(
+fun properListᴼ(es: Term<LogicList<Gterm>>, env: Term<Environment>, rs: Term<LogicList<Gterm>>): Goal = conde(
     (es `===` nilLogicList()) and (rs `===` nilLogicList()),
     freshTypedVars<Gterm, LogicList<Gterm>, Gterm, LogicList<Gterm>> { e, d, te, td ->
         and(
@@ -116,18 +120,21 @@ fun properListᴼ(es: Term<LogicList<Gterm>>, env: Term<Fenv>, rs: Term<LogicLis
     }
 )
 
-fun evalᴼ(term: Term<Gterm>, env: Term<Fenv>, r: Term<Gresult>): Goal = conde(
+/**
+ * Evaluates the [term] in the passed [env] to the [result].
+ */
+fun evalᴼ(term: Term<Gterm>, env: Term<Environment>, result: Term<Gresult>): Goal = conde(
     freshTypedVars<Gterm> { t ->
         and(
             term `===` Seq(logicListOf(Symb(quoteSymbol), t)),
-            r `===` Val(t),
+            result `===` Val(t),
             notInEnvᴼ(quoteSymbol, env)
         )
     },
     freshTypedVars<LogicList<Gterm>, LogicList<Gterm>> { es, rs ->
         and(
             term `===` Seq(Symb(listSymbol) + es),
-            r `===` Val(Seq(rs)),
+            result `===` Val(Seq(rs)),
             notInEnvᴼ(listSymbol, env),
             properListᴼ(es, env, rs)
         )
@@ -135,22 +142,22 @@ fun evalᴼ(term: Term<Gterm>, env: Term<Fenv>, r: Term<Gresult>): Goal = conde(
     freshTypedVars<Symbol> { s ->
         and(
             term `===` Symb(s),
-            lookupᴼ(s, env, r)
+            lookupᴼ(s, env, result)
         )
     },
-    freshTypedVars<Gterm, Gterm, Gresult, Symbol, Gterm, Fenv> { func, arge, arg, x, body, env1 ->
+    freshTypedVars<Gterm, Gterm, Gresult, Symbol, Gterm, Environment> { func, arge, arg, x, body, env1 ->
         and(
             term `===` Seq(logicListOf(func, arge)),
             evalᴼ(arge, env, arg),
             evalᴼ(func, env, Closure(x, body, env1)),
-            evalᴼ(body, (x logicTo arg) + env1, r)
+            evalᴼ(body, (x logicTo arg) + env1, result)
         )
     },
     freshTypedVars<Symbol, Gterm> { x, body ->
         and(
             term `===` Seq(Symb(lambdaSymbol) + logicListOf(Seq(Symb(x).toLogicList()), body)),
             notInEnvᴼ(lambdaSymbol, env),
-            r `===` Closure(x, body, env)
+            result `===` Closure(x, body, env)
         )
     }
 )

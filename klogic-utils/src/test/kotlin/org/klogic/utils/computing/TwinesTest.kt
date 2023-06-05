@@ -7,7 +7,7 @@ import org.klogic.utils.computing.utils.*
 class TwinesTest {
     @Test
     fun testTwines() {
-        val twines = findTwines(10)
+        val twines = findTwines(15)
         val firstTwine = twines.first()
         val reifiedTwine = firstTwine.term.asReified()
 

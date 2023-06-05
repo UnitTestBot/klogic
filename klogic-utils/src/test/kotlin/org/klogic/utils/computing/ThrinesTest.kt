@@ -12,7 +12,7 @@ import org.klogic.utils.computing.utils.repeatedPartInQuines
 class ThrinesTest {
     @Test
     fun testThrines() {
-        val thrines = findThrines(10)
+        val thrines = findThrines(3)
         val firstThrine = thrines.first()
         val reifiedThrine = firstThrine.term.asReified()
 
