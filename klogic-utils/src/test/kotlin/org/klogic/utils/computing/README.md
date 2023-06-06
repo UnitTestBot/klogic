@@ -1,0 +1,1 @@
+To learn more about quines, twines, and thrines, take a look at `Byrd, William E., Eric Holk, and Daniel P. Friedman. "miniKanren, live and untagged: Quine generation via relational interpreters (programming pearl)." Proceedings of the 2012 Annual Workshop on Scheme and Functional Programming. 2012.` 

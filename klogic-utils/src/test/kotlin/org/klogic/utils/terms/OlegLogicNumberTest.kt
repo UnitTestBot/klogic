@@ -247,6 +247,16 @@ class OlegLogicNumberTest {
     }
 
     @Test
+    fun logarithmTest() {
+        val n = 14u.toOlegLogicNumber()
+        val b = 2u.toOlegLogicNumber()
+        val q = 3u.toOlegLogicNumber()
+
+        val r = run(10, { r: Term<OlegLogicNumber> -> logᴼ(n, b, q, r) }).singleReifiedTerm.asReified().toUInt()
+        assertEquals(6u, r)
+    }
+
+    @Test
     fun forwardExponentTest() {
         for (i in 1u..3u) {
             val base = i.toOlegLogicNumber()

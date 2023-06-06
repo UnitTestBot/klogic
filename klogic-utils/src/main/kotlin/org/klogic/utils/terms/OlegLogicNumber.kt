@@ -356,6 +356,9 @@ fun splitᴼ(n: OlegTerm, r: OlegTerm, l: OlegTerm, h: Term<LogicList<Digit>>): 
     },
 )
 
+/**
+ * Satisfies n = b ^ q + r, where 0 <= r <= n and q is the largest.
+ */
 @Suppress("NAME_SHADOWING")
 fun logᴼ(n: OlegTerm, b: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
     (n `===` numberOne) and posᴼ(b) and (q `===` numberZero) and (r `===` numberZero),

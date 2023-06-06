@@ -10,6 +10,8 @@ data class LogicPair<A : Term<A>, B : Term<B>>(
     override val second: Term<B>
 ) : BinaryTerm<LogicPair<A, B>, Term<A>, Term<B>>() {
     override val constructor: (Term<A>, Term<B>) -> LogicPair<A, B> = ::LogicPair
+
+    override fun toString(): String = ("$first, $second")
 }
 
 /**
