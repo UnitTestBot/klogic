@@ -4,7 +4,7 @@ import org.klogic.core.CustomTerm
 import org.klogic.core.Term
 
 /**
- * Represents a logic type for simple [Pair].
+ * Represents a logic type for simple [Triple].
  */
 data class LogicTriple<A : Term<A>, B : Term<B>, C : Term<C>>(
     val first: Term<A>,
