@@ -4,8 +4,6 @@ import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
 import org.klogic.unify.UnificationState
 
-var unificationCounter: Int = 0
-
 /**
  * Represents a logic object. It has only one direct implementor - [Var], user terms have to implement [CustomTerm].
  *
@@ -85,7 +83,7 @@ sealed interface Term<T : Term<T>> {
     @Suppress("UNCHECKED_CAST")
     fun asReified(): T = this as T
 
-    infix fun `===`(other: Term<T>): Goal = (this unify other).also { unificationCounter++ }
+    infix fun `===`(other: Term<T>): Goal = this unify other
     infix fun `!==`(other: Term<T>): Goal = this ineq other
 
     fun isVar(): Boolean = this is Var<*>
