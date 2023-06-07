@@ -139,11 +139,16 @@ data class ReifiedTerm<T : Term<T>>(val term: Term<T>, val constraints: Set<Cons
  * Returns a result of invoking [run] overloading with goals for the new fresh variable created using the passed [state].
  * NOTE: [goals] must not be empty.
  */
-fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
+fun <T : Term<T>> run(
+    count: Int,
+    goals: Array<(Term<T>) -> Goal>,
+    state: State = State.empty,
+    unificationListeners: Iterable<UnificationListener> = emptyList()
+): List<ReifiedTerm<T>> {
     val term = state.freshTypedVar<T>()
     val goalsWithCreatedFreshVar = goals.map { it(term) }.toTypedArray()
 
-    return run(count, term, goalsWithCreatedFreshVar, state)
+    return run(count, term, goalsWithCreatedFreshVar, state, unificationListeners)
 }
 
 /**
@@ -153,19 +158,26 @@ fun <T : Term<T>> run(
     count: Int,
     goal: (Term<T>) -> Goal,
     vararg nextGoals: (Term<T>) -> Goal,
-    state: State = State.empty
-): List<ReifiedTerm<T>> = run(count, arrayOf(goal, *nextGoals), state)
+    state: State = State.empty,
+    unificationListeners: Iterable<UnificationListener> = emptyList()
+): List<ReifiedTerm<T>> = run(count, arrayOf(goal, *nextGoals), state, unificationListeners)
 
 /**
  * Returns a result of invoking [run] overloading with first passed goal and the rest goals.
  * NOTE: [goals] must not be empty.
  */
-fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
+fun <T : Term<T>> run(
+    count: Int,
+    term: Term<T>,
+    goals: Array<Goal>,
+    state: State = State.empty,
+    unificationListeners: Iterable<UnificationListener> = emptyList()
+): List<ReifiedTerm<T>> {
     require(goals.isNotEmpty()) {
         "Could not `run` with empty goals"
     }
 
-    return run(count, term, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
+    return run(count, term, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state, unificationListeners)
 }
 
 /**
@@ -179,29 +191,57 @@ fun <T : Term<T>> run(
     term: Term<T>,
     goal: Goal,
     vararg nextGoals: Goal,
-    state: State = State.empty
-): List<ReifiedTerm<T>> = unreifiedRun(count, goal, nextGoals = nextGoals, state).reify(term)
+    state: State = State.empty,
+    unificationListeners: Iterable<UnificationListener> = emptyList()
+): List<ReifiedTerm<T>> =
+    unreifiedRun(count, goal, nextGoals = nextGoals, state, unificationListeners = unificationListeners).reify(term)
 
 /**
  * Returns a result of invoking [unreifiedRun] overloading with first passed goal and the rest goals.
  * NOTE: [goals] must not be empty.
  */
-fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): List<State> {
+fun unreifiedRun(
+    count: Int,
+    goals: Array<Goal>,
+    state: State = State.empty,
+    unificationListeners: Iterable<UnificationListener> = emptyList()
+): List<State> {
     require(goals.isNotEmpty()) {
         "Could not `unreifiedRun` with empty goals"
     }
 
-    return unreifiedRun(count, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
+    return unreifiedRun(
+        count,
+        goals.first(),
+        nextGoals = goals.drop(1).toTypedArray(),
+        state,
+        unificationListeners = unificationListeners
+    )
 }
 
 /**
  * Collects all passed goals to one conjunction in the context of the passed [state] and producing one [RecursiveStream],
  * and returns at most [count] [State]s.
+ *
+ * @param unificationListeners all [UnificationListener]s that can listen [Term.unify] events for this particular run.
  */
-fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal, state: State = State.empty): List<State> =
-    nextGoals
+fun unreifiedRun(
+    count: Int,
+    goal: Goal,
+    vararg nextGoals: Goal,
+    state: State = State.empty,
+    unificationListeners: Iterable<UnificationListener> = emptyList()
+): List<State> {
+    Term.unificationListeners = unificationListeners
+
+    val result = nextGoals
         .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(state)
         .take(count)
+
+    Term.clearListeners()
+
+    return result
+}
 
 // TODO add simplify:
 // 1) Remove irrelevant constraints

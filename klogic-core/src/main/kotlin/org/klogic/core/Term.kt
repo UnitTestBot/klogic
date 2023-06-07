@@ -4,6 +4,8 @@ import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
 import org.klogic.unify.UnificationState
 
+typealias UnificationListener = () -> Unit
+
 /**
  * Represents a logic object. It has only one direct implementor - [Var], user terms have to implement [CustomTerm].
  *
@@ -43,6 +45,8 @@ sealed interface Term<T : Term<T>> {
         st.unifyWithConstraintsVerification(this, other)?.let {
             single(it)
         } ?: nilStream()
+    }.also {
+        unificationListeners.forEach { it.invoke() }
     }
 
     /**
@@ -97,6 +101,18 @@ sealed interface Term<T : Term<T>> {
             right: Term<T>,
             unificationState: UnificationState
         ): UnificationState? = left.unify(right, unificationState)
+
+        /**
+         * Stores any listeners for the [Term.unify] event.
+         */
+        internal var unificationListeners: Iterable<UnificationListener> = emptyList()
+
+        /**
+         * Clears all attached listeners.
+         */
+        internal fun clearListeners() {
+            unificationListeners = emptyList()
+        }
     }
 }
 

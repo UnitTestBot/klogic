@@ -5,13 +5,8 @@ package org.klogic.utils.terms
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.klogic.core.ReifiedTerm
-import org.klogic.core.Term
-import org.klogic.core.Var
+import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.core.and
-import org.klogic.core.reified
-import org.klogic.core.run
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
