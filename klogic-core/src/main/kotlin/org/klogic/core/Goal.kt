@@ -80,11 +80,11 @@ fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
  */
 fun <T : Term<T>> debugVar(
     term: Term<T>,
-    reifier: (Term<T>) -> ReifiedTerm<T>,
-    callBack: (ReifiedTerm<T>) -> Goal
+    reifier: (Term<T>, Set<Constraint<*>>) -> ReifiedTerm<*> = ::ReifiedTerm,
+    callBack: (ReifiedTerm<*>) -> Goal
 ): Goal = { st: State ->
     val walkedTerm = term.walk(st.substitution)
-    val reified = reifier(walkedTerm)
+    val reified = reifier(walkedTerm, st.constraints)
 
     callBack(reified)(st)
 }
