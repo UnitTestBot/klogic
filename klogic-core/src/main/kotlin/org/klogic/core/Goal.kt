@@ -1,5 +1,6 @@
 package org.klogic.core
 
+import org.klogic.autogeneration.Fresh
 import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
 
@@ -94,36 +95,9 @@ fun <T : Term<T>> debugVar(
  *
  * @see [delay], [State.freshTypedVar].
  */
+@Fresh
 fun <T : Term<T>> freshTypedVars(f: (Term<T>) -> Goal): Goal = delay {
     { st: State -> f(st.freshTypedVar())(st) }
-}
-
-fun <T1 : Term<T1>, T2 : Term<T2>> freshTypedVars(f: (Term<T1>, Term<T2>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar())(st) }
-}
-
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
-}
-
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
-}
-
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
-}
-
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6: Term<T6>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
-}
-
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6 : Term<T6>, T7 : Term<T7>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
-}
-
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6 : Term<T6>, T7 : Term<T7>, T8 : Term<T8>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>, Term<T8>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
 }
 
 /**
