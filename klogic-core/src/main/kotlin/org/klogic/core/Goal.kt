@@ -199,9 +199,7 @@ fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): Li
  * and returns at most [count] [State]s.
  */
 fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal, state: State = State.empty): List<State> =
-    nextGoals
-        .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(state)
-        .take(count)
+    RelationalContext().useWith { unreifiedRun(count, goal, *nextGoals, state = state) }
 
 // TODO add simplify:
 // 1) Remove irrelevant constraints

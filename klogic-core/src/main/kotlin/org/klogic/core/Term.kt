@@ -39,8 +39,12 @@ sealed interface Term<T : Term<T>> {
      *
      * @see [State.unifyWithConstraintsVerification] for details.
      */
+    context(RelationalContext)
     infix fun unify(other: Term<T>): Goal = { st: State ->
-        st.unifyWithConstraintsVerification(this, other)?.let {
+        val stateAfter = st.unifyWithConstraintsVerification(this, other)
+        unificationListener.onUnification(this, other, st, stateAfter)
+
+        stateAfter?.let {
             single(it)
         } ?: nilStream()
     }
@@ -54,14 +58,21 @@ sealed interface Term<T : Term<T>> {
      *
      * @see [Substitution.ineq] for details.
      */
+    context(RelationalContext)
     infix fun ineq(other: Term<T>): Goal = { st: State ->
         st.substitution.ineq(this, other).let {
             when (it) {
-                ViolatedConstraintResult -> nilStream()
-                RedundantConstraintResult -> single(st)
+                ViolatedConstraintResult -> nilStream<State>().also {
+                    disequalityListener.onDisequality(this, other, st, null)
+                }
+                RedundantConstraintResult -> single(st).also {
+                    disequalityListener.onDisequality(this, other, st, st)
+                }
                 is SatisfiableConstraintResult -> {
                     val newConstraint = it.simplifiedConstraint
                     val newState = st.copy(constraints = st.constraints.add(newConstraint))
+
+                    disequalityListener.onDisequality(this, other, st, newState)
 
                     single(newState)
                 }
@@ -83,7 +94,10 @@ sealed interface Term<T : Term<T>> {
     @Suppress("UNCHECKED_CAST")
     fun asReified(): T = this as T
 
+    context(RelationalContext)
     infix fun `===`(other: Term<T>): Goal = this unify other
+
+    context(RelationalContext)
     infix fun `!==`(other: Term<T>): Goal = this ineq other
 
     fun isVar(): Boolean = this is Var<*>

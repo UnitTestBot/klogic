@@ -2,15 +2,24 @@ package org.klogic.utils.computing
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.klogic.core.RelationalContext
+import org.klogic.core.useWith
 import org.klogic.utils.computing.utils.extractVariable
 import org.klogic.utils.computing.utils.lambdaSymb
 import org.klogic.utils.computing.utils.quoteSymb
 import org.klogic.utils.computing.utils.repeatedPartInQuines
+import org.klogic.utils.listeners.UnificationCounter
 
 class QuinesTest {
     @Test
     fun testQuines() {
-        val quines = findQuines(10)
+        val unificationCounter = UnificationCounter()
+
+        val quines = RelationalContext().useWith {
+            setUnificationListener(unificationCounter)
+
+            findQuines(10)
+        }
         val quine = quines.first()
         val actualQuine = quine.term.asReified() as Seq
 
@@ -36,5 +45,7 @@ class QuinesTest {
         )
 
         assertEquals(expectedQuine, actualQuine)
+
+        println("Unifications: ${unificationCounter.counter}")
     }
 }

@@ -1,7 +1,9 @@
 package org.klogic.benchmarks
 
+import org.klogic.core.RelationalContext
 import org.klogic.core.Term
 import org.klogic.core.run
+import org.klogic.core.useWith
 import org.klogic.utils.terms.OlegLogicNumber
 import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
 import org.klogic.utils.terms.expᴼ
@@ -14,6 +16,6 @@ open class ExponentBenchmark : AbstractKlogicBenchmark() {
         val base = 3u.toOlegLogicNumber()
         val power = 5u.toOlegLogicNumber()
 
-        bh.consume(run(10, { result: Term<OlegLogicNumber> -> expᴼ(base, power, result) }))
+        bh.consume(run(10, { result: Term<OlegLogicNumber> -> RelationalContext().useWith { expᴼ(base, power, result) } }))
     }
 }

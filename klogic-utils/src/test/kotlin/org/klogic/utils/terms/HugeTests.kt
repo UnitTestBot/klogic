@@ -3,8 +3,11 @@ package org.klogic.utils.terms
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.klogic.core.RelationalContext
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.core.run
+import org.klogic.core.useWith
+import org.klogic.utils.listeners.UnificationCounter
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
@@ -13,19 +16,26 @@ import kotlin.time.measureTimedValue
 class HugeTests {
     @Test
     fun testAllPermutations() {
-        val size = 9
+        val unificationCounter = UnificationCounter()
 
-        val unsortedList = (-1).createTypedVar<LogicList<PeanoLogicNumber>>()
+        RelationalContext().useWith {
+            setUnificationListener(unificationCounter)
 
-        val sortedList = (1..size).map { it.toPeanoLogicNumber() }.toLogicList()
+            val size = 9
 
-        val goal = sortᴼ(unsortedList, sortedList)
+            val unsortedList = (-1).createTypedVar<LogicList<PeanoLogicNumber>>()
 
-        val count = (1..size).reduce(Int::times)
-        val run = measureTimedValue { run(count + 1, unsortedList, goal) }
+            val sortedList = (1..size).map { it.toPeanoLogicNumber() }.toLogicList()
 
-        assertEquals(count, run.value.size)
+            val goal = sortᴼ(unsortedList, sortedList)
 
-        println("Generating all permutations of size $size took: ${run.duration.inWholeMilliseconds} ms")
+            val count = (1..size).reduce(Int::times)
+            val run = measureTimedValue { run(count + 1, unsortedList, goal) }
+
+            assertEquals(count, run.value.size)
+
+            println("Generating all permutations of size $size took: ${run.duration.inWholeMilliseconds} ms")
+            println("Unifications: ${unificationCounter.counter}")
+        }
     }
 }

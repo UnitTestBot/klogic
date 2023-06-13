@@ -5,11 +5,8 @@ package org.klogic.utils.terms
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.core.reified
-import org.klogic.core.reify
-import org.klogic.core.run
-import org.klogic.core.unreifiedRun
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicFalsᴼ.falsᴼ
 import org.klogic.utils.terms.LogicTruᴼ.truᴼ
@@ -18,104 +15,116 @@ class LogicBoolTest {
     @Test
     @DisplayName("Forward !false = true")
     fun testForwardNotᴼ1() {
-        val q = (-1).createTypedVar<LogicBool>()
+        RelationalContext().useWith {
+            val q = (-1).createTypedVar<LogicBool>()
 
-        val goal = notᴼ(truᴼ, q)
+            val goal = notᴼ(truᴼ, q)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = falsᴼ
+            val expectedTerm = falsᴼ
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("Forward !true = false")
     fun testForwardNotᴼ2() {
-        val q = (-1).createTypedVar<LogicBool>()
+        RelationalContext().useWith {
+            val q = (-1).createTypedVar<LogicBool>()
 
-        val goal = notᴼ(falsᴼ, q)
+            val goal = notᴼ(falsᴼ, q)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = truᴼ
+            val expectedTerm = truᴼ
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("Backward !false = true")
     fun testBackwardNotᴼ1() {
-        val q = (-1).createTypedVar<LogicBool>()
+        RelationalContext().useWith {
+            val q = (-1).createTypedVar<LogicBool>()
 
-        val goal = notᴼ(q, truᴼ)
+            val goal = notᴼ(q, truᴼ)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = falsᴼ
+            val expectedTerm = falsᴼ
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("Backward !true = false")
     fun testBackwardNotᴼ2() {
-        val q = (-1).createTypedVar<LogicBool>()
+        RelationalContext().useWith {
+            val q = (-1).createTypedVar<LogicBool>()
 
-        val goal = notᴼ(q, falsᴼ)
+            val goal = notᴼ(q, falsᴼ)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = truᴼ
+            val expectedTerm = truᴼ
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
     
     @Test
     fun testOrᴼ() {
-        val x = (-1).createTypedVar<LogicBool>()
-        val y = (-2).createTypedVar<LogicBool>()
-        val z = (-3).createTypedVar<LogicBool>()
+        RelationalContext().useWith {
+            val x = (-1).createTypedVar<LogicBool>()
+            val y = (-2).createTypedVar<LogicBool>()
+            val z = (-3).createTypedVar<LogicBool>()
 
-        val goal = orᴼ(x, y, z)
+            val goal = orᴼ(x, y, z)
 
-        val unreifiedRun = unreifiedRun(9, goal)
+            val unreifiedRun = unreifiedRun(9, goal)
 
-        val reifiedTerms = unreifiedRun.reify(x).zip(unreifiedRun.reify(y)).zip(unreifiedRun.reify(z)).map {
-            Triple(it.first.first, it.first.second, it.second)
+            val reifiedTerms = unreifiedRun.reify(x).zip(unreifiedRun.reify(y)).zip(unreifiedRun.reify(z)).map {
+                Triple(it.first.first, it.first.second, it.second)
+            }
+
+            val expectedTerms = listOf(
+                Triple(falsᴼ, falsᴼ, falsᴼ),
+                Triple(falsᴼ, truᴼ, truᴼ),
+                Triple(truᴼ, falsᴼ, truᴼ),
+                Triple(truᴼ, truᴼ, truᴼ),
+            ).map { Triple(it.first.reified(), it.second.reified(), it.third.reified()) }
+
+            assertEquals(expectedTerms, reifiedTerms)
         }
-
-        val expectedTerms = listOf(
-            Triple(falsᴼ, falsᴼ, falsᴼ),
-            Triple(falsᴼ, truᴼ, truᴼ),
-            Triple(truᴼ, falsᴼ, truᴼ),
-            Triple(truᴼ, truᴼ, truᴼ),
-        ).map { Triple(it.first.reified(), it.second.reified(), it.third.reified()) }
-
-        assertEquals(expectedTerms, reifiedTerms)
     }
 
     @Test
     fun testAndᴼ() {
-        val x = (-1).createTypedVar<LogicBool>()
-        val y = (-2).createTypedVar<LogicBool>()
-        val z = (-3).createTypedVar<LogicBool>()
+        RelationalContext().useWith {
+            val x = (-1).createTypedVar<LogicBool>()
+            val y = (-2).createTypedVar<LogicBool>()
+            val z = (-3).createTypedVar<LogicBool>()
 
-        val goal = andᴼ(x, y, z)
+            val goal = andᴼ(x, y, z)
 
-        val unreifiedRun = unreifiedRun(9, goal)
+            val unreifiedRun = unreifiedRun(9, goal)
 
-        val reifiedTerms = unreifiedRun.reify(x).zip(unreifiedRun.reify(y)).zip(unreifiedRun.reify(z)).map {
-            Triple(it.first.first, it.first.second, it.second)
+            val reifiedTerms = unreifiedRun.reify(x).zip(unreifiedRun.reify(y)).zip(unreifiedRun.reify(z)).map {
+                Triple(it.first.first, it.first.second, it.second)
+            }
+
+            val expectedTerms = listOf(
+                Triple(falsᴼ, falsᴼ, falsᴼ),
+                Triple(falsᴼ, truᴼ, falsᴼ),
+                Triple(truᴼ, falsᴼ, falsᴼ),
+                Triple(truᴼ, truᴼ, truᴼ),
+            ).map { Triple(it.first.reified(), it.second.reified(), it.third.reified()) }
+
+            assertEquals(expectedTerms, reifiedTerms)
         }
-
-        val expectedTerms = listOf(
-            Triple(falsᴼ, falsᴼ, falsᴼ),
-            Triple(falsᴼ, truᴼ, falsᴼ),
-            Triple(truᴼ, falsᴼ, falsᴼ),
-            Triple(truᴼ, truᴼ, truᴼ),
-        ).map { Triple(it.first.reified(), it.second.reified(), it.third.reified()) }
-
-        assertEquals(expectedTerms, reifiedTerms)
     }
 }

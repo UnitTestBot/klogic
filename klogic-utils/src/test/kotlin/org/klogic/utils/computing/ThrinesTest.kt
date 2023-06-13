@@ -2,17 +2,25 @@ package org.klogic.utils.computing
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.klogic.core.RelationalContext
+import org.klogic.core.useWith
 import org.klogic.utils.computing.utils.*
 import org.klogic.utils.computing.utils.doubleQuote
 import org.klogic.utils.computing.utils.lambdaSymb
 import org.klogic.utils.computing.utils.listSymb
 import org.klogic.utils.computing.utils.quoteSymb
 import org.klogic.utils.computing.utils.repeatedPartInQuines
+import org.klogic.utils.listeners.UnificationCounter
 
 class ThrinesTest {
     @Test
     fun testThrines() {
-        val thrines = findThrines(3)
+        val unificationCounter = UnificationCounter()
+
+        val thrines = RelationalContext().useWith {
+            setUnificationListener(unificationCounter)
+            findThrines(3)
+        }
         val firstThrine = thrines.first()
         val reifiedThrine = firstThrine.term.asReified()
 
@@ -62,5 +70,7 @@ class ThrinesTest {
         assertEquals(expectedP, p)
         assertEquals(expectedQ, q)
         assertEquals(expectedR, r)
+
+        println("Unifications: ${unificationCounter.counter}")
     }
 }

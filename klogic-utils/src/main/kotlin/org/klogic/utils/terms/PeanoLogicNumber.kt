@@ -2,13 +2,7 @@
 
 package org.klogic.utils.terms
 
-import org.klogic.core.CustomTerm
-import org.klogic.core.Goal
-import org.klogic.core.Term
-import org.klogic.core.Var
-import org.klogic.core.and
-import org.klogic.core.conde
-import org.klogic.core.freshTypedVars
+import org.klogic.core.*
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.LogicFalsᴼ.falsᴼ
 import org.klogic.utils.terms.LogicTruᴼ.truᴼ
@@ -66,6 +60,7 @@ internal val two: PeanoLogicNumber = succ(one)
 
 fun Int.toPeanoLogicNumber(): PeanoLogicNumber = if (this <= 0) Z else succ((this - 1).toPeanoLogicNumber())
 
+context(RelationalContext)
 fun addᴼ(x: PeanoTerm, y: PeanoTerm, result: PeanoTerm): Goal = conde(
     (x `===` Z) and (result `===` y),
     freshTypedVars<PeanoLogicNumber, PeanoLogicNumber> { a, b ->
@@ -73,6 +68,7 @@ fun addᴼ(x: PeanoTerm, y: PeanoTerm, result: PeanoTerm): Goal = conde(
     }
 )
 
+context(RelationalContext)
 fun mulᴼ(x: PeanoTerm, y: PeanoTerm, result: PeanoTerm): Goal = conde(
     (x `===` Z) and (result `===` Z),
     freshTypedVars<PeanoLogicNumber, PeanoLogicNumber> { a, b ->
@@ -80,6 +76,7 @@ fun mulᴼ(x: PeanoTerm, y: PeanoTerm, result: PeanoTerm): Goal = conde(
     }
 )
 
+context(RelationalContext)
 fun lessThanOrEqualᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = conde(
     (x `===` Z) and (result `===` truᴼ),
     (x ineq Z) and (y `===` Z) and (result `===` falsᴼ),
@@ -88,8 +85,10 @@ fun lessThanOrEqualᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goa
     }
 )
 
+context(RelationalContext)
 fun greaterThanOrEqualᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = lessThanOrEqualᴼ(y, x, result)
 
+context(RelationalContext)
 fun greaterThanᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = conde(
     (x ineq Z) and (y `===` Z) and (result `===` truᴼ),
     (x `===` Z) and (result `===` falsᴼ),
@@ -98,13 +97,16 @@ fun greaterThanᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = 
     }
 )
 
+context(RelationalContext)
 fun lessThanᴼ(x: PeanoTerm, y: PeanoTerm, result: Term<LogicBool>): Goal = greaterThanᴼ(y, x, result)
 
+context(RelationalContext)
 fun minMaxᴼ(a: PeanoTerm, b: PeanoTerm, min: PeanoTerm, max: PeanoTerm): Goal = conde(
     (min `===` a) and (max `===` b) and lessThanOrEqualᴼ(a, b, truᴼ),
     (min `===` b) and (max `===` a) and greaterThanᴼ(a, b, truᴼ),
 )
 
+context(RelationalContext)
 fun smallestᴼ(
     nonEmptyList: Term<LogicList<PeanoLogicNumber>>,
     smallestElement: PeanoTerm,
@@ -119,6 +121,7 @@ fun smallestᴼ(
     }
 )
 
+context(RelationalContext)
 fun sortᴼ(unsortedList: Term<LogicList<PeanoLogicNumber>>, sortedList: Term<LogicList<PeanoLogicNumber>>): Goal = conde(
     (unsortedList `===` nilLogicList()) and (sortedList `===` nilLogicList()),
     freshTypedVars<PeanoLogicNumber, LogicList<PeanoLogicNumber>, LogicList<PeanoLogicNumber>> { smallest, unsortedOthers, sortedTail ->

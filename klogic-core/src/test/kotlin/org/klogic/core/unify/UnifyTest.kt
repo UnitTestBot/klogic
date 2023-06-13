@@ -3,10 +3,7 @@ package org.klogic.core.unify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import org.klogic.core.Substitution
-import org.klogic.core.reified
-import org.klogic.core.run
-import org.klogic.core.`|||`
+import org.klogic.core.*
 import org.klogic.utils.terms.Nil.nilLogicList
 import org.klogic.utils.terms.Symbol
 import org.klogic.utils.terms.plus
@@ -54,11 +51,13 @@ class UnifyTest {
 
     @Test
     fun testUnion() {
-        val goal = (`5` `===` q) `|||` (`6` `===` q)
+        RelationalContext().useWith {
+            val goal = (`5` `===` q) `|||` (`6` `===` q)
 
-        val run = run(3, q, goal)
+            val run = run(3, q, goal)
 
-        val expectedAnswer = listOf(`5`, `6`).reified()
-        assertEquals(expectedAnswer, run)
+            val expectedAnswer = listOf(`5`, `6`).reified()
+            assertEquals(expectedAnswer, run)
+        }
     }
 }

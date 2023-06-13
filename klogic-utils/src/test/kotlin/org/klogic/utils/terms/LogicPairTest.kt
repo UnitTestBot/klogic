@@ -2,54 +2,62 @@ package org.klogic.utils.terms
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.klogic.core.RelationalContext
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.core.run
+import org.klogic.core.useWith
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
 
 class LogicPairTest {
     @Test
     fun testConstructingPair() {
-        val first = "a".toSymbol()
-        val second = 42.toPeanoLogicNumber()
-        val pair = (-1).createTypedVar<LogicPair<Symbol, PeanoLogicNumber>>()
+        RelationalContext().useWith {
+            val first = "a".toSymbol()
+            val second = 42.toPeanoLogicNumber()
+            val pair = (-1).createTypedVar<LogicPair<Symbol, PeanoLogicNumber>>()
 
-        val goal = pair `===` (first logicTo second)
+            val goal = pair `===` (first logicTo second)
 
-        val run = run(2, pair, goal)
+            val run = run(2, pair, goal)
 
-        val expectedTerm = first logicTo second
+            val expectedTerm = first logicTo second
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     fun testFirstComponent() {
-        val first = (-1).createTypedVar<Symbol>()
-        val second = 42.toPeanoLogicNumber()
-        val pair = "a".toSymbol() logicTo second
+        RelationalContext().useWith {
+            val first = (-1).createTypedVar<Symbol>()
+            val second = 42.toPeanoLogicNumber()
+            val pair = "a".toSymbol() logicTo second
 
-        val goal = pair `===` (first logicTo second)
+            val goal = pair `===` (first logicTo second)
 
-        val run = run(2, first, goal)
+            val run = run(2, first, goal)
 
-        val expectedTerm = "a".toSymbol()
+            val expectedTerm = "a".toSymbol()
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     fun testSecondComponent() {
-        val first = "a".toSymbol()
-        val second = (-1).createTypedVar<PeanoLogicNumber>()
-        val pair = first logicTo 42.toPeanoLogicNumber()
+        RelationalContext().useWith {
+            val first = "a".toSymbol()
+            val second = (-1).createTypedVar<PeanoLogicNumber>()
+            val pair = first logicTo 42.toPeanoLogicNumber()
 
-        val goal = pair `===` (first logicTo second)
+            val goal = pair `===` (first logicTo second)
 
-        val run = run(2, second, goal)
+            val run = run(2, second, goal)
 
-        val expectedTerm = 42.toPeanoLogicNumber()
+            val expectedTerm = 42.toPeanoLogicNumber()
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 }
