@@ -17,6 +17,7 @@ import org.klogic.utils.terms.Symbol.Companion.toSymbol
 import org.klogic.utils.terms.appendᴼ
 import org.klogic.utils.terms.plus
 import org.klogic.utils.terms.toLogicList
+import org.klogic.utils.withEmptyContext
 
 class AppendᴼTest {
     private val symbolA = "a".toSymbol()
@@ -24,7 +25,7 @@ class AppendᴼTest {
 
     @Test
     fun testForwardAppendᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val xy = (-1).createTypedVar<LogicList<Symbol>>()
 
             val goal = appendᴼ(symbolA.toLogicList(), symbolB.toLogicList(), xy)
@@ -39,7 +40,7 @@ class AppendᴼTest {
 
     @Test
     fun testBackwardAppendᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = (-1).createTypedVar<LogicList<Symbol>>()
             val y = (-2).createTypedVar<LogicList<Symbol>>()
             val xy = symbolA + (symbolB + nilLogicList())

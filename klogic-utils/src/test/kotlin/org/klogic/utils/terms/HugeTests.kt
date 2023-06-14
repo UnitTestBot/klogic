@@ -8,6 +8,7 @@ import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.core.run
 import org.klogic.core.useWith
 import org.klogic.utils.listeners.UnificationCounter
+import org.klogic.utils.withEmptyContext
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
@@ -18,8 +19,8 @@ class HugeTests {
     fun testAllPermutations() {
         val unificationCounter = UnificationCounter()
 
-        RelationalContext().useWith {
-            setUnificationListener(unificationCounter)
+        withEmptyContext {
+            unificationListener = unificationCounter
 
             val size = 9
 

@@ -21,7 +21,7 @@ import org.klogic.utils.*
 class InequalityTest {
     @Test
     fun testDropOneBranchAndTakeMore() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val onlyOneResult = ((x `===` `1`) `|||` (x `===` `2`)) `&&&` (x `!==` `1`)
 
             val run = run(2, x, onlyOneResult)
@@ -33,7 +33,7 @@ class InequalityTest {
 
     @Test
     fun testDropAllBranches() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val noResults = (x `===` `1`) `&&&` (x `!==` `1`)
 
             val run = run(2, x, noResults)
@@ -44,7 +44,7 @@ class InequalityTest {
 
     @Test
     fun testDropAllBranchesReverted() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val noResults = (x `!==` `1`) `&&&` (x `===` `1`)
 
             val run = run(2, x, noResults)
@@ -55,7 +55,7 @@ class InequalityTest {
 
     @Test
     fun testOnlyInequalityGoal() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goal = x `!==` `1`
 
             val run = run(2, x, goal)
@@ -68,7 +68,7 @@ class InequalityTest {
 
     @Test
     fun testTwoVariables() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val noResults = (x `===` y) `&&&` (x `!==` y)
 
             val run = run(2, x, noResults)
@@ -79,7 +79,7 @@ class InequalityTest {
 
     @Test
     fun testListExample1() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val tail = y.toLogicList()
             val goal = (listQ `!==` nilLogicList()) `&&&` (listQ `!==` x + tail)
 
@@ -96,7 +96,7 @@ class InequalityTest {
     // See corresponding "=/=-22"
     @Test
     fun testListExample2() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val tail = y.toLogicList()
             val goals = arrayOf(
                 x + `1`.toLogicList() `!==` `2` + tail,
@@ -119,7 +119,7 @@ class InequalityTest {
     // See corresponding "=/=-24"
     @Test
     fun testListExample3() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val tail = y.toLogicList()
             val goals = arrayOf(
                 x + `1`.toLogicList() `!==` `2` + tail,
@@ -140,7 +140,7 @@ class InequalityTest {
     // See corresponding "=/=-27"
     @Test
     fun testListExample4() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goals = arrayOf(
                 listA `!==` x + `1`.toLogicList(),
                 listA `===` z + `1`.toLogicList(),
@@ -160,7 +160,7 @@ class InequalityTest {
     // See corresponding "=/=-28"
     @Test
     fun testTruth() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goals = arrayOf(`3` `!==` `4`)
 
             val run = run(2, q, goals)
@@ -173,7 +173,7 @@ class InequalityTest {
     // See corresponding "=/=-29"
     @Test
     fun testAbsurd() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goals = arrayOf(`3` `!==` `3`)
 
             val run = run(2, q, goals)
@@ -185,7 +185,7 @@ class InequalityTest {
     // See "non watch-var pair implies satisfied"
     @Test
     fun testNoConstraintsRequired() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goals = arrayOf(
                 a + listC `!==` b + listD,
                 listC `===` logicListOf(`1`, `2`),
@@ -205,7 +205,7 @@ class InequalityTest {
     @Tag("implementation-dependent")
     @Test
     fun testOnlyOneConstraintIsEnoughExample1() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val listOfListsX = (-1).createTypedVar<LogicList<LogicList<Symbol>>>()
 
             val tail = z.toLogicList().toLogicList()
@@ -238,7 +238,7 @@ class InequalityTest {
     @Tag("implementation-dependent")
     @Test
     fun testOnlyOneConstraintIsEnoughExample2() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goal = (logicListOf(x, `1`) `!==` `2` + y.toLogicList()) `&&&` (logicListOf(x, y) `===` listQ)
             val run = run(3, listQ, goal)
 
@@ -264,7 +264,7 @@ class InequalityTest {
     // Example from "Relational Programming in miniKanren: Techniques, Applications, and Implementations", Chapter 8.
     @Test
     fun testByrdExample() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goals = arrayOf(
                 logicListOf(`5`, `6`) `!==` listQ,
                 logicListOf(x, y) `===` listQ,

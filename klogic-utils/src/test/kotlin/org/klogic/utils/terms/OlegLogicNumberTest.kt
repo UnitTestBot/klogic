@@ -13,12 +13,13 @@ import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
+import org.klogic.utils.withEmptyContext
 import kotlin.math.pow
 
 class OlegLogicNumberTest {
     @Test
     fun testTruePosᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = (-1).createTypedVar<OlegLogicNumber>()
 
             val positiveNumber = 1u.toOlegLogicNumber()
@@ -33,7 +34,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun testFalsePosᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = (-1).createTypedVar<OlegLogicNumber>()
 
             val zero = 0u.toOlegLogicNumber()
@@ -48,7 +49,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun testTrueGreaterThan1ᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = (-1).createTypedVar<OlegLogicNumber>()
 
             val number2 = 2u.toOlegLogicNumber()
@@ -63,7 +64,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun testFalseGreaterThan1ᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = (-1).createTypedVar<OlegLogicNumber>()
 
             val goal = greaterThan1ᴼ(numberOne)
@@ -76,7 +77,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun generateTriplesTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = (-1).createTypedVar<OlegLogicNumber>()
             val y = (-2).createTypedVar<OlegLogicNumber>()
             val r = (-3).createTypedVar<OlegLogicNumber>()
@@ -158,7 +159,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun minusTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = 8u.toOlegLogicNumber()
             val y = (-1).createTypedVar<OlegLogicNumber>()
             val q = 3u.toOlegLogicNumber()
@@ -175,7 +176,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun forwardMultiplicationTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             for (i in 0u until 5u) {
                 val first = i.toOlegLogicNumber()
 
@@ -194,7 +195,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun backwardFirstArgumentMultiplicationTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             for (i in 1u..5u) {
                 val first = (-1).createTypedVar<OlegLogicNumber>()
 
@@ -212,7 +213,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun backwardSecondArgumentMultiplicationTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             for (i in 1u..5u) {
                 val first = i.toOlegLogicNumber()
 
@@ -230,7 +231,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun testFactors() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val result = 12u.toOlegLogicNumber()
             val firstFactor = (-1).createTypedVar<OlegLogicNumber>()
             val secondFactor = (-2).createTypedVar<OlegLogicNumber>()
@@ -244,7 +245,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun testBackwardDivision() {
-        RelationalContext().useWith {
+        withEmptyContext {
             for (i in 1u..5u) {
                 val m = i.toOlegLogicNumber()
                 for (j in 1u..5u) {
@@ -265,7 +266,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun logarithmTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val n = 14u.toOlegLogicNumber()
             val b = 2u.toOlegLogicNumber()
             val q = 3u.toOlegLogicNumber()
@@ -277,7 +278,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun forwardExponentTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             for (i in 1u..3u) {
                 val base = i.toOlegLogicNumber()
 
@@ -296,7 +297,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun backwardFirstArgumentExponentTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             for (i in 1u..3u) {
                 val base = (-1).createTypedVar<OlegLogicNumber>()
 
@@ -314,7 +315,7 @@ class OlegLogicNumberTest {
 
     @Test
     fun backwardSecondArgumentExponentTest() {
-        RelationalContext().useWith {
+        withEmptyContext {
             for (i in 2u..3u) {
                 val base = i.toOlegLogicNumber()
 

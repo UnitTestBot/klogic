@@ -12,6 +12,7 @@ import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.PeanoLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
+import org.klogic.utils.withEmptyContext
 
 class PeanoLogicNumberTest {
     private val three: NextNaturalNumber = succ(two)
@@ -20,7 +21,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("0 + 1 == q -> q == 1")
     fun testAddᴼ1() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = addᴼ(Z, one, q)
@@ -36,7 +37,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("1 + 1 == q -> q == 2")
     fun testAddᴼ2() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = addᴼ(one, one, q)
@@ -52,7 +53,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("q + 1 == 1 -> q == 0")
     fun testAddᴼ3() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = addᴼ(q, one, one)
@@ -68,7 +69,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("1 + q == 1 -> q == 0")
     fun testAddᴼ4() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = addᴼ(one, q, one)
@@ -84,7 +85,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("q + r == 4")
     fun testAddᴼ5() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
             val r = (-2).createTypedVar<PeanoLogicNumber>()
 
@@ -109,7 +110,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("0 * 1 == q -> q == 0")
     fun testMulᴼ1() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = mulᴼ(Z, one, q)
@@ -125,7 +126,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("2 * 2 == q -> q == 4")
     fun testMulᴼ2() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = mulᴼ(two, two, q)
@@ -141,7 +142,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("q * 2 == 2 -> q == 1")
     fun testMulᴼ3() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = mulᴼ(q, two, two)
@@ -157,7 +158,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("q * 2 == 3 -> no answer")
     fun testMulᴼ4() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = mulᴼ(q, two, three)
@@ -171,7 +172,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("2 * q == 2 -> q == 1")
     fun testMulᴼ5() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
 
             val goal = mulᴼ(two, q, two)
@@ -187,7 +188,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("q * 1 == r")
     fun testMulᴼ6() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
             val r = (-2).createTypedVar<PeanoLogicNumber>()
 
@@ -208,7 +209,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("minmax(5, 6) == minmax(6, 5) = (5, 6)")
     fun testMinMaxᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<PeanoLogicNumber>()
             val r = (-2).createTypedVar<PeanoLogicNumber>()
 
@@ -231,7 +232,7 @@ class PeanoLogicNumberTest {
 
     @Test
     fun testSorting() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val numbers = listOf(4, 3, 2, 1).map { it.toPeanoLogicNumber() }.toLogicList()
 
             val run = run(1, { sorted: Term<LogicList<PeanoLogicNumber>> -> sortᴼ(numbers, sorted) })
@@ -244,7 +245,7 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("all permutations of [1, 2, 3]")
     fun testAllPermutations() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val unsortedList = (-1).createTypedVar<LogicList<PeanoLogicNumber>>()
 
             val sortedList = logicListOf(one, two, three)

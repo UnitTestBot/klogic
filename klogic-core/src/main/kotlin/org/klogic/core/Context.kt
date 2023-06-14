@@ -3,24 +3,15 @@ package org.klogic.core
 import org.klogic.core.DisequalityListener.Companion.EmptyDisequalityListener
 import org.klogic.core.UnificationListener.Companion.EmptyUnificationListener
 
-// TODO rename it to something more general?
-open class RelationalContext() : AutoCloseable {
+/**
+ * The context for relations and unifications. Configures listeners for unification and disequality events.
+ */
+open class RelationalContext : AutoCloseable {
     var unificationListener: UnificationListener = EmptyUnificationListener
-        private set
-
     var disequalityListener: DisequalityListener = EmptyDisequalityListener
-        private set
-
-    fun setUnificationListener(unificationListener: UnificationListener) {
-        this.unificationListener = unificationListener
-    }
 
     fun removeUnificationListener() {
         unificationListener = EmptyUnificationListener
-    }
-
-    fun setDisequalityListener(disequalityListener: DisequalityListener) {
-        this.disequalityListener = disequalityListener
     }
 
     fun removeDisequalityListener() {
@@ -96,24 +87,36 @@ open class RelationalContext() : AutoCloseable {
             .take(count)
 
     override fun close() {
-        // TODO("Not yet implemented")
+        // Do nothing for now
     }
 }
 
 inline fun <T : AutoCloseable?, R> T.useWith(block: T.() -> R): R = use { it.block() }
 
+/**
+ * A listener for [Term.unify] events.
+ */
 interface UnificationListener {
     fun onUnification(firstTerm: Term<*>, secondTerm: Term<*>, stateBefore: State, stateAfter: State?) = Unit
 
     companion object {
+        /**
+         * Listener that does nothing on [Term.unify] events.
+         */
         internal object EmptyUnificationListener : UnificationListener
     }
 }
 
+/**
+ * A listener for [Term.ineq] events.
+ */
 interface DisequalityListener {
     fun onDisequality(firstTerm: Term<*>, secondTerm: Term<*>, stateBefore: State, stateAfter: State?) = Unit
 
     companion object {
+        /**
+         * Listener that does nothing on [Term.ineq] events.
+         */
         internal object EmptyDisequalityListener : DisequalityListener
     }
 }

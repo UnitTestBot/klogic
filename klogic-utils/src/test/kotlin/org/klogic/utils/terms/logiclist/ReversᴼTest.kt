@@ -14,6 +14,7 @@ import org.klogic.utils.terms.Symbol
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
 import org.klogic.utils.terms.plus
 import org.klogic.utils.terms.reversᴼ
+import org.klogic.utils.withEmptyContext
 
 class ReversᴼTest {
     private val symbolA = "a".toSymbol()
@@ -21,7 +22,7 @@ class ReversᴼTest {
 
     @Test
     fun testForwardReversᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val original = symbolA + (symbolB + nilLogicList())
             val goal = reversᴼ(original, (-1).createTypedVar())
 
@@ -34,7 +35,7 @@ class ReversᴼTest {
 
     @Test
     fun testBackwardReversᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val reversed = symbolB + (symbolA + nilLogicList())
             val goal = reversᴼ((-1).createTypedVar(), reversed)
 

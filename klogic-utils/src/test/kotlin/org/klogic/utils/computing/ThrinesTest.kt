@@ -11,14 +11,15 @@ import org.klogic.utils.computing.utils.listSymb
 import org.klogic.utils.computing.utils.quoteSymb
 import org.klogic.utils.computing.utils.repeatedPartInQuines
 import org.klogic.utils.listeners.UnificationCounter
+import org.klogic.utils.withEmptyContext
 
 class ThrinesTest {
     @Test
     fun testThrines() {
         val unificationCounter = UnificationCounter()
 
-        val thrines = RelationalContext().useWith {
-            setUnificationListener(unificationCounter)
+        val thrines = withEmptyContext {
+            unificationListener = unificationCounter
             findThrines(3)
         }
         val firstThrine = thrines.first()

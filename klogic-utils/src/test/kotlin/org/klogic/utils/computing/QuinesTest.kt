@@ -9,14 +9,15 @@ import org.klogic.utils.computing.utils.lambdaSymb
 import org.klogic.utils.computing.utils.quoteSymb
 import org.klogic.utils.computing.utils.repeatedPartInQuines
 import org.klogic.utils.listeners.UnificationCounter
+import org.klogic.utils.withEmptyContext
 
 class QuinesTest {
     @Test
     fun testQuines() {
         val unificationCounter = UnificationCounter()
 
-        val quines = RelationalContext().useWith {
-            setUnificationListener(unificationCounter)
+        val quines = withEmptyContext {
+            unificationListener = unificationCounter
 
             findQuines(10)
         }

@@ -136,8 +136,7 @@ fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, 
 data class ReifiedTerm<T : Term<T>>(val term: Term<T>, val constraints: Set<Constraint<*>> = emptySet())
 
 /**
- * Returns a result of invoking [run] overloading with goals for the new fresh variable created using the passed [state].
- * NOTE: [goals] must not be empty.
+ * @see RelationalContext.run
  */
 fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
     val term = state.freshTypedVar<T>()
@@ -147,7 +146,7 @@ fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State 
 }
 
 /**
- * Returns a result of invoking [run] overloading with passed goals.
+ * @see RelationalContext.run
  */
 fun <T : Term<T>> run(
     count: Int,
@@ -157,8 +156,7 @@ fun <T : Term<T>> run(
 ): List<ReifiedTerm<T>> = run(count, arrayOf(goal, *nextGoals), state)
 
 /**
- * Returns a result of invoking [run] overloading with first passed goal and the rest goals.
- * NOTE: [goals] must not be empty.
+ * @see RelationalContext.run
  */
 fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
     require(goals.isNotEmpty()) {
@@ -169,11 +167,8 @@ fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>, state: Stat
 }
 
 /**
- * Runs [unreifiedRun] with and reifies the passed [term].
- *
- * @see [unreifiedRun], [State.reify] and [ReifiedTerm].
+ * @see RelationalContext.run
  */
-// TODO pass user mapper function to stream.
 fun <T : Term<T>> run(
     count: Int,
     term: Term<T>,
@@ -183,8 +178,7 @@ fun <T : Term<T>> run(
 ): List<ReifiedTerm<T>> = unreifiedRun(count, goal, nextGoals = nextGoals, state).reify(term)
 
 /**
- * Returns a result of invoking [unreifiedRun] overloading with first passed goal and the rest goals.
- * NOTE: [goals] must not be empty.
+ * @see RelationalContext.unreifiedRun
  */
 fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): List<State> {
     require(goals.isNotEmpty()) {
@@ -195,8 +189,7 @@ fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): Li
 }
 
 /**
- * Collects all passed goals to one conjunction in the context of the passed [state] and producing one [RecursiveStream],
- * and returns at most [count] [State]s.
+ * @see RelationalContext.unreifiedRun
  */
 fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal, state: State = State.empty): List<State> =
     RelationalContext().useWith { unreifiedRun(count, goal, *nextGoals, state = state) }

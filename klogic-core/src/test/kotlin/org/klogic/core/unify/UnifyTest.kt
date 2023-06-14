@@ -51,7 +51,7 @@ class UnifyTest {
 
     @Test
     fun testUnion() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goal = (`5` `===` q) `|||` (`6` `===` q)
 
             val run = run(3, q, goal)

@@ -10,12 +10,13 @@ import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicFalsᴼ.falsᴼ
 import org.klogic.utils.terms.LogicTruᴼ.truᴼ
+import org.klogic.utils.withEmptyContext
 
 class LogicBoolTest {
     @Test
     @DisplayName("Forward !false = true")
     fun testForwardNotᴼ1() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<LogicBool>()
 
             val goal = notᴼ(truᴼ, q)
@@ -31,7 +32,7 @@ class LogicBoolTest {
     @Test
     @DisplayName("Forward !true = false")
     fun testForwardNotᴼ2() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<LogicBool>()
 
             val goal = notᴼ(falsᴼ, q)
@@ -47,7 +48,7 @@ class LogicBoolTest {
     @Test
     @DisplayName("Backward !false = true")
     fun testBackwardNotᴼ1() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<LogicBool>()
 
             val goal = notᴼ(q, truᴼ)
@@ -63,7 +64,7 @@ class LogicBoolTest {
     @Test
     @DisplayName("Backward !true = false")
     fun testBackwardNotᴼ2() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val q = (-1).createTypedVar<LogicBool>()
 
             val goal = notᴼ(q, falsᴼ)
@@ -78,7 +79,7 @@ class LogicBoolTest {
     
     @Test
     fun testOrᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = (-1).createTypedVar<LogicBool>()
             val y = (-2).createTypedVar<LogicBool>()
             val z = (-3).createTypedVar<LogicBool>()
@@ -104,7 +105,7 @@ class LogicBoolTest {
 
     @Test
     fun testAndᴼ() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val x = (-1).createTypedVar<LogicBool>()
             val y = (-2).createTypedVar<LogicBool>()
             val z = (-3).createTypedVar<LogicBool>()

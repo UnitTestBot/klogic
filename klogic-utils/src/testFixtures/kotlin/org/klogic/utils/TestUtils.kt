@@ -2,10 +2,7 @@
 
 package org.klogic.utils
 
-import org.klogic.core.Constraint
-import org.klogic.core.ReifiedTerm
-import org.klogic.core.Term
-import org.klogic.core.Var
+import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.terms.LogicList
 import org.klogic.utils.terms.Symbol
@@ -51,3 +48,5 @@ val <T : Term<T>> List<ReifiedTerm<T>>.singleReifiedTerm: Term<T>
     get() = single().term
 val List<ReifiedTerm<*>>.singleReifiedTermConstraints: Set<Constraint<*>>
     get() = single().constraints
+
+inline fun <R> withEmptyContext(block: RelationalContext.() -> R): R = RelationalContext().useWith { block() }

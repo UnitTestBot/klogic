@@ -8,11 +8,12 @@ import org.klogic.core.run
 import org.klogic.core.useWith
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
+import org.klogic.utils.withEmptyContext
 
 class LogicPairTest {
     @Test
     fun testConstructingPair() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val first = "a".toSymbol()
             val second = 42.toPeanoLogicNumber()
             val pair = (-1).createTypedVar<LogicPair<Symbol, PeanoLogicNumber>>()
@@ -29,7 +30,7 @@ class LogicPairTest {
 
     @Test
     fun testFirstComponent() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val first = (-1).createTypedVar<Symbol>()
             val second = 42.toPeanoLogicNumber()
             val pair = "a".toSymbol() logicTo second
@@ -46,7 +47,7 @@ class LogicPairTest {
 
     @Test
     fun testSecondComponent() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val first = "a".toSymbol()
             val second = (-1).createTypedVar<PeanoLogicNumber>()
             val pair = first logicTo 42.toPeanoLogicNumber()

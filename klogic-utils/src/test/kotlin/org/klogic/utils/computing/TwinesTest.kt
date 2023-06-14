@@ -6,14 +6,15 @@ import org.klogic.core.RelationalContext
 import org.klogic.core.useWith
 import org.klogic.utils.computing.utils.*
 import org.klogic.utils.listeners.UnificationCounter
+import org.klogic.utils.withEmptyContext
 
 class TwinesTest {
     @Test
     fun testTwines() {
         val unificationCounter = UnificationCounter()
 
-        val twines = RelationalContext().useWith {
-            setUnificationListener(unificationCounter)
+        val twines = withEmptyContext {
+            unificationListener = unificationCounter
             findTwines(15)
         }
         val firstTwine = twines.first()

@@ -6,11 +6,12 @@ import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.Symbol
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
+import org.klogic.utils.withEmptyContext
 
 class RunTest {
     @Test
     fun testFailedRun() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val variable = 1.createTypedVar<Symbol>()
             val unreachableGoal = (variable `===` "a".toSymbol()) `&&&` (variable `===` "b".toSymbol())
 
@@ -23,7 +24,7 @@ class RunTest {
 
     @Test
     fun testRunOverloadingWithoutExplicitResultingVariable() {
-        RelationalContext().useWith {
+        withEmptyContext {
             val goal = { symbol: Term<Symbol> -> symbol `===` "a".toSymbol() }
 
             val run = run(2, goal)
