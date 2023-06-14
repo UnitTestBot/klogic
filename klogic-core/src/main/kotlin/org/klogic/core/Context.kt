@@ -2,6 +2,7 @@ package org.klogic.core
 
 import org.klogic.core.DisequalityListener.Companion.EmptyDisequalityListener
 import org.klogic.core.UnificationListener.Companion.EmptyUnificationListener
+import org.klogic.core.Var.Companion.createTypedVar
 
 /**
  * The context for relations and unifications. Configures listeners for unification and disequality events.
@@ -9,6 +10,11 @@ import org.klogic.core.UnificationListener.Companion.EmptyUnificationListener
 open class RelationalContext : AutoCloseable {
     var unificationListener: UnificationListener = EmptyUnificationListener
     var disequalityListener: DisequalityListener = EmptyDisequalityListener
+
+    /**
+     * The index of the last variable created in this context.
+     */
+    private var lastCreatedVariableIndex: Int = 0
 
     fun removeUnificationListener() {
         unificationListener = EmptyUnificationListener
@@ -19,11 +25,17 @@ open class RelationalContext : AutoCloseable {
     }
 
     /**
+     * Returns a new variable [Var] of the specified type with [lastCreatedVariableIndex] as its [Var.index]
+     * and increments [lastCreatedVariableIndex].
+     */
+    fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
+
+    /**
      * Returns a result of invoking [run] overloading with goals for the new fresh variable created using the passed [state].
      * NOTE: [goals] must not be empty.
      */
     fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
-        val term = state.freshTypedVar<T>()
+        val term = freshTypedVar<T>()
         val goalsWithCreatedFreshVar = goals.map { it(term) }.toTypedArray()
 
         return run(count, term, goalsWithCreatedFreshVar, state)

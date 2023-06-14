@@ -94,36 +94,44 @@ fun <T : Term<T>> debugVar(
  *
  * @see [delay], [State.freshTypedVar].
  */
+context(RelationalContext)
 fun <T : Term<T>> freshTypedVars(f: (Term<T>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar())(st) }
+    { st: State -> f(freshTypedVar())(st) }
 }
 
+context(RelationalContext)
 fun <T1 : Term<T1>, T2 : Term<T2>> freshTypedVars(f: (Term<T1>, Term<T2>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar())(st) }
+    { st: State -> f(freshTypedVar(), freshTypedVar())(st) }
 }
 
+context(RelationalContext)
 fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+    { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
+context(RelationalContext)
 fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+    { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
+context(RelationalContext)
 fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+    { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
+context(RelationalContext)
 fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6: Term<T6>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+    { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
+context(RelationalContext)
 fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6 : Term<T6>, T7 : Term<T7>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+    { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
+context(RelationalContext)
 fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6 : Term<T6>, T7 : Term<T7>, T8 : Term<T8>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>, Term<T8>) -> Goal): Goal = delay {
-    { st: State -> f(st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar(), st.freshTypedVar())(st) }
+    { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
 /**
@@ -138,12 +146,8 @@ data class ReifiedTerm<T : Term<T>>(val term: Term<T>, val constraints: Set<Cons
 /**
  * @see RelationalContext.run
  */
-fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
-    val term = state.freshTypedVar<T>()
-    val goalsWithCreatedFreshVar = goals.map { it(term) }.toTypedArray()
-
-    return run(count, term, goalsWithCreatedFreshVar, state)
-}
+fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> =
+    RelationalContext().useWith { run(count, goals, state) }
 
 /**
  * @see RelationalContext.run
@@ -153,18 +157,13 @@ fun <T : Term<T>> run(
     goal: (Term<T>) -> Goal,
     vararg nextGoals: (Term<T>) -> Goal,
     state: State = State.empty
-): List<ReifiedTerm<T>> = run(count, arrayOf(goal, *nextGoals), state)
+): List<ReifiedTerm<T>> = RelationalContext().useWith { run(count, goal, nextGoals = nextGoals, state) }
 
 /**
  * @see RelationalContext.run
  */
-fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
-    require(goals.isNotEmpty()) {
-        "Could not `run` with empty goals"
-    }
-
-    return run(count, term, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
-}
+fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>, state: State = State.empty): List<ReifiedTerm<T>> =
+    RelationalContext().useWith { run(count, term, goals, state) }
 
 /**
  * @see RelationalContext.run
@@ -175,18 +174,15 @@ fun <T : Term<T>> run(
     goal: Goal,
     vararg nextGoals: Goal,
     state: State = State.empty
-): List<ReifiedTerm<T>> = unreifiedRun(count, goal, nextGoals = nextGoals, state).reify(term)
+): List<ReifiedTerm<T>> = RelationalContext().useWith {
+    run(count, term, goal, nextGoals = nextGoals, state)
+}
 
 /**
  * @see RelationalContext.unreifiedRun
  */
-fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): List<State> {
-    require(goals.isNotEmpty()) {
-        "Could not `unreifiedRun` with empty goals"
-    }
-
-    return unreifiedRun(count, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
-}
+fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): List<State> =
+    RelationalContext().useWith { unreifiedRun(count, goals, state) }
 
 /**
  * @see RelationalContext.unreifiedRun
