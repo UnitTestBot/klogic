@@ -5,7 +5,7 @@ import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.infra.Blackhole
 
 open class TwinesBenchmark : AbstractKlogicBenchmark() {
-    @Benchmark
+    // @Benchmark
     fun benchmarkTwines(bh: Blackhole) {
         bh.consume(findTwines(15))
     }

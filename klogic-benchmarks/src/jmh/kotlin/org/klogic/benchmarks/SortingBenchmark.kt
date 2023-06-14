@@ -7,7 +7,7 @@ import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.infra.Blackhole
 
 open class SortingBenchmark : AbstractKlogicBenchmark() {
-    @Benchmark
+    // @Benchmark
     fun benchmarkSorting(bh: Blackhole) {
         val numbers = listOf(4, 3, 2, 1).map { it.toPeanoLogicNumber() }.toLogicList()
 
