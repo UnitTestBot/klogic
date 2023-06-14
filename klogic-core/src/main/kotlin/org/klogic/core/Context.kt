@@ -5,7 +5,8 @@ import org.klogic.core.UnificationListener.Companion.EmptyUnificationListener
 import org.klogic.core.Var.Companion.createTypedVar
 
 /**
- * The context for relations and unifications. Configures listeners for unification and disequality events.
+ * The context for relations and unifications.
+ * It configures listeners for unification and disequality events and is responsible for creating new variables.
  */
 open class RelationalContext : AutoCloseable {
     var unificationListener: UnificationListener = EmptyUnificationListener
