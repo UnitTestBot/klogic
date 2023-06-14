@@ -20,7 +20,7 @@ import java.util.concurrent.*
 
 open class ExponentBenchmark : AbstractKlogicBenchmark() {
     @Benchmark
-    @Measurement(iterations = 5, time = 1)
+//    @Measurement(iterations = 5, time = 1)
     fun benchmark3pow5(bh: Blackhole) {
         val base = 3u.toOlegLogicNumber()
         val power = 5u.toOlegLogicNumber()
