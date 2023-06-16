@@ -17,7 +17,6 @@ import org.klogic.utils.*
 
 // Some tests are taken from faster-minikanren
 // (see https://github.com/michaelballantyne/faster-minikanren/blob/master/disequality-tests.scm)
-@Suppress("RemoveRedundantBackticks", "LocalVariableName")
 class InequalityTest {
     @Test
     fun testDropOneBranchAndTakeMore() {

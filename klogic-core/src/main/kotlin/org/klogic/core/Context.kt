@@ -1,6 +1,8 @@
 package org.klogic.core
 
 import org.klogic.core.DisequalityListener.Companion.EmptyDisequalityListener
+import org.klogic.core.StreamBindListener.Companion.EmptyStreamBindListener
+import org.klogic.core.StreamMplusListener.Companion.EmptyStreamMplusListener
 import org.klogic.core.UnificationListener.Companion.EmptyUnificationListener
 import org.klogic.core.Var.Companion.createTypedVar
 
@@ -11,6 +13,15 @@ import org.klogic.core.Var.Companion.createTypedVar
 open class RelationalContext : AutoCloseable {
     var unificationListener: UnificationListener = EmptyUnificationListener
     var disequalityListener: DisequalityListener = EmptyDisequalityListener
+    var mplusListener: StreamMplusListener = EmptyStreamMplusListener
+    var bindListener: StreamBindListener = EmptyStreamBindListener
+
+    /**
+     * Determines whether current calculation of streams should be interrupted or not.
+     */
+    var shouldStopCalculations: () -> Boolean = { false }
+
+    val nilStream: NilStream = NilStream()
 
     /**
      * The index of the last variable created in this context.
@@ -23,6 +34,14 @@ open class RelationalContext : AutoCloseable {
 
     fun removeDisequalityListener() {
         disequalityListener = EmptyDisequalityListener
+    }
+
+    fun removeStreamMplusListener() {
+        mplusListener = EmptyStreamMplusListener
+    }
+
+    fun removeBindListener() {
+        bindListener = EmptyStreamBindListener
     }
 
     /**
@@ -131,5 +150,33 @@ interface DisequalityListener {
          * Listener that does nothing on [Term.ineq] events.
          */
         internal object EmptyDisequalityListener : DisequalityListener
+    }
+}
+
+/**
+ * A listener for [RecursiveStream.mplus] events.
+ */
+interface StreamMplusListener {
+    fun <T> onMplus(firstStream: RecursiveStream<T>, secondStream: RecursiveStream<T>) = Unit
+
+    companion object {
+        /**
+         * Listener that does nothing on [RecursiveStream.mplus] events.
+         */
+        internal object EmptyStreamMplusListener : StreamMplusListener
+    }
+}
+
+/**
+ * A listener for [RecursiveStream.bind] events.
+ */
+interface StreamBindListener {
+    fun <T, R> onBind(stream: RecursiveStream<T>, f: (T) -> RecursiveStream<R>) = Unit
+
+    companion object {
+        /**
+         * Listener that does nothing on [RecursiveStream.bind] events.
+         */
+        internal object EmptyStreamBindListener : StreamBindListener
     }
 }

@@ -1,20 +1,22 @@
 package org.klogic.core
 
-import org.klogic.core.RecursiveStream.Companion.nilStream
 import org.klogic.core.RecursiveStream.Companion.single
 
 typealias Goal = (State) -> RecursiveStream<State>
 
+context(RelationalContext)
 private infix fun (Goal).disjunctionBase(other: Goal) = { st: State ->
     this(st) mplus ThunkStream { other(st) }
 }
 
+context(RelationalContext)
 infix fun Goal.or(other: Goal): Goal = { newState: State ->
     ThunkStream{ disjunctionBase(other)(newState) }
 }
 
 infix fun Goal.and(other: Goal): Goal = { st: State -> this(st) bind other }
 
+context(RelationalContext)
 @Suppress("DANGEROUS_CHARACTERS")
 infix fun Goal.`|||`(other: Goal): Goal = this or other
 infix fun Goal.`&&&`(other: Goal): Goal = this and other
@@ -22,11 +24,16 @@ infix fun Goal.`&&&`(other: Goal): Goal = this and other
 /**
  * Represents a [Goal] that always succeeds.
  */
-val success: Goal = { st: State -> single(st) }
+context(RelationalContext)
+val success: Goal
+    get() = { st: State -> single(st) }
+
 /**
  * Represents a [Goal] that always fails.
  */
-val failure: Goal = { nilStream() }
+context(RelationalContext)
+val failure: Goal
+    get() = { nilStream() }
 
 /**
  * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a sequence of goals.
@@ -35,6 +42,7 @@ val failure: Goal = { nilStream() }
  *
  * Such implementation is taken from [OCanren](https://github.com/PLTools/OCanren/blob/b1a4cb7b2fb7fd22e026f4a010cc21ce79676705/src/core/Core.ml#L498)
  */
+context(RelationalContext)
 fun conde(goal: Goal, vararg goals: Goal): Goal = { state: State ->
     val allGoals = listOf(goal, *goals)
 
@@ -57,6 +65,7 @@ fun conde(goal: Goal, vararg goals: Goal): Goal = { state: State ->
  * Invokes [this] [Goal]. If it succeeds, returns a [RecursiveStream] with its result.
  * Otherwise, returns a [Goal] with result of invoking [second] [Goal].
  */
+context(RelationalContext)
 infix fun Goal.condo2(second: Goal): Goal = { st: State ->
     this(st).msplit()?.let {
         ConsStream(it.first, it.second)
@@ -73,6 +82,7 @@ fun and(goal: Goal, vararg goals: Goal): Goal = goal and goals.reduceRight(Goal:
 /**
  * Creates a lazy [Goal] by passed goal generator [f].
  */
+context(RelationalContext)
 fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
 
 /**
