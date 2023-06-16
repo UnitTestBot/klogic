@@ -143,53 +143,6 @@ fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, 
  */
 data class ReifiedTerm<T : Term<T>>(val term: Term<T>, val constraints: Set<Constraint<*>> = emptySet())
 
-/**
- * @see RelationalContext.run
- */
-fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> =
-    RelationalContext().useWith { run(count, goals, state) }
-
-/**
- * @see RelationalContext.run
- */
-fun <T : Term<T>> run(
-    count: Int,
-    goal: (Term<T>) -> Goal,
-    vararg nextGoals: (Term<T>) -> Goal,
-    state: State = State.empty
-): List<ReifiedTerm<T>> = RelationalContext().useWith { run(count, goal, nextGoals = nextGoals, state) }
-
-/**
- * @see RelationalContext.run
- */
-fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>, state: State = State.empty): List<ReifiedTerm<T>> =
-    RelationalContext().useWith { run(count, term, goals, state) }
-
-/**
- * @see RelationalContext.run
- */
-fun <T : Term<T>> run(
-    count: Int,
-    term: Term<T>,
-    goal: Goal,
-    vararg nextGoals: Goal,
-    state: State = State.empty
-): List<ReifiedTerm<T>> = RelationalContext().useWith {
-    run(count, term, goal, nextGoals = nextGoals, state)
-}
-
-/**
- * @see RelationalContext.unreifiedRun
- */
-fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): List<State> =
-    RelationalContext().useWith { unreifiedRun(count, goals, state) }
-
-/**
- * @see RelationalContext.unreifiedRun
- */
-fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal, state: State = State.empty): List<State> =
-    RelationalContext().useWith { unreifiedRun(count, goal, *nextGoals, state = state) }
-
 // TODO add simplify:
 // 1) Remove irrelevant constraints
 // 2) Remove subsumed constraints

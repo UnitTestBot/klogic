@@ -2,10 +2,7 @@ package org.klogic.utils.terms
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.RelationalContext
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.core.run
-import org.klogic.core.useWith
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
 import org.klogic.utils.withEmptyContext

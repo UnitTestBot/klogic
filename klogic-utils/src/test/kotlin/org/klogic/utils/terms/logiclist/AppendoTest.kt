@@ -4,22 +4,15 @@ package org.klogic.utils.terms.logiclist
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.RelationalContext
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.core.reified
-import org.klogic.core.run
-import org.klogic.core.useWith
+import org.klogic.utils.terms.*
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
-import org.klogic.utils.terms.LogicList
 import org.klogic.utils.terms.Nil.nilLogicList
-import org.klogic.utils.terms.Symbol
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
-import org.klogic.utils.terms.appendᴼ
-import org.klogic.utils.terms.plus
-import org.klogic.utils.terms.toLogicList
 import org.klogic.utils.withEmptyContext
 
-class AppendᴼTest {
+class AppendoTest {
     private val symbolA = "a".toSymbol()
     private val symbolB = "b".toSymbol()
 
