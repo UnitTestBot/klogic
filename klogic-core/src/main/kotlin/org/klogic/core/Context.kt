@@ -21,7 +21,7 @@ open class RelationalContext : AutoCloseable {
      */
     var shouldStopCalculations: () -> Boolean = { false }
 
-    val nilStream: NilStream = NilStream()
+    val nilStream: RecursiveStream<Nothing> = NilStream()
 
     /**
      * The index of the last variable created in this context.

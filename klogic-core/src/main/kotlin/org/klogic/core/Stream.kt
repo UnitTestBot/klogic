@@ -100,9 +100,11 @@ sealed class RecursiveStream<out T> {
 
 /**
  * Represents an empty [RecursiveStream].
+ *
+ * NOTE: it can not be instantiated directly and should be used only via [RelationalContext].
  */
 context(RelationalContext)
-class NilStream internal constructor(): RecursiveStream<Nothing>() {
+internal class NilStream internal constructor(): RecursiveStream<Nothing>() {
     override infix fun mplusImpl(other: RecursiveStream<Nothing>): RecursiveStream<Nothing> = other.force()
 
     override infix fun <R> bindImpl(f: (Nothing) -> RecursiveStream<R>): RecursiveStream<R> = this
