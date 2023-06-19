@@ -26,14 +26,14 @@ infix fun Goal.`&&&`(other: Goal): Goal = this and other
  */
 context(RelationalContext)
 val success: Goal
-    get() = { st: State -> single(st) }
+    inline get() = { st: State -> single(st) }
 
 /**
  * Represents a [Goal] that always fails.
  */
 context(RelationalContext)
 val failure: Goal
-    get() = { nilStream() }
+    inline get() = { nilStream() }
 
 /**
  * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a sequence of goals.
@@ -66,7 +66,7 @@ fun conde(goal: Goal, vararg goals: Goal): Goal = { state: State ->
  * Otherwise, returns a [Goal] with result of invoking [second] [Goal].
  */
 context(RelationalContext)
-infix fun Goal.condo2(second: Goal): Goal = { st: State ->
+inline infix fun Goal.condo2(crossinline second: Goal): Goal = { st: State ->
     this(st).msplit()?.let {
         ConsStream(it.first, it.second)
     } ?: second(st)
@@ -83,15 +83,15 @@ fun and(goal: Goal, vararg goals: Goal): Goal = goal and goals.reduceRight(Goal:
  * Creates a lazy [Goal] by passed goal generator [f].
  */
 context(RelationalContext)
-fun delay(f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
+inline fun delay(crossinline f: () -> Goal): Goal = { st: State -> ThunkStream { f()(st) } }
 
 /**
  * Reifies walked [term] using the passed [reifier] and returns a Goal from the passed [callBack].
  */
-fun <T : Term<T>> debugVar(
+inline fun <T : Term<T>> debugVar(
     term: Term<T>,
-    reifier: (Term<T>) -> ReifiedTerm<T>,
-    callBack: (ReifiedTerm<T>) -> Goal
+    crossinline reifier: (Term<T>) -> ReifiedTerm<T>,
+    crossinline callBack: (ReifiedTerm<T>) -> Goal
 ): Goal = { st: State ->
     val walkedTerm = term.walk(st.substitution)
     val reified = reifier(walkedTerm)
@@ -105,42 +105,42 @@ fun <T : Term<T>> debugVar(
  * @see [delay], [State.freshTypedVar].
  */
 context(RelationalContext)
-fun <T : Term<T>> freshTypedVars(f: (Term<T>) -> Goal): Goal = delay {
+inline fun <T : Term<T>> freshTypedVars(crossinline f: (Term<T>) -> Goal): Goal = delay {
     { st: State -> f(freshTypedVar())(st) }
 }
 
 context(RelationalContext)
-fun <T1 : Term<T1>, T2 : Term<T2>> freshTypedVars(f: (Term<T1>, Term<T2>) -> Goal): Goal = delay {
+inline fun <T1 : Term<T1>, T2 : Term<T2>> freshTypedVars(crossinline f: (Term<T1>, Term<T2>) -> Goal): Goal = delay {
     { st: State -> f(freshTypedVar(), freshTypedVar())(st) }
 }
 
 context(RelationalContext)
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>) -> Goal): Goal = delay {
+inline fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>> freshTypedVars(crossinline f: (Term<T1>, Term<T2>, Term<T3>) -> Goal): Goal = delay {
     { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
 context(RelationalContext)
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>) -> Goal): Goal = delay {
+inline fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>> freshTypedVars(crossinline f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>) -> Goal): Goal = delay {
     { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
 context(RelationalContext)
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>) -> Goal): Goal = delay {
+inline fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>> freshTypedVars(crossinline f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>) -> Goal): Goal = delay {
     { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
 context(RelationalContext)
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6: Term<T6>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>) -> Goal): Goal = delay {
+inline fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6: Term<T6>> freshTypedVars(crossinline f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>) -> Goal): Goal = delay {
     { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
 context(RelationalContext)
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6 : Term<T6>, T7 : Term<T7>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>) -> Goal): Goal = delay {
+inline fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6 : Term<T6>, T7 : Term<T7>> freshTypedVars(crossinline f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>) -> Goal): Goal = delay {
     { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 
 context(RelationalContext)
-fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6 : Term<T6>, T7 : Term<T7>, T8 : Term<T8>> freshTypedVars(f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>, Term<T8>) -> Goal): Goal = delay {
+inline fun <T1 : Term<T1>, T2 : Term<T2>, T3 : Term<T3>, T4 : Term<T4>, T5 : Term<T5>, T6 : Term<T6>, T7 : Term<T7>, T8 : Term<T8>> freshTypedVars(crossinline f: (Term<T1>, Term<T2>, Term<T3>, Term<T4>, Term<T5>, Term<T6>, Term<T7>, Term<T8>) -> Goal): Goal = delay {
     { st: State -> f(freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar(), freshTypedVar())(st) }
 }
 

@@ -8,25 +8,25 @@ sealed class RecursiveStream<out T> {
     /**
      * Returns the list of first [n] elements of this stream.
      */
-    @Suppress("NAME_SHADOWING")
     infix fun take(n: Int): List<T> {
-        val result = mutableListOf<T>()
+        @Suppress("NAME_SHADOWING")
         var n = n
-        var curStream = this
 
-        while (n > 0) {
-            when (curStream) {
-                is NilStream -> return result
-                is ThunkStream -> curStream = curStream.elements()
-                is ConsStream -> {
-                    result += curStream.head
-                    curStream = curStream.tail
-                    --n
+        return buildList(n) {
+            var curStream = this@RecursiveStream
+
+            while (n > 0) {
+                when (curStream) {
+                    is NilStream -> return@buildList
+                    is ThunkStream -> curStream = curStream.elements()
+                    is ConsStream -> {
+                        add(curStream.head)
+                        curStream = curStream.tail
+                        --n
+                    }
                 }
             }
         }
-
-        return result
     }
 
     /**
