@@ -36,7 +36,7 @@ sealed class RecursiveStream<out T> {
         if (shouldStopCalculations()) {
             return this
         }
-        mplusListener.onMplus(this, other)
+        mplusListeners.forEach { it.onMplus(this, other) }
 
         return this mplusImpl other
     }
@@ -46,13 +46,13 @@ sealed class RecursiveStream<out T> {
      *
      * NOTE: do not use this method with mapping to a different type together with non-default [RelationalContext.shouldStopCalculations].
      */
-    @Suppress("UNCHECKED_CAST")
     infix fun <R> bind(f: (T) -> RecursiveStream<R>): RecursiveStream<R> {
         if (shouldStopCalculations()) {
             // Here we assume that we work on streams consisting of the same type - see the note in the docs of this method.
+            @Suppress("UNCHECKED_CAST")
             return this as RecursiveStream<R>
         }
-        bindListener.onBind(this, f)
+        bindListeners.forEach { it.onBind(this, f) }
 
         return this bindImpl f
     }
@@ -116,7 +116,7 @@ internal class NilStream internal constructor(): RecursiveStream<Nothing>() {
     override fun equals(other: Any?): Boolean = this === nilStream
 
     // Note that this hashCode does not depend on the current context
-    // so nil streams from different contexts have the same hash code.
+    // so nil streams from different contexts loaded using the same classloader have the same hash code.
     override fun hashCode(): Int = javaClass.hashCode()
 }
 

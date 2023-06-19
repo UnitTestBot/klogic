@@ -33,7 +33,7 @@ val success: Goal
  */
 context(RelationalContext)
 val failure: Goal
-    inline get() = { nilStream() }
+    inline get() = { nilStream }
 
 /**
  * Calculates g1 ||| (g2 ||| (g3 ||| ... gn)) for a sequence of goals.

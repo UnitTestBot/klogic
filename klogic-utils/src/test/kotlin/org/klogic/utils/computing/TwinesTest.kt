@@ -2,8 +2,6 @@ package org.klogic.utils.computing
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.RelationalContext
-import org.klogic.core.useWith
 import org.klogic.utils.computing.utils.*
 import org.klogic.utils.listeners.UnificationCounter
 import org.klogic.utils.withEmptyContext
@@ -14,7 +12,7 @@ class TwinesTest {
         val unificationCounter = UnificationCounter()
 
         val twines = withEmptyContext {
-            unificationListener = unificationCounter
+            addUnificationListener(unificationCounter)
             findTwines(15)
         }
         val firstTwine = twines.first()

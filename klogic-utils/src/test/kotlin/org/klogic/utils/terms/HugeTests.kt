@@ -17,7 +17,7 @@ class HugeTests {
         val unificationCounter = UnificationCounter()
 
         withEmptyContext {
-            unificationListener = unificationCounter
+            addUnificationListener(unificationCounter)
 
             val size = 9
 

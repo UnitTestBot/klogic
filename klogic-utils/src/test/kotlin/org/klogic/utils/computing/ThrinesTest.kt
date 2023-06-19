@@ -2,8 +2,6 @@ package org.klogic.utils.computing
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.RelationalContext
-import org.klogic.core.useWith
 import org.klogic.utils.computing.utils.*
 import org.klogic.utils.computing.utils.doubleQuote
 import org.klogic.utils.computing.utils.lambdaSymb
@@ -19,7 +17,7 @@ class ThrinesTest {
         val unificationCounter = UnificationCounter()
 
         val thrines = withEmptyContext {
-            unificationListener = unificationCounter
+            addUnificationListener(unificationCounter)
             findThrines(3)
         }
         val firstThrine = thrines.first()

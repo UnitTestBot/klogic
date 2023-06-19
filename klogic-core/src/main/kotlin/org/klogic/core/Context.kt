@@ -1,20 +1,17 @@
 package org.klogic.core
 
-import org.klogic.core.DisequalityListener.Companion.EmptyDisequalityListener
-import org.klogic.core.StreamBindListener.Companion.EmptyStreamBindListener
-import org.klogic.core.StreamMplusListener.Companion.EmptyStreamMplusListener
-import org.klogic.core.UnificationListener.Companion.EmptyUnificationListener
 import org.klogic.core.Var.Companion.createTypedVar
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The context for relations and unifications.
  * It configures listeners for unification and disequality events and is responsible for creating new variables.
  */
 open class RelationalContext : AutoCloseable {
-    var unificationListener: UnificationListener = EmptyUnificationListener
-    var disequalityListener: DisequalityListener = EmptyDisequalityListener
-    var mplusListener: StreamMplusListener = EmptyStreamMplusListener
-    var bindListener: StreamBindListener = EmptyStreamBindListener
+    val unificationListeners: MutableSet<UnificationListener> = ConcurrentHashMap.newKeySet()
+    val disequalityListeners: MutableSet<DisequalityListener> = ConcurrentHashMap.newKeySet()
+    val mplusListeners: MutableSet<StreamMplusListener> = ConcurrentHashMap.newKeySet()
+    val bindListeners: MutableSet<StreamBindListener> = ConcurrentHashMap.newKeySet()
 
     /**
      * Determines whether current calculation of streams should be interrupted or not.
@@ -28,30 +25,42 @@ open class RelationalContext : AutoCloseable {
      */
     private var lastCreatedVariableIndex: Int = 0
 
-    fun removeUnificationListener() {
-        unificationListener = EmptyUnificationListener
+    fun addUnificationListener(unificationListener: UnificationListener) {
+        unificationListeners += unificationListener
+    }
+    fun addDisequalityListener(disequalityListener: DisequalityListener) {
+        disequalityListeners += disequalityListener
+    }
+    fun addMplusListener(mplusListener: StreamMplusListener) {
+        mplusListeners += mplusListener
+    }
+    fun addBindListener(bindListener: StreamBindListener) {
+        bindListeners += bindListener
     }
 
-    fun removeDisequalityListener() {
-        disequalityListener = EmptyDisequalityListener
+    fun removeUnificationListener(unificationListener: UnificationListener) {
+        unificationListeners -= unificationListener
     }
-
-    fun removeStreamMplusListener() {
-        mplusListener = EmptyStreamMplusListener
+    fun removeDisequalityListener(disequalityListener: DisequalityListener) {
+        disequalityListeners -= disequalityListener
     }
-
-    fun removeBindListener() {
-        bindListener = EmptyStreamBindListener
+    fun removeMplusListener(mplusListener: StreamMplusListener) {
+        mplusListeners -= mplusListener
+    }
+    fun removeBindListener(bindListener: StreamBindListener) {
+        bindListeners -= bindListener
     }
 
     /**
      * Returns a new variable [Var] of the specified type with [lastCreatedVariableIndex] as its [Var.index]
      * and increments [lastCreatedVariableIndex].
+     *
+     * NOTE: this method is not thread-safe and requires explicit outer synchronization in multithreading applications.
      */
     fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
 
     /**
-     * Returns a result of invoking [run] overloading with goals for the new fresh variable created using the passed [state].
+     * Returns a result of invoking [run] overloading with goals for the fresh variable created using the passed [state].
      * NOTE: [goals] must not be empty.
      */
     fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
@@ -128,55 +137,27 @@ inline fun <T : AutoCloseable?, R> T.useWith(block: T.() -> R): R = use { it.blo
 /**
  * A listener for [Term.unify] events.
  */
-interface UnificationListener {
-    fun onUnification(firstTerm: Term<*>, secondTerm: Term<*>, stateBefore: State, stateAfter: State?) = Unit
-
-    companion object {
-        /**
-         * Listener that does nothing on [Term.unify] events.
-         */
-        internal object EmptyUnificationListener : UnificationListener
-    }
+fun interface UnificationListener {
+    fun onUnification(firstTerm: Term<*>, secondTerm: Term<*>, stateBefore: State, stateAfter: State?)
 }
 
 /**
  * A listener for [Term.ineq] events.
  */
-interface DisequalityListener {
-    fun onDisequality(firstTerm: Term<*>, secondTerm: Term<*>, stateBefore: State, stateAfter: State?) = Unit
-
-    companion object {
-        /**
-         * Listener that does nothing on [Term.ineq] events.
-         */
-        internal object EmptyDisequalityListener : DisequalityListener
-    }
+fun interface DisequalityListener {
+    fun onDisequality(firstTerm: Term<*>, secondTerm: Term<*>, stateBefore: State, stateAfter: State?)
 }
 
 /**
  * A listener for [RecursiveStream.mplus] events.
  */
 interface StreamMplusListener {
-    fun <T> onMplus(firstStream: RecursiveStream<T>, secondStream: RecursiveStream<T>) = Unit
-
-    companion object {
-        /**
-         * Listener that does nothing on [RecursiveStream.mplus] events.
-         */
-        internal object EmptyStreamMplusListener : StreamMplusListener
-    }
+    fun <T> onMplus(firstStream: RecursiveStream<T>, secondStream: RecursiveStream<T>)
 }
 
 /**
  * A listener for [RecursiveStream.bind] events.
  */
 interface StreamBindListener {
-    fun <T, R> onBind(stream: RecursiveStream<T>, f: (T) -> RecursiveStream<R>) = Unit
-
-    companion object {
-        /**
-         * Listener that does nothing on [RecursiveStream.bind] events.
-         */
-        internal object EmptyStreamBindListener : StreamBindListener
-    }
+    fun <T, R> onBind(stream: RecursiveStream<T>, f: (T) -> RecursiveStream<R>)
 }

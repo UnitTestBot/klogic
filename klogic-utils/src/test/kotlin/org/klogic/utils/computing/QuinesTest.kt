@@ -2,8 +2,6 @@ package org.klogic.utils.computing
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.klogic.core.RelationalContext
-import org.klogic.core.useWith
 import org.klogic.utils.computing.utils.extractVariable
 import org.klogic.utils.computing.utils.lambdaSymb
 import org.klogic.utils.computing.utils.quoteSymb
@@ -17,7 +15,7 @@ class QuinesTest {
         val unificationCounter = UnificationCounter()
 
         val quines = withEmptyContext {
-            unificationListener = unificationCounter
+            addUnificationListener(unificationCounter)
 
             findQuines(10)
         }

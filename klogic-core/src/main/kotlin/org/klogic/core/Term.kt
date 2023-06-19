@@ -42,7 +42,7 @@ sealed interface Term<T : Term<T>> {
     context(RelationalContext)
     infix fun unify(other: Term<T>): Goal = { st: State ->
         val stateAfter = st.unifyWithConstraintsVerification(this, other)
-        unificationListener.onUnification(this, other, st, stateAfter)
+        unificationListeners.forEach { it.onUnification(this, other, st, stateAfter) }
 
         stateAfter?.let {
             single(it)
@@ -63,16 +63,22 @@ sealed interface Term<T : Term<T>> {
         st.substitution.ineq(this, other).let {
             when (it) {
                 ViolatedConstraintResult -> nilStream<State>().also {
-                    disequalityListener.onDisequality(this, other, st, null)
+                    disequalityListeners.forEach {
+                        listener -> listener.onDisequality(this, other, st, stateAfter = null)
+                    }
                 }
                 RedundantConstraintResult -> single(st).also {
-                    disequalityListener.onDisequality(this, other, st, st)
+                    disequalityListeners.forEach { listener ->
+                        listener.onDisequality(this, other, st, st)
+                    }
                 }
                 is SatisfiableConstraintResult -> {
                     val newConstraint = it.simplifiedConstraint
                     val newState = st.copy(constraints = st.constraints.add(newConstraint))
 
-                    disequalityListener.onDisequality(this, other, st, newState)
+                    disequalityListeners.forEach { listener ->
+                        listener.onDisequality(this, other, st, newState)
+                    }
 
                     single(newState)
                 }
