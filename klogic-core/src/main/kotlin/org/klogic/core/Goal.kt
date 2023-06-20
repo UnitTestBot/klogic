@@ -11,7 +11,7 @@ private infix fun (Goal).disjunctionBase(other: Goal) = { st: State ->
 
 context(RelationalContext)
 infix fun Goal.or(other: Goal): Goal = { newState: State ->
-    ThunkStream{ disjunctionBase(other)(newState) }
+    ThunkStream { disjunctionBase(other)(newState) }
 }
 
 infix fun Goal.and(other: Goal): Goal = { st: State -> this(st) bind other }
@@ -19,6 +19,7 @@ infix fun Goal.and(other: Goal): Goal = { st: State -> this(st) bind other }
 context(RelationalContext)
 @Suppress("DANGEROUS_CHARACTERS")
 infix fun Goal.`|||`(other: Goal): Goal = this or other
+
 infix fun Goal.`&&&`(other: Goal): Goal = this and other
 
 /**
