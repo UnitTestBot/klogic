@@ -3,35 +3,25 @@ package org.klogic.core
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.collections.immutable.toPersistentHashSet
-import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.unify.toUnificationState
 
 typealias InequalityConstraints = PersistentSet<InequalityConstraint>
 
 /**
- * Represents a current immutable state of current [run] expression with [substitution] for [Var]s,
- * passed satisfiable [Constraint]s,
- * and an index of the last created with [freshTypedVar] variable.
+ * Represents a current immutable state of current [run] expression with [substitution] for [Var]s and
+ * passed satisfiable [Constraint]s.
  */
 data class State(
     val substitution: Substitution,
     val constraints: PersistentSet<Constraint<*>> = persistentHashSetOf(),
-    private var lastCreatedVariableIndex: Int = 0
 ) {
     constructor(
         map: Map<Var<*>, Term<*>>,
         constraints: PersistentSet<Constraint<*>>,
-        lastCreatedVariableIndex: Int = 0
-    ) : this(Substitution(map), constraints, lastCreatedVariableIndex)
+    ) : this(Substitution(map), constraints)
 
     private val inequalityConstraints: InequalityConstraints =
         constraints.filterIsInstance<InequalityConstraint>().toPersistentHashSet()
-
-    /**
-     * Returns a new variable [Var] of the specified type with [lastCreatedVariableIndex] as its [Var.index]
-     * and increments [lastCreatedVariableIndex].
-     */
-    fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
 
     /**
      * Returns a new state with [substitution] extended with passed not already presented association
@@ -42,7 +32,7 @@ data class State(
             "Variable $variable already exists in substitution $substitution"
         }
 
-        return State(substitution + (variable to term), inequalityConstraints, lastCreatedVariableIndex)
+        return State(substitution + (variable to term), inequalityConstraints)
     }
 
     /**

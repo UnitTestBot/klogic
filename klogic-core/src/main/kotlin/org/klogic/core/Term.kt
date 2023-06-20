@@ -39,8 +39,12 @@ sealed interface Term<T : Term<T>> {
      *
      * @see [State.unifyWithConstraintsVerification] for details.
      */
+    context(RelationalContext)
     infix fun unify(other: Term<T>): Goal = { st: State ->
-        st.unifyWithConstraintsVerification(this, other)?.let {
+        val stateAfter = st.unifyWithConstraintsVerification(this, other)
+        unificationListeners.forEach { it.onUnification(this, other, st, stateAfter) }
+
+        stateAfter?.let {
             single(it)
         } ?: nilStream()
     }
@@ -54,14 +58,27 @@ sealed interface Term<T : Term<T>> {
      *
      * @see [Substitution.ineq] for details.
      */
+    context(RelationalContext)
     infix fun ineq(other: Term<T>): Goal = { st: State ->
         st.substitution.ineq(this, other).let {
             when (it) {
-                ViolatedConstraintResult -> nilStream()
-                RedundantConstraintResult -> single(st)
+                ViolatedConstraintResult -> nilStream<State>().also {
+                    disequalityListeners.forEach {
+                        listener -> listener.onDisequality(this, other, st, stateAfter = null)
+                    }
+                }
+                RedundantConstraintResult -> single(st).also {
+                    disequalityListeners.forEach { listener ->
+                        listener.onDisequality(this, other, st, st)
+                    }
+                }
                 is SatisfiableConstraintResult -> {
                     val newConstraint = it.simplifiedConstraint
                     val newState = st.copy(constraints = st.constraints.add(newConstraint))
+
+                    disequalityListeners.forEach { listener ->
+                        listener.onDisequality(this, other, st, newState)
+                    }
 
                     single(newState)
                 }
@@ -83,7 +100,10 @@ sealed interface Term<T : Term<T>> {
     @Suppress("UNCHECKED_CAST")
     fun asReified(): T = this as T
 
+    context(RelationalContext)
     infix fun `===`(other: Term<T>): Goal = this unify other
+
+    context(RelationalContext)
     infix fun `!==`(other: Term<T>): Goal = this ineq other
 
     fun isVar(): Boolean = this is Var<*>
@@ -160,11 +180,11 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
             (it as? Term<*>)?.walk(substitution) ?: it
         }
 
-        return constructFromSubtrees(walkedSubtrees.asIterable())
+        return constructFromSubtrees(walkedSubtrees)
     }
 
     override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = subtreesToUnify.any {
-        if (it is Term<*>) it.occurs(variable) else false
+        (it as? Term<*>)?.occurs(variable) ?: false
     }
 
     override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
@@ -177,18 +197,18 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
             return null
         }
 
-        var currentUnificationState: UnificationState? = unificationState
+        var currentUnificationState: UnificationState = unificationState
 
         subtreesToUnify.zip(walkedOther.subtreesToUnify).forEach { (curSubtree, otherSubtree) ->
-            currentUnificationState = currentUnificationState?.let {
-                // Terms should be unified, non-logic types should be checked for equality
-                if (curSubtree is Term<*>) {
-                    // Cannot use non-static method here because of type inference error
-                    Term.unify(curSubtree, (otherSubtree as Term<*>).cast(), it)
-                } else {
-                    currentUnificationState.takeIf { curSubtree == otherSubtree }
-                }
-            } ?: return null
+            // Terms should be unified, non-logic types should be checked for equality
+            val unificationResult = if (curSubtree is Term<*>) {
+                // Cannot use non-static method here because of type inference error
+                Term.unify(curSubtree, (otherSubtree as Term<*>).cast(), currentUnificationState)
+            } else {
+                currentUnificationState.takeIf { curSubtree == otherSubtree }
+            }
+
+            currentUnificationState = unificationResult ?: return null
         }
 
         return currentUnificationState

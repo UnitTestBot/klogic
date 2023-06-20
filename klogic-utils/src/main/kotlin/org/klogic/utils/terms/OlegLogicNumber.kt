@@ -59,6 +59,7 @@ internal val numberThree: OlegLogicNumber = (digitOne + digitOne.toLogicList()).
 /**
  * Checks whether the [number] is positive.
  */
+context(RelationalContext)
 fun posᴼ(number: OlegTerm): Goal = freshTypedVars<Digit, LogicList<Digit>> { head, tail ->
     number `===` (head + tail).toOlegLogicNumber()
 }
@@ -66,6 +67,7 @@ fun posᴼ(number: OlegTerm): Goal = freshTypedVars<Digit, LogicList<Digit>> { h
 /**
  * Checks whether [number] is greater than 1.
  */
+context(RelationalContext)
 fun greaterThan1ᴼ(number: OlegTerm): Goal =
     freshTypedVars<Digit, Digit, LogicList<Digit>> { head, tailHead, tail ->
         number `===` (head + (tailHead + tail)).toOlegLogicNumber()
@@ -74,6 +76,7 @@ fun greaterThan1ᴼ(number: OlegTerm): Goal =
 /**
  * Satisfies [b] + [x] + [y] = [r] + 2 * [c]
  */
+context(RelationalContext)
 fun fullAdderᴼ(b: DigitTerm, x: DigitTerm, y: DigitTerm, r: DigitTerm, c: DigitTerm): Goal = conde(
     (digitZero `===` b) and (digitZero `===` x) and (digitZero `===` y) and (digitZero `===` r) and (digitZero `===` c),
     (digitOne `===` b) and (digitZero `===` x) and (digitZero `===` y) and (digitOne `===` r) and (digitZero `===` c),
@@ -88,6 +91,7 @@ fun fullAdderᴼ(b: DigitTerm, x: DigitTerm, y: DigitTerm, r: DigitTerm, c: Digi
 /**
  * Adds a carry-in bit [d] to arbitrarily large numbers [n] and [m] to produce a number [r].
  */
+context(RelationalContext)
 fun adderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal = conde(
     (digitZero `===` d) and (m `===` numberZero) and (n `===` r),
     (digitZero `===` d) and (n `===` numberZero) and (m `===` r) and posᴼ(m),
@@ -106,6 +110,7 @@ fun adderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal = conde(
 /**
  * Satisfies [d] + [n] + [m] = [r], provided that [m] and [r] are greater than 1 and [n] is positive.
  */
+context(RelationalContext)
 fun genAdderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal =
     freshTypedVars<Digit, Digit, Digit, Digit, LogicList<Digit>, LogicList<Digit>, LogicList<Digit>> { a, b, c, e, x, y, z ->
         val numberX = x.toOlegLogicNumber()
@@ -121,11 +126,14 @@ fun genAdderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal =
                 (adderᴼ(e, numberX, numberY, numberZ))
     }
 
+context(RelationalContext)
 fun plusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal = adderᴼ(digitZero, n, m, result)
 
+context(RelationalContext)
 fun minusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal = plusᴼ(m, result, n)
 
 // `=lo`
+context(RelationalContext)
 fun hasTheSameLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
     (n `===` numberZero) and (m `===` numberZero),
     (n `===` numberOne) and (m `===` numberOne),
@@ -140,6 +148,7 @@ fun hasTheSameLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
 )
 
 // `<lo`
+context(RelationalContext)
 fun hasTheSmallerLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
     (n `===` numberZero) and posᴼ(m),
     (n `===` numberOne) and greaterThan1ᴼ(m),
@@ -154,23 +163,27 @@ fun hasTheSmallerLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
 )
 
 // `<=lo`
+context(RelationalContext)
 fun hasTheSmallerOrSameLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
     hasTheSameLengthᴼ(n, m),
     hasTheSmallerLengthᴼ(n, m)
 )
 
 // `<o`
+context(RelationalContext)
 fun lessThanᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
     hasTheSmallerLengthᴼ(n, m),
     hasTheSameLengthᴼ(n, m) and freshTypedVars<OlegLogicNumber> { x -> posᴼ(x) and plusᴼ(n, x, m) }
 )
 
 // `<=o`
+context(RelationalContext)
 fun lessThanOrEqualᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
     n `===` m,
     lessThanᴼ(n, m)
 )
 
+context(RelationalContext)
 fun mulᴼ(n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = conde(
     (n `===` numberZero) and (p `===` numberZero),
     posᴼ(n) and (m `===` numberZero) and (p `===` numberZero),
@@ -209,6 +222,7 @@ fun mulᴼ(n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = conde(
     }
 )
 
+context(RelationalContext)
 fun oddMulᴼ(x: OlegTerm, n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = freshTypedVars<LogicList<Digit>> { q ->
     val number = q.toOlegLogicNumber()
 
@@ -219,6 +233,7 @@ fun oddMulᴼ(x: OlegTerm, n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = freshT
     )
 }
 
+context(RelationalContext)
 fun boundMulᴼ(q: OlegTerm, p: OlegTerm, n: OlegTerm, m: OlegTerm): Goal = conde(
     (q `===` numberZero) and posᴼ(p),
     freshTypedVars<Digit, Digit, Digit, Digit, LogicList<Digit>, LogicList<Digit>, LogicList<Digit>> { a0, a1, a2, a3, x, y, z ->
@@ -244,6 +259,7 @@ fun boundMulᴼ(q: OlegTerm, p: OlegTerm, n: OlegTerm, m: OlegTerm): Goal = cond
     }
 )
 
+context(RelationalContext)
 fun repeatedMulᴼ(n: OlegTerm, q: OlegTerm, nq: OlegTerm): Goal = conde(
     posᴼ(n) and (q `===` numberZero) and (nq `===` numberOne),
     (q `===` numberOne) and (n `===` nq),
@@ -262,6 +278,7 @@ fun repeatedMulᴼ(n: OlegTerm, q: OlegTerm, nq: OlegTerm): Goal = conde(
 /**
  * Satisfies n = m * q + r, with 0 <= r < m.
  */
+context(RelationalContext)
 fun divᴼ(n: OlegTerm, m: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
     (r `===` n) and (q `===` numberZero) and lessThanᴼ(n, m),
     and(
@@ -305,6 +322,7 @@ fun divᴼ(n: OlegTerm, m: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
  *  Splits a binary numeral at a given length:
  * (split o n r l h) holds if n = 2^{s+1} · l + h where s = ∥r∥ and h < 2^{s+1}.
  */
+context(RelationalContext)
 fun splitᴼ(n: OlegTerm, r: OlegTerm, l: OlegTerm, h: Term<LogicList<Digit>>): Goal = conde(
     (n `===` numberZero) and (h `===` nilLogicList()) and (l `===` numberZero),
     freshTypedVars<Digit, LogicList<Digit>> { b, n1 ->
@@ -359,6 +377,7 @@ fun splitᴼ(n: OlegTerm, r: OlegTerm, l: OlegTerm, h: Term<LogicList<Digit>>): 
 /**
  * Satisfies n = b ^ q + r, where 0 <= r <= n and q is the largest.
  */
+context(RelationalContext)
 @Suppress("NAME_SHADOWING")
 fun logᴼ(n: OlegTerm, b: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
     (n `===` numberOne) and posᴼ(b) and (q `===` numberZero) and (r `===` numberZero),
@@ -426,6 +445,7 @@ fun logᴼ(n: OlegTerm, b: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
     )
 )
 
+context(RelationalContext)
 fun exp2ᴼ(n: OlegTerm, b: Term<LogicList<Digit>>, q: OlegTerm): Goal {
     val numberB = b.toOlegLogicNumber()
 
@@ -464,4 +484,5 @@ fun exp2ᴼ(n: OlegTerm, b: Term<LogicList<Digit>>, q: OlegTerm): Goal {
     )
 }
 
+context(RelationalContext)
 fun expᴼ(b: OlegTerm, q: OlegTerm, n: OlegTerm): Goal = logᴼ(n, b, q, numberZero)

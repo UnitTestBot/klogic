@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation(project(":klogic-core"))
     implementation(project(":klogic-utils"))
+    implementation(testFixtures(project(":klogic-utils")))
 
     jmh("org.openjdk.jmh:jmh-core:1.36")
     jmh("org.openjdk.jmh:jmh-generator-annprocess:1.36")

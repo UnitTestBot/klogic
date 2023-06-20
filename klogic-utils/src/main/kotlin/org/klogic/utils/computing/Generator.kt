@@ -83,6 +83,7 @@ internal val lambdaSymbol: Symbol = "lambda".toSymbol()
 /**
  * Searches an association of [x] in the [env].
  */
+context(RelationalContext)
 fun lookupᴼ(x: Term<Symbol>, env: Term<Environment>, t: Term<Gresult>): Goal =
     freshTypedVars<Symbol, Gresult, LogicList<LogicPair<Symbol, Gresult>>> { y, v, rest ->
         and(
@@ -97,6 +98,7 @@ fun lookupᴼ(x: Term<Symbol>, env: Term<Environment>, t: Term<Gresult>): Goal =
 /**
  * 'Checks' whether [x] is not in [env].
  */
+context(RelationalContext)
 fun notInEnvᴼ(x: Term<Symbol>, env: Term<Environment>): Goal = conde(
     freshTypedVars<Symbol, Gresult, LogicList<LogicPair<Symbol, Gresult>>> { y, v, rest ->
         and(
@@ -108,6 +110,7 @@ fun notInEnvᴼ(x: Term<Symbol>, env: Term<Environment>): Goal = conde(
     env `===` nilLogicList()
 )
 
+context(RelationalContext)
 fun properListᴼ(es: Term<LogicList<Gterm>>, env: Term<Environment>, rs: Term<LogicList<Gterm>>): Goal = conde(
     (es `===` nilLogicList()) and (rs `===` nilLogicList()),
     freshTypedVars<Gterm, LogicList<Gterm>, Gterm, LogicList<Gterm>> { e, d, te, td ->
@@ -123,6 +126,7 @@ fun properListᴼ(es: Term<LogicList<Gterm>>, env: Term<Environment>, rs: Term<L
 /**
  * Evaluates the [term] in the passed [env] to the [result].
  */
+context(RelationalContext)
 fun evalᴼ(term: Term<Gterm>, env: Term<Environment>, result: Term<Gresult>): Goal = conde(
     freshTypedVars<Gterm> { t ->
         and(

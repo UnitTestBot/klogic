@@ -2,10 +2,7 @@
 
 package org.klogic.utils.terms
 
-import org.klogic.core.Goal
-import org.klogic.core.Term
-import org.klogic.core.and
-import org.klogic.core.conde
+import org.klogic.core.*
 import org.klogic.utils.terms.LogicFalsᴼ.falsᴼ
 import org.klogic.utils.terms.LogicTruᴼ.truᴼ
 
@@ -33,11 +30,13 @@ object LogicTruᴼ : LogicBool() {
     override fun toBool(): Boolean = true
 }
 
+context(RelationalContext)
 fun notᴼ(x: Term<LogicBool>, y: Term<LogicBool>): Goal = conde(
     (x `===` falsᴼ) and (y `===` truᴼ),
     (y `===` falsᴼ) and (x `===` truᴼ),
 )
 
+context(RelationalContext)
 fun orᴼ(x: BoolTerm, y: BoolTerm, z: BoolTerm): Goal = conde(
     (x `===` falsᴼ) and (y `===` falsᴼ) and (z `===` falsᴼ),
     (x `===` falsᴼ) and (y `===` truᴼ) and (z `===` truᴼ),
@@ -45,6 +44,7 @@ fun orᴼ(x: BoolTerm, y: BoolTerm, z: BoolTerm): Goal = conde(
     (x `===` truᴼ) and (y `===` truᴼ) and (z `===` truᴼ),
 )
 
+context(RelationalContext)
 fun andᴼ(x: BoolTerm, y: BoolTerm, z: BoolTerm): Goal = conde(
     (x `===` falsᴼ) and (y `===` falsᴼ) and (z `===` falsᴼ),
     (x `===` falsᴼ) and (y `===` truᴼ) and (z `===` falsᴼ),

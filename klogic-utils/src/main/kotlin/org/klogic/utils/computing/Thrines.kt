@@ -6,6 +6,7 @@ import org.klogic.core.*
 import org.klogic.utils.terms.LogicTriple
 import org.klogic.utils.terms.Nil.nilLogicList
 
+context(RelationalContext)
 fun thrinesᴼ(x: Term<LogicTriple<Gterm, Gterm, Gterm>>): Goal = freshTypedVars<Gterm, Gterm, Gterm> { p, q, r ->
     and(
         p `!==` q,
@@ -22,4 +23,5 @@ fun thrinesᴼ(x: Term<LogicTriple<Gterm, Gterm, Gterm>>): Goal = freshTypedVars
  * Finds [n] thrines - distinct programs p, q, and r, such that
  * (eval p) ⇒ q, (eval q) ⇒ r , and (eval r ) ⇒ p.
  */
+context(RelationalContext)
 fun findThrines(n: Int): List<ReifiedTerm<LogicTriple<Gterm, Gterm, Gterm>>> = run(n, { thrinesᴼ(it) })

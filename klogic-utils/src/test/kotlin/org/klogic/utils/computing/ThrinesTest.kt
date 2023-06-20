@@ -8,11 +8,18 @@ import org.klogic.utils.computing.utils.lambdaSymb
 import org.klogic.utils.computing.utils.listSymb
 import org.klogic.utils.computing.utils.quoteSymb
 import org.klogic.utils.computing.utils.repeatedPartInQuines
+import org.klogic.utils.listeners.UnificationCounter
+import org.klogic.utils.withEmptyContext
 
 class ThrinesTest {
     @Test
     fun testThrines() {
-        val thrines = findThrines(3)
+        val unificationCounter = UnificationCounter()
+
+        val thrines = withEmptyContext {
+            addUnificationListener(unificationCounter)
+            findThrines(3)
+        }
         val firstThrine = thrines.first()
         val reifiedThrine = firstThrine.term.asReified()
 
@@ -62,5 +69,7 @@ class ThrinesTest {
         assertEquals(expectedP, p)
         assertEquals(expectedQ, q)
         assertEquals(expectedR, r)
+
+        println("Unifications: ${unificationCounter.counter}")
     }
 }

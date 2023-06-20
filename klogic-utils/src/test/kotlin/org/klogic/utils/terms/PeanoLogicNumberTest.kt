@@ -12,6 +12,7 @@ import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.PeanoLogicNumber.Companion.succ
 import org.klogic.utils.terms.ZeroNaturalNumber.Z
+import org.klogic.utils.withEmptyContext
 
 class PeanoLogicNumberTest {
     private val three: NextNaturalNumber = succ(two)
@@ -20,221 +21,249 @@ class PeanoLogicNumberTest {
     @Test
     @DisplayName("0 + 1 == q -> q == 1")
     fun testAddᴼ1() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = addᴼ(Z, one, q)
+            val goal = addᴼ(Z, one, q)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = one
+            val expectedTerm = one
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("1 + 1 == q -> q == 2")
     fun testAddᴼ2() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = addᴼ(one, one, q)
+            val goal = addᴼ(one, one, q)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = two
+            val expectedTerm = two
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("q + 1 == 1 -> q == 0")
     fun testAddᴼ3() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = addᴼ(q, one, one)
+            val goal = addᴼ(q, one, one)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = Z
+            val expectedTerm = Z
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("1 + q == 1 -> q == 0")
     fun testAddᴼ4() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = addᴼ(one, q, one)
+            val goal = addᴼ(one, q, one)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = Z
+            val expectedTerm = Z
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("q + r == 4")
     fun testAddᴼ5() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
-        val r = (-2).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
+            val r = (-2).createTypedVar<PeanoLogicNumber>()
 
-        val goal = addᴼ(q, r, four)
+            val goal = addᴼ(q, r, four)
 
-        val unreifiedRun = unreifiedRun(7, goal)
+            val unreifiedRun = unreifiedRun(7, goal)
 
-        val reifiedTerms = unreifiedRun.reify(q).zip(unreifiedRun.reify(r))
+            val reifiedTerms = unreifiedRun.reify(q).zip(unreifiedRun.reify(r))
 
-        val expectedTerms = listOf(
-            zero to four,
-            one to three,
-            two to two,
-            three to one,
-            four to zero
-        ).map { it.first.reified() to it.second.reified() }
+            val expectedTerms = listOf(
+                zero to four,
+                one to three,
+                two to two,
+                three to one,
+                four to zero
+            ).map { it.first.reified() to it.second.reified() }
 
-        assertEquals(expectedTerms, reifiedTerms)
+            assertEquals(expectedTerms, reifiedTerms)
+        }
     }
 
     @Test
     @DisplayName("0 * 1 == q -> q == 0")
     fun testMulᴼ1() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = mulᴼ(Z, one, q)
+            val goal = mulᴼ(Z, one, q)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = Z
+            val expectedTerm = Z
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("2 * 2 == q -> q == 4")
     fun testMulᴼ2() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = mulᴼ(two, two, q)
+            val goal = mulᴼ(two, two, q)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = four
+            val expectedTerm = four
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("q * 2 == 2 -> q == 1")
     fun testMulᴼ3() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = mulᴼ(q, two, two)
+            val goal = mulᴼ(q, two, two)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = one
+            val expectedTerm = one
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("q * 2 == 3 -> no answer")
     fun testMulᴼ4() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = mulᴼ(q, two, three)
+            val goal = mulᴼ(q, two, three)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        assertTrue(run.isEmpty())
+            assertTrue(run.isEmpty())
+        }
     }
 
     @Test
     @DisplayName("2 * q == 2 -> q == 1")
     fun testMulᴼ5() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
 
-        val goal = mulᴼ(two, q, two)
+            val goal = mulᴼ(two, q, two)
 
-        val run = run(2, q, goal)
+            val run = run(2, q, goal)
 
-        val expectedTerm = one
+            val expectedTerm = one
 
-        assertEquals(expectedTerm, run.singleReifiedTerm)
+            assertEquals(expectedTerm, run.singleReifiedTerm)
+        }
     }
 
     @Test
     @DisplayName("q * 1 == r")
     fun testMulᴼ6() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
-        val r = (-2).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
+            val r = (-2).createTypedVar<PeanoLogicNumber>()
 
-        val goal = mulᴼ(q, one, r)
+            val goal = mulᴼ(q, one, r)
 
-        val unreifiedRun = unreifiedRun(10, goal)
+            val unreifiedRun = unreifiedRun(10, goal)
 
-        val reifiedTerms = unreifiedRun.reify(q).zip(unreifiedRun.reify(r))
+            val reifiedTerms = unreifiedRun.reify(q).zip(unreifiedRun.reify(r))
 
-        val expectedTerms = (0..9).map { int ->
-            int.toPeanoLogicNumber().reified().let { it to it }
+            val expectedTerms = (0..9).map { int ->
+                int.toPeanoLogicNumber().reified().let { it to it }
+            }
+
+            assertEquals(expectedTerms, reifiedTerms)
         }
-
-        assertEquals(expectedTerms, reifiedTerms)
     }
 
     @Test
     @DisplayName("minmax(5, 6) == minmax(6, 5) = (5, 6)")
     fun testMinMaxᴼ() {
-        val q = (-1).createTypedVar<PeanoLogicNumber>()
-        val r = (-2).createTypedVar<PeanoLogicNumber>()
+        withEmptyContext {
+            val q = (-1).createTypedVar<PeanoLogicNumber>()
+            val r = (-2).createTypedVar<PeanoLogicNumber>()
 
-        val five = 5.toPeanoLogicNumber()
-        val six = 6.toPeanoLogicNumber()
-        val goal = minMaxᴼ(q, r, five, six)
+            val five = 5.toPeanoLogicNumber()
+            val six = 6.toPeanoLogicNumber()
+            val goal = minMaxᴼ(q, r, five, six)
 
-        val unreifiedRun = unreifiedRun(10, goal)
+            val unreifiedRun = unreifiedRun(10, goal)
 
-        val reifiedTerms = unreifiedRun.reify(q).zip(unreifiedRun.reify(r))
+            val reifiedTerms = unreifiedRun.reify(q).zip(unreifiedRun.reify(r))
 
-        val expectedTerms = listOf(
-            five to six,
-            six to five
-        ).map { it.first.reified() to it.second.reified() }
+            val expectedTerms = listOf(
+                five to six,
+                six to five
+            ).map { it.first.reified() to it.second.reified() }
 
-        assertEquals(expectedTerms, reifiedTerms)
+            assertEquals(expectedTerms, reifiedTerms)
+        }
     }
 
     @Test
     fun testSorting() {
-        val numbers = listOf(4, 3, 2, 1).map { it.toPeanoLogicNumber() }.toLogicList()
+        withEmptyContext {
+            val numbers = listOf(4, 3, 2, 1).map { it.toPeanoLogicNumber() }.toLogicList()
 
-        val run = run(1, { sorted: Term<LogicList<PeanoLogicNumber>> -> sortᴼ(numbers, sorted) })
+            val run = run(1, { sorted: Term<LogicList<PeanoLogicNumber>> -> sortᴼ(numbers, sorted) })
 
-        val expected = (1..4).map { it.toPeanoLogicNumber() }.toLogicList().reified()
-        assertEquals(expected, run.single())
+            val expected = (1..4).map { it.toPeanoLogicNumber() }.toLogicList().reified()
+            assertEquals(expected, run.single())
+        }
     }
 
     @Test
     @DisplayName("all permutations of [1, 2, 3]")
     fun testAllPermutations() {
-        val unsortedList = (-1).createTypedVar<LogicList<PeanoLogicNumber>>()
+        withEmptyContext {
+            val unsortedList = (-1).createTypedVar<LogicList<PeanoLogicNumber>>()
 
-        val sortedList = logicListOf(one, two, three)
+            val sortedList = logicListOf(one, two, three)
 
-        val goal = sortᴼ(unsortedList, sortedList)
+            val goal = sortᴼ(unsortedList, sortedList)
 
-        val run = run(7, unsortedList, goal)
+            val run = run(7, unsortedList, goal)
 
-        val expectedTerms = listOf(
-            logicListOf(two, one, three),
-            logicListOf(one, two, three),
-            logicListOf(three, one, two),
-            logicListOf(two, three, one),
-            logicListOf(three, two, one),
-            logicListOf(one, three, two),
-        ).map { it.reified() }
+            val expectedTerms = listOf(
+                logicListOf(two, one, three),
+                logicListOf(one, two, three),
+                logicListOf(three, one, two),
+                logicListOf(two, three, one),
+                logicListOf(three, two, one),
+                logicListOf(one, three, two),
+            ).map { it.reified() }
 
-        assertEquals(expectedTerms, run)
+            assertEquals(expectedTerms, run)
+        }
     }
 }

@@ -2,13 +2,7 @@
 
 package org.klogic.utils.terms
 
-import org.klogic.core.`&&&`
-import org.klogic.core.CustomTerm
-import org.klogic.core.Goal
-import org.klogic.core.Term
-import org.klogic.core.Var
-import org.klogic.core.freshTypedVars
-import org.klogic.core.`|||`
+import org.klogic.core.*
 import org.klogic.utils.terms.Nil.nilLogicList
 
 /**
@@ -145,12 +139,14 @@ fun <T : Term<T>> Term<T>.toLogicList(): LogicList<T> = Cons(this, nilLogicList(
  */
 fun <T : Term<T>> Collection<Term<T>>.toLogicList(): LogicList<T> = LogicList.logicListOf(*this.toTypedArray())
 
+context(RelationalContext)
 fun <T : Term<T>> appendᴼ(x: ListTerm<T>, y: ListTerm<T>, xy: ListTerm<T>): Goal =
     ((x `===` nilLogicList()) `&&&` (y `===` xy)) `|||`
             freshTypedVars<T, LogicList<T>, LogicList<T>> { head, tail, rest ->
                 (x `===` head + tail) `&&&` (xy `===` head + rest) `&&&` appendᴼ(tail, y, rest)
             }
 
+context(RelationalContext)
 fun <T : Term<T>> reversᴼ(x: ListTerm<T>, reversed: ListTerm<T>): Goal =
     ((x `===` nilLogicList()) `&&&` (reversed `===` nilLogicList())) `|||`
             freshTypedVars<T, LogicList<T>, LogicList<T>> { head, tail, rest ->

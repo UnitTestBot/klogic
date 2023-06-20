@@ -6,11 +6,19 @@ import org.klogic.utils.computing.utils.extractVariable
 import org.klogic.utils.computing.utils.lambdaSymb
 import org.klogic.utils.computing.utils.quoteSymb
 import org.klogic.utils.computing.utils.repeatedPartInQuines
+import org.klogic.utils.listeners.UnificationCounter
+import org.klogic.utils.withEmptyContext
 
 class QuinesTest {
     @Test
     fun testQuines() {
-        val quines = findQuines(10)
+        val unificationCounter = UnificationCounter()
+
+        val quines = withEmptyContext {
+            addUnificationListener(unificationCounter)
+
+            findQuines(10)
+        }
         val quine = quines.first()
         val actualQuine = quine.term.asReified() as Seq
 
@@ -36,5 +44,7 @@ class QuinesTest {
         )
 
         assertEquals(expectedQuine, actualQuine)
+
+        println("Unifications: ${unificationCounter.counter}")
     }
 }
