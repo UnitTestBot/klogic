@@ -26,7 +26,7 @@ class OlegLogicNumberTest {
 
             val firstTenPositiveNumbers = run(10, x, goal)
 
-            assertEquals(x, firstTenPositiveNumbers.singleReifiedTerm)
+            assertEquals(x, firstTenPositiveNumbers.single().term)
         }
     }
 
@@ -56,7 +56,7 @@ class OlegLogicNumberTest {
 
             val firstTenPositiveNumbers = run(10, x, goal)
 
-            assertEquals(x, firstTenPositiveNumbers.singleReifiedTerm)
+            assertEquals(x, firstTenPositiveNumbers.single().term)
         }
     }
 
@@ -129,7 +129,7 @@ class OlegLogicNumberTest {
                     val run = run(10, result, mulᴼ(first, second, result))
 
                     val expectedResult = i * j
-                    assertEquals(expectedResult, run.singleReifiedTerm.asReified().toUInt())
+                    assertEquals(expectedResult, run.singleReifiedTerm.toUInt())
                 }
             }
         }
@@ -147,7 +147,7 @@ class OlegLogicNumberTest {
 
                     val run = run(10, first, mulᴼ(first, second, result))
 
-                    assertEquals(i, run.singleReifiedTerm.asReified().toUInt())
+                    assertEquals(i, run.singleReifiedTerm.toUInt())
                 }
             }
         }
@@ -205,7 +205,7 @@ class OlegLogicNumberTest {
 
                     val run = run(10, second, mulᴼ(first, second, result))
 
-                    assertEquals(j, run.singleReifiedTerm.asReified().toUInt())
+                    assertEquals(j, run.singleReifiedTerm.toUInt())
                 }
             }
         }
@@ -253,7 +253,7 @@ class OlegLogicNumberTest {
             val b = 2u.toOlegLogicNumber()
             val q = 3u.toOlegLogicNumber()
 
-            val r = run(10, { r: Term<OlegLogicNumber> -> logᴼ(n, b, q, r) }).singleReifiedTerm.asReified().toUInt()
+            val r = run(10, { r: Term<OlegLogicNumber> -> logᴼ(n, b, q, r) }).singleReifiedTerm.toUInt()
             assertEquals(6u, r)
         }
     }
@@ -271,7 +271,7 @@ class OlegLogicNumberTest {
                     val run = run(10, result, expᴼ(base, power, result))
 
                     val expectedResult = i.toDouble().pow(j.toInt()).toUInt()
-                    assertEquals(expectedResult, run.singleReifiedTerm.asReified().toUInt())
+                    assertEquals(expectedResult, run.singleReifiedTerm.toUInt())
                 }
             }
         }
@@ -289,7 +289,7 @@ class OlegLogicNumberTest {
 
                     val run = run(10, base, expᴼ(base, power, result))
 
-                    assertEquals(i, run.singleReifiedTerm.asReified().toUInt())
+                    assertEquals(i, run.singleReifiedTerm.toUInt())
                 }
             }
         }
@@ -307,7 +307,7 @@ class OlegLogicNumberTest {
 
                     val run = run(10, power, expᴼ(base, power, result))
 
-                    assertEquals(j, run.singleReifiedTerm.asReified().toUInt())
+                    assertEquals(j, run.singleReifiedTerm.toUInt())
                 }
             }
         }

@@ -120,11 +120,28 @@ sealed interface Term<T : Term<T>> {
     }
 }
 
+sealed interface UnboundedValue<T : Term<T>> : Term<T>
+
+class Wildcard<T : Term<T>> internal constructor() : UnboundedValue<T> {
+    // TODO think about the answer
+    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = false
+
+    override fun walk(substitution: Substitution): Wildcard<T> = this
+
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        if (walkedOther is Wildcard) {
+            return unificationState
+        }
+
+        return walkedOther.unifyImpl(this, unificationState)
+    }
+}
+
 /**
  * Represents a symbolic term with the specified term that can be equal to any other [Term] of the same type.
  */
 @JvmInline
-value class Var<T : Term<T>>(val index: Int) : Term<T> {
+value class Var<T : Term<T>>(val index: Int) : UnboundedValue<T> {
     override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = this == variable
 
     override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
@@ -136,11 +153,11 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
             return unificationState
         }
 
-        if (walkedOther !is Var<T> && walkedOther.occurs(this)) {
+        if (walkedOther is CustomTerm && walkedOther.occurs(this)) {
             return null
         }
 
-        val newAssociation = this to walkedOther
+        val newAssociation = if (walkedOther is Wildcard) walkedOther to this else this to walkedOther
         unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
 
         return unificationState.copy(substitution = unificationState.substitution + newAssociation)
@@ -188,6 +205,13 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     }
 
     override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        if (walkedOther is Wildcard) {
+            val newAssociation = walkedOther to this
+            unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
+
+            return unificationState.copy(substitution = unificationState.substitution + newAssociation)
+        }
+
         if (walkedOther !is CustomTerm) {
             // This branch means that walkedOther is Var
             return walkedOther.unifyImpl(this, unificationState)

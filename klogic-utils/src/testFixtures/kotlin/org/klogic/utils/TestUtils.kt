@@ -44,8 +44,8 @@ val listB: Var<LogicList<Symbol>> = listSymbolVariables[5]
 val listC: Var<LogicList<Symbol>> = listSymbolVariables[6]
 val listD: Var<LogicList<Symbol>> = listSymbolVariables[7]
 
-val <T : Term<T>> List<ReifiedTerm<T>>.singleReifiedTerm: Term<T>
-    get() = single().term
+val <T : Term<T>> List<ReifiedTerm<T>>.singleReifiedTerm: T
+    get() = single().term.asReified()
 val List<ReifiedTerm<*>>.singleReifiedTermConstraints: Set<Constraint<*>>
     get() = single().constraints
 

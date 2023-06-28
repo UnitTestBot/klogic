@@ -16,7 +16,7 @@ data class State(
     val constraints: PersistentSet<Constraint<*>> = persistentHashSetOf(),
 ) {
     constructor(
-        map: Map<Var<*>, Term<*>>,
+        map: Map<UnboundedValue<*>, Term<*>>,
         constraints: PersistentSet<Constraint<*>>,
     ) : this(Substitution(map), constraints)
 

@@ -58,10 +58,11 @@ class InequalityTest {
             val goal = x `!==` `1`
 
             val run = run(2, x, goal)
+            val answer = run.single()
 
             val expectedConstraints = setOf(InequalityConstraint.of(x, `1`))
-            assertEquals(x, run.singleReifiedTerm)
-            assertEquals(expectedConstraints, run.singleReifiedTermConstraints)
+            assertEquals(x, answer.term)
+            assertEquals(expectedConstraints, answer.constraints)
         }
     }
 
@@ -163,9 +164,10 @@ class InequalityTest {
             val goals = arrayOf(`3` `!==` `4`)
 
             val run = run(2, q, goals)
+            val answer = run.single()
 
-            assertTrue(run.singleReifiedTermConstraints.isEmpty())
-            assertEquals(q, run.singleReifiedTerm)
+            assertTrue(answer.constraints.isEmpty())
+            assertEquals(q, answer.term)
         }
     }
 

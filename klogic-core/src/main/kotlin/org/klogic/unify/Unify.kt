@@ -1,9 +1,6 @@
 package org.klogic.unify
 
-import org.klogic.core.State
-import org.klogic.core.Substitution
-import org.klogic.core.Term
-import org.klogic.core.Var
+import org.klogic.core.*
 
 /**
  * Represents a mutable state of unification process.
@@ -13,7 +10,7 @@ import org.klogic.core.Var
  */
 data class UnificationState(
     val substitution: Substitution = Substitution.empty,
-    val substitutionDifference: MutableMap<Var<*>, Term<*>> = mutableMapOf()
+    val substitutionDifference: MutableMap<UnboundedValue<*>, Term<*>> = mutableMapOf()
 ) {
     /**
      * Tries to unify two terms of the same type [left] and [right] using [substitution].

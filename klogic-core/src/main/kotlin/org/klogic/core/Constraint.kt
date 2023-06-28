@@ -47,7 +47,8 @@ data class InequalityConstraint internal constructor(
         }
 
         return substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
-            val delta = unificationResult.substitutionDifference
+            // Filter out wildcards as they add no information
+            val delta = unificationResult.substitutionDifference.filterKeys { it !is Wildcard }
             // If the substitution from unification does not differ from the current substitution,
             // it means that this constraint is violated.
             if (delta.isEmpty()) {
@@ -55,8 +56,8 @@ data class InequalityConstraint internal constructor(
             }
 
             // Simplify this inequality constraint according to difference in substitutions
-            val simplifiedConstraints = delta.entries.map {
-                SingleInequalityConstraint(it.key, it.value.cast())
+            val simplifiedConstraints = delta.map {
+                SingleInequalityConstraint(it.key as Var<*>, it.value.cast())
             }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
