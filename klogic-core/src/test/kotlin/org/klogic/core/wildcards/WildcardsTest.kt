@@ -2,6 +2,7 @@ package org.klogic.core.wildcards
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.klogic.core.*
 import org.klogic.core.InequalityConstraint.SingleInequalityConstraint
@@ -15,6 +16,7 @@ import org.klogic.utils.terms.logicTo
 
 class WildcardsTest {
     @Test
+    @DisplayName("x !== *")
     fun testAlwaysFail() {
         withEmptyContext {
             val goal = { x: Term<Symbol> -> x `!==` freshTypedWildcard() }
@@ -25,6 +27,7 @@ class WildcardsTest {
     }
 
     @Test
+    @DisplayName("x === *")
     fun testAlwaysSuccess() {
         withEmptyContext {
             val goal = { x: Term<Symbol> -> x `===` freshTypedWildcard() }
@@ -35,6 +38,7 @@ class WildcardsTest {
     }
 
     @Test
+    @DisplayName("x === * && y === *")
     fun testFewWildcards() {
         withEmptyContext {
             val a = (-1).createTypedVar<Symbol>()
@@ -50,6 +54,7 @@ class WildcardsTest {
     }
 
     @Test
+    @DisplayName("x !== (1, *) && x === (1, *)")
     fun testWildcardInTermWithDisequality() {
         withEmptyContext {
             val one = "1".toSymbol()
@@ -71,6 +76,7 @@ class WildcardsTest {
     }
 
     @Test
+    @DisplayName("(*, 1) === (1, *)")
     fun testWildcardsInTerms() {
         withEmptyContext {
             val goal = { _: Term<*> -> (freshTypedWildcard<Symbol>() logicTo "1".toSymbol()) `===` ("1".toSymbol() logicTo freshTypedWildcard()) }
@@ -84,6 +90,7 @@ class WildcardsTest {
     }
 
     @Test
+    @DisplayName("x === * && x === 5")
     fun testRedundantWildcard() {
         withEmptyContext {
             val goal = { x: Term<Symbol> -> x `===` freshTypedWildcard() and (x `===` "5".toSymbol()) }
