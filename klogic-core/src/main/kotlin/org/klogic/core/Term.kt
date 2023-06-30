@@ -120,6 +120,10 @@ sealed interface Term<T : Term<T>> {
     }
 }
 
+/**
+ * Represents a logic term of the specific type
+ * that does not have a particular value before unifications - either [Var] or [Wildcard].
+ */
 sealed interface UnboundedValue<T : Term<T>> : Term<T>
 
 /**
@@ -164,10 +168,12 @@ value class Var<T : Term<T>> internal constructor(val index: Int) : UnboundedVal
     }
 }
 
-// TODO docs
+/**
+ * Represents all logic values of the specific type (in consideration of [InequalityConstraint]s).
+ * For more information [take a look at the paper](https://danyaberezun.github.io/publications/assets/mk-2022-wild.pdf).
+ */
 @JvmInline
 value class Wildcard<T : Term<T>> internal constructor(val index: Int) : UnboundedValue<T> {
-    // TODO think about the answer
     override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = false
 
     override fun walk(substitution: Substitution): Wildcard<T> = this

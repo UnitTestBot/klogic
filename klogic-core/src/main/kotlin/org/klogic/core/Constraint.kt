@@ -73,7 +73,7 @@ data class InequalityConstraint internal constructor(
 
         val firstSingleConstraint = remainingSimplifiedConstraints.first()
 
-        return unify(firstSingleConstraint.variable, firstSingleConstraint.term.cast())
+        return unify(firstSingleConstraint.unboundedValue, firstSingleConstraint.term.cast())
             ?.verify(remainingSimplifiedConstraints.subList(1, remainingSimplifiedConstraints.size))
     }
 
@@ -96,10 +96,10 @@ data class InequalityConstraint internal constructor(
 
 
     /**
-     * Represents a simple inequality constraint - [variable] cannot be equal to [term] of the same type.
+     * Represents a simple inequality constraint - [unboundedValue] cannot be equal to [term] of the same type.
      */
-    data class SingleInequalityConstraint<T : Term<T>>(val variable: UnboundedValue<T>, val term: Term<T>) {
-        override fun toString(): String = "$variable !== $term"
+    data class SingleInequalityConstraint<T : Term<T>>(val unboundedValue: UnboundedValue<T>, val term: Term<T>) {
+        override fun toString(): String = "$unboundedValue !== $term"
     }
 }
 
