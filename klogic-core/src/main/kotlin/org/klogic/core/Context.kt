@@ -21,9 +21,14 @@ open class RelationalContext : AutoCloseable {
     val nilStream: RecursiveStream<Nothing> = NilStream()
 
     /**
-     * The index of the last variable created in this context.
+     * The index of the last [Var] created in this context.
      */
     private var lastCreatedVariableIndex: Int = 0
+
+    /**
+     * The index of the last [Wildcard] created in this context.
+     */
+    private var lastCreatedWildcardIndex: Int = 0
 
     fun addUnificationListener(unificationListener: UnificationListener) {
         unificationListeners += unificationListener
@@ -58,6 +63,14 @@ open class RelationalContext : AutoCloseable {
      * NOTE: this method is not thread-safe and requires explicit outer synchronization in multithreading applications.
      */
     fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
+
+    /**
+     * Returns a new wildcard [Wildcard] of the specified type with [lastCreatedWildcardIndex] as its [Wildcard.index]
+     * and increments [lastCreatedWildcardIndex].
+     *
+     * NOTE: this method is not thread-safe and requires explicit outer synchronization in multithreading applications.
+     */
+    fun <T : Term<T>> freshTypedWildcard(): Wildcard<T> = Wildcard(lastCreatedWildcardIndex++)
 
     /**
      * Returns a result of invoking [run] overloading with goals for the fresh variable created using the passed [state].

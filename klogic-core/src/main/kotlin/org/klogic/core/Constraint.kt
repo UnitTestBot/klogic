@@ -39,7 +39,7 @@ interface Constraint<out T : Constraint<T>> {
  * The standard operation that applies this constraint is [Term.ineq].
  */
 data class InequalityConstraint internal constructor(
-    private val simplifiedConstraints: List<SingleInequalityConstraint<*>>
+    internal val simplifiedConstraints: List<SingleInequalityConstraint<*>>
 ) : Constraint<InequalityConstraint> {
     override fun verify(substitution: Substitution): ConstraintVerificationResult<InequalityConstraint> {
         if (simplifiedConstraints.isEmpty()) {
@@ -47,8 +47,7 @@ data class InequalityConstraint internal constructor(
         }
 
         return substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
-            // Filter out wildcards as they add no information
-            val delta = unificationResult.substitutionDifference.filterKeys { it !is Wildcard }
+            val delta = unificationResult.substitutionDifference
             // If the substitution from unification does not differ from the current substitution,
             // it means that this constraint is violated.
             if (delta.isEmpty()) {
@@ -57,7 +56,7 @@ data class InequalityConstraint internal constructor(
 
             // Simplify this inequality constraint according to difference in substitutions
             val simplifiedConstraints = delta.map {
-                SingleInequalityConstraint(it.key as Var<*>, it.value.cast())
+                SingleInequalityConstraint(it.key, it.value.cast())
             }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
@@ -81,12 +80,12 @@ data class InequalityConstraint internal constructor(
     override fun toString(): String = simplifiedConstraints.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
     companion object {
-        fun <T : Term<T>> of(variable: Var<T>, term: Term<T>): InequalityConstraint =
+        fun <T : Term<T>> of(variable: UnboundedValue<T>, term: Term<T>): InequalityConstraint =
             InequalityConstraint(listOf(SingleInequalityConstraint(variable, term)))
 
         // This method does not check that variable type equals to type of corresponding term,
         // as it has to be in SingleInequalityConstraint, so it should be used very carefully
-        private fun unsafeOf(vararg pairs: Pair<Var<out Term<*>>, Term<*>>): InequalityConstraint {
+        private fun unsafeOf(vararg pairs: Pair<UnboundedValue<out Term<*>>, Term<*>>): InequalityConstraint {
             val singleInequalityConstraints = pairs.map {
                 SingleInequalityConstraint(it.first, it.second.cast())
             }
@@ -99,7 +98,7 @@ data class InequalityConstraint internal constructor(
     /**
      * Represents a simple inequality constraint - [variable] cannot be equal to [term] of the same type.
      */
-    data class SingleInequalityConstraint<T : Term<T>>(val variable: Var<T>, val term: Term<T>) {
+    data class SingleInequalityConstraint<T : Term<T>>(val variable: UnboundedValue<T>, val term: Term<T>) {
         override fun toString(): String = "$variable !== $term"
     }
 }

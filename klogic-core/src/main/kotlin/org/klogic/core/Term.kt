@@ -122,26 +122,11 @@ sealed interface Term<T : Term<T>> {
 
 sealed interface UnboundedValue<T : Term<T>> : Term<T>
 
-class Wildcard<T : Term<T>> internal constructor() : UnboundedValue<T> {
-    // TODO think about the answer
-    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = false
-
-    override fun walk(substitution: Substitution): Wildcard<T> = this
-
-    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
-        if (walkedOther is Wildcard) {
-            return unificationState
-        }
-
-        return walkedOther.unifyImpl(this, unificationState)
-    }
-}
-
 /**
  * Represents a symbolic term with the specified term that can be equal to any other [Term] of the same type.
  */
 @JvmInline
-value class Var<T : Term<T>>(val index: Int) : UnboundedValue<T> {
+value class Var<T : Term<T>> internal constructor(val index: Int) : UnboundedValue<T> {
     override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = this == variable
 
     override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
@@ -171,8 +156,36 @@ value class Var<T : Term<T>>(val index: Int) : UnboundedValue<T> {
     override fun toString(): String = "_.$index"
 
     companion object {
+        /**
+         * Manually creates a variable with [this] index.
+         * WARNING: use it very carefully as this method does not care about [RelationalContext.lastCreatedVariableIndex].
+         */
         fun <T :Term<T>> Int.createTypedVar(): Var<T> = Var(this)
     }
+}
+
+// TODO docs
+@JvmInline
+value class Wildcard<T : Term<T>> internal constructor(val index: Int) : UnboundedValue<T> {
+    // TODO think about the answer
+    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = false
+
+    override fun walk(substitution: Substitution): Wildcard<T> = this
+
+    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        if (walkedOther is Wildcard) {
+            return unificationState
+        }
+
+        return walkedOther.unifyImpl(this, unificationState)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <R : Term<R>> cast(): Wildcard<R> = this as Wildcard<R>
+
+    override fun asReified(): T = error("Wildcard $this cannot be reified")
+
+    override fun toString(): String = "*.$index"
 }
 
 /**

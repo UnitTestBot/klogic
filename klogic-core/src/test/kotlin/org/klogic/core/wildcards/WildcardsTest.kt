@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.klogic.core.*
+import org.klogic.core.InequalityConstraint.SingleInequalityConstraint
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicPair
@@ -16,7 +17,7 @@ class WildcardsTest {
     @Test
     fun testAlwaysFail() {
         withEmptyContext {
-            val goal = { x: Term<Symbol> -> x `!==` Wildcard() }
+            val goal = { x: Term<Symbol> -> x `!==` freshTypedWildcard() }
 
             val run = run(10, goal)
             assertTrue(run.isEmpty())
@@ -26,7 +27,7 @@ class WildcardsTest {
     @Test
     fun testAlwaysSuccess() {
         withEmptyContext {
-            val goal = { x: Term<Symbol> -> x `===` Wildcard() }
+            val goal = { x: Term<Symbol> -> x `===` freshTypedWildcard() }
 
             val run = run(10, goal)
             assertTrue(run.single().term is Var)
@@ -38,7 +39,7 @@ class WildcardsTest {
         withEmptyContext {
             val a = (-1).createTypedVar<Symbol>()
             val b = (-2).createTypedVar<Symbol>()
-            val goal = { x: Term<Symbol>, y: Term<Symbol> -> (x `===` Wildcard()) and (y `===` Wildcard()) }
+            val goal = { x: Term<Symbol>, y: Term<Symbol> -> (x `===` freshTypedWildcard()) and (y `===` freshTypedWildcard()) }
 
             val run = unreifiedRun(10, goal(a, b))
             val answers = listOf(a, b).map { run.reify(it) }
@@ -51,20 +52,28 @@ class WildcardsTest {
     @Test
     fun testWildcardInTermWithDisequality() {
         withEmptyContext {
+            val one = "1".toSymbol()
             val goal = { x: Term<LogicPair<Symbol, Symbol>> ->
-                (x `!==` (Wildcard<Symbol>() logicTo "1".toSymbol())) and (x `===` ("1".toSymbol() logicTo Wildcard()))
+                (x `!==` (freshTypedWildcard<Symbol>() logicTo one)) and (x `===` (one logicTo freshTypedWildcard()))
             }
 
             val run = run(10, goal)
-            println(run)
-            assertTrue(run.single().term is Var)
+            val answer = run.single()
+
+            assertEquals(one, answer.term.asReified().first)
+
+            val wildcardInPair = answer.term.asReified().second as Wildcard<Symbol>
+            val answerConstraint = answer.constraints.single() as InequalityConstraint
+
+            val expectedConstraint = SingleInequalityConstraint(wildcardInPair, one)
+            assertTrue(answerConstraint.simplifiedConstraints.any { it == expectedConstraint })
         }
     }
 
     @Test
     fun testWildcardsInTerms() {
         withEmptyContext {
-            val goal = { _: Term<*> -> (Wildcard<Symbol>() logicTo "1".toSymbol()) `===` ("1".toSymbol() logicTo Wildcard()) }
+            val goal = { _: Term<*> -> (freshTypedWildcard<Symbol>() logicTo "1".toSymbol()) `===` ("1".toSymbol() logicTo freshTypedWildcard()) }
 
             val run = run(10, goal)
             val answer = run.single()
@@ -77,7 +86,7 @@ class WildcardsTest {
     @Test
     fun testRedundantWildcard() {
         withEmptyContext {
-            val goal = { x: Term<Symbol> -> x `===` Wildcard() and (x `===` "5".toSymbol()) }
+            val goal = { x: Term<Symbol> -> x `===` freshTypedWildcard() and (x `===` "5".toSymbol()) }
 
             val run = run(10, goal)
             assertEquals("5".toSymbol(), run.singleReifiedTerm)
