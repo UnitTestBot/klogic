@@ -9,8 +9,8 @@ import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
-import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
-import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
+import org.klogic.utils.terms.OlegLogicNumber.Companion.`1`
+import org.klogic.utils.terms.OlegLogicNumber.Companion.`0`
 import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
 import org.klogic.utils.withEmptyContext
@@ -132,8 +132,8 @@ class OlegLogicNumberTest {
                 assertEquals(numberOne, it[0])
 
                 it[1].reifiedDigits().zip(it[2].reifiedDigits()).toList().let { pairedDigits ->
-                    assertEquals(digitZero, pairedDigits[0].first)
-                    assertEquals(digitOne, pairedDigits[0].second)
+                    assertEquals(`0`, pairedDigits[0].first)
+                    assertEquals(`1`, pairedDigits[0].second)
 
                     assertEquals(pairedDigits[1].first, pairedDigits[1].second)
                     assertTrue(pairedDigits[1].first.isVar())
@@ -148,9 +148,9 @@ class OlegLogicNumberTest {
                 assertEquals(numberFour, it[2])
             }
             (run[5].listTerm()).let {
-                assertEquals(digitZero, it[0].reifiedDigits().first().asReified())
+                assertEquals(`0`, it[0].reifiedDigits().first().asReified())
                 assertEquals(numberOne, it[1])
-                assertEquals(digitOne, it[2].reifiedDigits().first().asReified())
+                assertEquals(`1`, it[2].reifiedDigits().first().asReified())
 
                 assertEquals(it[0].reifiedDigits().drop(1), it[2].reifiedDigits().drop(1))
             }

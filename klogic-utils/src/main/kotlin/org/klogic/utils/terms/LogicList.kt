@@ -119,7 +119,7 @@ data class Cons<T : Term<T>>(val head: Term<T>, val tail: Term<LogicList<T>>) : 
                 else -> listOf((this as Cons<T>).head.toString()) + tail.mapToString()
             }
 
-        return mapToString().joinToString(", ", prefix = "(", postfix = ")")
+        return mapToString().joinToString(" ", prefix = "(", postfix = ")")
     }
 }
 
@@ -143,7 +143,7 @@ context(RelationalContext)
 fun <T : Term<T>> appendᴼ(x: ListTerm<T>, y: ListTerm<T>, xy: ListTerm<T>): Goal =
     ((x `===` nilLogicList()) `&&&` (y `===` xy)) `|||`
             freshTypedVars<T, LogicList<T>, LogicList<T>> { head, tail, rest ->
-                (x `===` head + tail) `&&&` (xy `===` head + rest) `&&&` appendᴼ(tail, y, rest)
+                (head + tail `===` x) `&&&` (head + rest `===` xy) `&&&` appendᴼ(tail, y, rest)
             }
 
 context(RelationalContext)

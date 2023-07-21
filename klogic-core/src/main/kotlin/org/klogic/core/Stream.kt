@@ -125,11 +125,25 @@ internal class NilStream internal constructor(): RecursiveStream<Nothing>() {
  */
 context(RelationalContext)
 class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveStream<T>() {
-    override infix fun mplusImpl(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> =
-        ConsStream(head, ThunkStream { other() mplus tail })
+    override infix fun mplusImpl(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> {
+        // The special case for the one element from the Scheme implementation
+//        if (tail is NilStream) {
+//            return ConsStream(head, other)
+//        }
 
-    override infix fun <R> bindImpl(f: (T) -> RecursiveStream<R>): RecursiveStream<R> =
-        f(head) mplus ThunkStream { tail() bind f }
+        return ConsStream(head, ThunkStream { other() mplus tail })
+    }
+
+    override infix fun <R> bindImpl(f: (T) -> RecursiveStream<R>): RecursiveStream<R> {
+        val mappedHead = f(head)
+
+        // The special case for the one element from the Scheme implementation
+//        if (tail is NilStream) {
+//            return mappedHead
+//        }
+
+        return mappedHead mplus ThunkStream { tail() bind f }
+    }
 
     override fun force(): RecursiveStream<T> = this
 

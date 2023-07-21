@@ -5,8 +5,8 @@ package org.klogic.utils.terms
 import org.klogic.core.*
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.Nil.nilLogicList
-import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
-import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
+import org.klogic.utils.terms.OlegLogicNumber.Companion.`1`
+import org.klogic.utils.terms.OlegLogicNumber.Companion.`0`
 import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
@@ -34,8 +34,8 @@ data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : UnaryTerm<OlegL
     override fun toString(): String = digits.toString()
 
     companion object {
-        internal val digitZero: Digit = "0".toSymbol()
-        internal val digitOne: Digit = "1".toSymbol()
+        internal val `0`: Digit = "0".toSymbol()
+        internal val `1`: Digit = "1".toSymbol()
 
         val numberZero: OlegLogicNumber = nilLogicList<Digit>().toOlegLogicNumber()
 
@@ -46,15 +46,15 @@ data class OlegLogicNumber(val digits: Term<LogicList<Digit>>) : UnaryTerm<OlegL
         private fun UInt.toLogicList(): LogicList<Digit> =
             when {
                 this == 0u -> nilLogicList()
-                this % 2u == 0u -> digitZero + (this / 2u).toLogicList()
-                else -> digitOne + (this / 2u).toLogicList()
+                this % 2u == 0u -> `0` + (this / 2u).toLogicList()
+                else -> `1` + (this / 2u).toLogicList()
             }
     }
 }
 
-internal val numberOne: OlegLogicNumber = digitOne.toLogicList().toOlegLogicNumber()
-internal val numberTwo: OlegLogicNumber = (digitZero + digitOne.toLogicList()).toOlegLogicNumber()
-internal val numberThree: OlegLogicNumber = (digitOne + digitOne.toLogicList()).toOlegLogicNumber()
+internal val numberOne: OlegLogicNumber = `1`.toLogicList().toOlegLogicNumber()
+internal val numberTwo: OlegLogicNumber = (`0` + `1`.toLogicList()).toOlegLogicNumber()
+internal val numberThree: OlegLogicNumber = (`1` + `1`.toLogicList()).toOlegLogicNumber()
 
 /**
  * Checks whether the [number] is positive.
@@ -78,14 +78,14 @@ fun greaterThan1ᴼ(number: OlegTerm): Goal =
  */
 context(RelationalContext)
 fun fullAdderᴼ(b: DigitTerm, x: DigitTerm, y: DigitTerm, r: DigitTerm, c: DigitTerm): Goal = conde(
-    (digitZero `===` b) and (digitZero `===` x) and (digitZero `===` y) and (digitZero `===` r) and (digitZero `===` c),
-    (digitOne `===` b) and (digitZero `===` x) and (digitZero `===` y) and (digitOne `===` r) and (digitZero `===` c),
-    (digitZero `===` b) and (digitOne `===` x) and (digitZero `===` y) and (digitOne `===` r) and (digitZero `===` c),
-    (digitOne `===` b) and (digitOne `===` x) and (digitZero `===` y) and (digitZero `===` r) and (digitOne `===` c),
-    (digitZero `===` b) and (digitZero `===` x) and (digitOne `===` y) and (digitOne `===` r) and (digitZero `===` c),
-    (digitOne `===` b) and (digitZero `===` x) and (digitOne `===` y) and (digitZero `===` r) and (digitOne `===` c),
-    (digitZero `===` b) and (digitOne `===` x) and (digitOne `===` y) and (digitZero `===` r) and (digitOne `===` c),
-    (digitOne `===` b) and (digitOne `===` x) and (digitOne `===` y) and (digitOne `===` r) and (digitOne `===` c)
+    (`0` `===` b) and (`0` `===` x) and (`0` `===` y) and (`0` `===` r) and (`0` `===` c),
+    (`1` `===` b) and (`0` `===` x) and (`0` `===` y) and (`1` `===` r) and (`0` `===` c),
+    (`0` `===` b) and (`1` `===` x) and (`0` `===` y) and (`1` `===` r) and (`0` `===` c),
+    (`1` `===` b) and (`1` `===` x) and (`0` `===` y) and (`0` `===` r) and (`1` `===` c),
+    (`0` `===` b) and (`0` `===` x) and (`1` `===` y) and (`1` `===` r) and (`0` `===` c),
+    (`1` `===` b) and (`0` `===` x) and (`1` `===` y) and (`0` `===` r) and (`1` `===` c),
+    (`0` `===` b) and (`1` `===` x) and (`1` `===` y) and (`0` `===` r) and (`1` `===` c),
+    (`1` `===` b) and (`1` `===` x) and (`1` `===` y) and (`1` `===` r) and (`1` `===` c)
 )
 
 /**
@@ -93,17 +93,39 @@ fun fullAdderᴼ(b: DigitTerm, x: DigitTerm, y: DigitTerm, r: DigitTerm, c: Digi
  */
 context(RelationalContext)
 fun adderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal = conde(
-    (digitZero `===` d) and (m `===` numberZero) and (n `===` r),
-    (digitZero `===` d) and (n `===` numberZero) and (m `===` r) and posᴼ(m),
-    (digitOne `===` d) and (m `===` numberZero) and delay { adderᴼ(digitZero, n, numberOne, r) },
-    (digitOne `===` d) and (n `===` numberZero) and posᴼ(m) and delay { adderᴼ(digitZero, m, numberOne, r) },
+    (`0` `===` d) and (m `===` numberZero) and (n `===` r),
+    (`0` `===` d) and (n `===` numberZero) and (m `===` r) and posᴼ(m),
+    (`1` `===` d) and (m `===` numberZero) and delay {
+        adderᴼ(
+            `0`,
+            n,
+            numberOne,
+            r
+        )
+    },
+    (`1` `===` d) and (n `===` numberZero) and posᴼ(m) and delay {
+        adderᴼ(
+            `0`,
+            m,
+            numberOne,
+            r
+        )
+    },
     and(
         (n `===` numberOne), (m `===` numberOne), freshTypedVars<Digit, Digit> { a, c ->
-            (logicListOf(a, c).toOlegLogicNumber() `===` r) and fullAdderᴼ(d, digitOne, digitOne, a, c)
+            (logicListOf(a, c).toOlegLogicNumber() `===` r) and fullAdderᴼ(
+                d,
+                `1`,
+                `1`,
+                a,
+                c
+            )
         }
     ),
     (n `===` numberOne) and genAdderᴼ(d, n, m, r),
-    (m `===` numberOne) and greaterThan1ᴼ(n) and greaterThan1ᴼ(r) and delay { adderᴼ(d, numberOne, n, r) },
+    (m `===` numberOne) and greaterThan1ᴼ(n) and greaterThan1ᴼ(
+        r
+    ) and delay { adderᴼ(d, numberOne, n, r) },
     greaterThan1ᴼ(n) and genAdderᴼ(d, n, m, r)
 )
 
@@ -127,7 +149,8 @@ fun genAdderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal =
     }
 
 context(RelationalContext)
-fun plusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal = adderᴼ(digitZero, n, m, result)
+fun plusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal =
+    adderᴼ(`0`, n, m, result)
 
 context(RelationalContext)
 fun minusᴼ(n: OlegTerm, m: OlegTerm, result: OlegTerm): Goal = plusᴼ(m, result, n)
@@ -143,7 +166,7 @@ fun hasTheSameLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
 
         ((a + x).toOlegLogicNumber() `===` n) and posᴼ(numberX) and
         ((b + y).toOlegLogicNumber() `===` m) and posᴼ(numberY) and
-        hasTheSameLengthᴼ(numberX, numberY)
+                hasTheSameLengthᴼ(numberX, numberY)
     }
 )
 
@@ -158,7 +181,7 @@ fun hasTheSmallerLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
 
         ((a + x).toOlegLogicNumber() `===` n) and posᴼ(numberX) and
         ((b + y).toOlegLogicNumber() `===` m) and posᴼ(numberY) and
-        hasTheSmallerLengthᴼ(numberX, numberY)
+                hasTheSmallerLengthᴼ(numberX, numberY)
     }
 )
 
@@ -173,7 +196,15 @@ fun hasTheSmallerOrSameLengthᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
 context(RelationalContext)
 fun lessThanᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
     hasTheSmallerLengthᴼ(n, m),
-    hasTheSameLengthᴼ(n, m) and freshTypedVars<OlegLogicNumber> { x -> posᴼ(x) and plusᴼ(n, x, m) }
+    hasTheSameLengthᴼ(
+        n,
+        m
+    ) and freshTypedVars<OlegLogicNumber> { x -> posᴼ(x) and plusᴼ(
+        n,
+        x,
+        m
+    )
+    }
 )
 
 // `<=o`
@@ -183,6 +214,7 @@ fun lessThanOrEqualᴼ(n: OlegTerm, m: OlegTerm): Goal = conde(
     lessThanᴼ(n, m)
 )
 
+// Verified
 context(RelationalContext)
 fun mulᴼ(n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = conde(
     (n `===` numberZero) and (p `===` numberZero),
@@ -194,8 +226,8 @@ fun mulᴼ(n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = conde(
         val numberZ = z.toOlegLogicNumber()
 
         and(
-            (n `===` (digitZero + x).toOlegLogicNumber()) and posᴼ(numberX),
-            (p `===` (digitZero + z).toOlegLogicNumber()) and posᴼ(numberZ),
+            (n `===` (`0` + x).toOlegLogicNumber()) and posᴼ(numberX),
+            (p `===` (`0` + z).toOlegLogicNumber()) and posᴼ(numberZ),
             greaterThan1ᴼ(m),
             mulᴼ(numberX, m, numberZ)
         )
@@ -205,8 +237,8 @@ fun mulᴼ(n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = conde(
         val numberY = y.toOlegLogicNumber()
 
         and(
-            (n `===` (digitOne + x).toOlegLogicNumber()) and posᴼ(numberX),
-            (m `===` (digitZero + y).toOlegLogicNumber()) and posᴼ(numberY),
+            (n `===` (`1` + x).toOlegLogicNumber()) and posᴼ(numberX),
+            (m `===` (`0` + y).toOlegLogicNumber()) and posᴼ(numberY),
             mulᴼ(m, n, p)
         )
     },
@@ -215,8 +247,8 @@ fun mulᴼ(n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = conde(
         val numberY = y.toOlegLogicNumber()
 
         and(
-            (n `===` (digitOne + x).toOlegLogicNumber()) and posᴼ(numberX),
-            (m `===` (digitOne + y).toOlegLogicNumber()) and posᴼ(numberY),
+            (n `===` (`1` + x).toOlegLogicNumber()) and posᴼ(numberX),
+            (m `===` (`1` + y).toOlegLogicNumber()) and posᴼ(numberY),
             oddMulᴼ(numberX, n, m, p)
         )
     }
@@ -229,7 +261,7 @@ fun oddMulᴼ(x: OlegTerm, n: OlegTerm, m: OlegTerm, p: OlegTerm): Goal = freshT
     and(
         boundMulᴼ(number, p, n, m),
         mulᴼ(x, m, number),
-        plusᴼ((digitZero + q).toOlegLogicNumber(), m, p)
+        plusᴼ((`0` + q).toOlegLogicNumber(), m, p)
     )
 }
 
@@ -282,7 +314,10 @@ context(RelationalContext)
 fun divᴼ(n: OlegTerm, m: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
     (r `===` n) and (q `===` numberZero) and lessThanᴼ(n, m),
     and(
-        (q `===` numberOne) and hasTheSameLengthᴼ(n, m) and plusᴼ(r, m, n),
+        (q `===` numberOne) and hasTheSameLengthᴼ(
+            n,
+            m
+        ) and plusᴼ(r, m, n),
         lessThanᴼ(r, m)
     ),
     and(
@@ -329,7 +364,7 @@ fun splitᴼ(n: OlegTerm, r: OlegTerm, l: OlegTerm, h: Term<LogicList<Digit>>): 
         val concatenation = b + n1
 
         and(
-            n `===` (digitZero + concatenation).toOlegLogicNumber(),
+            n `===` (`0` + concatenation).toOlegLogicNumber(),
             r `===` numberZero,
             h `===` concatenation,
             l `===` numberZero
@@ -337,7 +372,7 @@ fun splitᴼ(n: OlegTerm, r: OlegTerm, l: OlegTerm, h: Term<LogicList<Digit>>): 
     },
     freshTypedVars<LogicList<Digit>> { n1 ->
         and(
-            n `===` (digitOne + n1).toOlegLogicNumber(),
+            n `===` (`1` + n1).toOlegLogicNumber(),
             (r `===` numberZero),
             (n1 `===` h),
             (l `===` numberOne)
@@ -347,15 +382,20 @@ fun splitᴼ(n: OlegTerm, r: OlegTerm, l: OlegTerm, h: Term<LogicList<Digit>>): 
         val concatenation = b + n1
 
         and(
-            n `===` (digitZero + concatenation).toOlegLogicNumber(),
+            n `===` (`0` + concatenation).toOlegLogicNumber(),
             r `===` (a + r1).toOlegLogicNumber(),
             l `===` numberZero,
-            splitᴼ(concatenation.toOlegLogicNumber(), r1.toOlegLogicNumber(), numberZero, h)
+            splitᴼ(
+                concatenation.toOlegLogicNumber(),
+                r1.toOlegLogicNumber(),
+                numberZero,
+                h
+            )
         )
     },
     freshTypedVars<LogicList<Digit>, Digit, LogicList<Digit>> { n1, a, r1 ->
         and(
-            n `===` (digitOne + n1).toOlegLogicNumber(),
+            n `===` (`1` + n1).toOlegLogicNumber(),
             r `===` (a + r1).toOlegLogicNumber(),
             l `===` numberOne,
             splitᴼ(n1.toOlegLogicNumber(), r1.toOlegLogicNumber(), numberZero, h)
@@ -381,9 +421,20 @@ context(RelationalContext)
 @Suppress("NAME_SHADOWING")
 fun logᴼ(n: OlegTerm, b: OlegTerm, q: OlegTerm, r: OlegTerm): Goal = conde(
     (n `===` numberOne) and posᴼ(b) and (q `===` numberZero) and (r `===` numberZero),
-    (q `===` numberZero) and lessThanᴼ(n, b) and plusᴼ(r, numberOne, n),
-    (q `===` numberOne) and greaterThan1ᴼ(b) and hasTheSameLengthᴼ(n, b) and plusᴼ(r, b, n),
-    (b `===` numberOne) and posᴼ(q) and plusᴼ(r, numberOne, n),
+    (q `===` numberZero) and lessThanᴼ(n, b) and plusᴼ(
+        r,
+        numberOne,
+        n
+    ),
+    (q `===` numberOne) and greaterThan1ᴼ(b) and hasTheSameLengthᴼ(
+        n,
+        b
+    ) and plusᴼ(r, b, n),
+    (b `===` numberOne) and posᴼ(q) and plusᴼ(
+        r,
+        numberOne,
+        n
+    ),
     (b `===` numberZero) and posᴼ(q) and (r `===` n),
     (b `===` numberTwo) and freshTypedVars<Digit, Digit, LogicList<Digit>> { a, ad, dd ->
         val numberDd = dd.toOlegLogicNumber()
@@ -454,17 +505,17 @@ fun exp2ᴼ(n: OlegTerm, b: Term<LogicList<Digit>>, q: OlegTerm): Goal {
         and(
             greaterThan1ᴼ(n) and (q `===` numberOne),
             freshTypedVars<OlegLogicNumber> { s ->
-                splitᴼ(n, numberB, s, logicListOf(digitOne))
+                splitᴼ(n, numberB, s, logicListOf(`1`))
             }
         ),
         freshTypedVars<LogicList<Digit>, LogicList<Digit>> { q1, b2 ->
             val numberQ1 = q1.toOlegLogicNumber()
 
             and(
-                q `===` (digitZero + q1).toOlegLogicNumber(),
+                q `===` (`0` + q1).toOlegLogicNumber(),
                 posᴼ(numberQ1),
                 hasTheSmallerLengthᴼ(numberB, n),
-                appendᴼ(b, digitOne + b, b2),
+                appendᴼ(b, `1` + b, b2),
                 exp2ᴼ(n, b2, numberQ1)
             )
         },
@@ -473,11 +524,11 @@ fun exp2ᴼ(n: OlegTerm, b: Term<LogicList<Digit>>, q: OlegTerm): Goal {
             val numberNh = nh.toOlegLogicNumber()
 
             and(
-                q `===` (digitOne + q1).toOlegLogicNumber(),
+                q `===` (`1` + q1).toOlegLogicNumber(),
                 posᴼ(numberQ1),
                 posᴼ(numberNh),
                 splitᴼ(n, numberB, s, nh),
-                appendᴼ(b, digitOne + b, b2),
+                appendᴼ(b, `1` + b, b2),
                 exp2ᴼ(numberNh, b2, numberQ1)
             )
         }
