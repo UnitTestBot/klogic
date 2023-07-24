@@ -128,7 +128,7 @@ class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveStream
     override infix fun mplusImpl(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> {
         // The special case for streams containing only one element from the Scheme implementation
         if (tail is NilStream) {
-            return ConsStream(head, other())
+            return ConsStream(head, other)
         }
 
         return ConsStream(head, ThunkStream { other() mplus tail })
