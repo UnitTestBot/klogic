@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
+import org.klogic.utils.computing.findQuines
+import org.klogic.utils.listeners.UnificationCounter
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
@@ -208,6 +210,46 @@ class OlegLogicNumberTest {
                     assertEquals(i, run.singleReifiedTerm.asReified().toUInt())
                 }
             }
+        }
+    }
+
+    private val unificationsTracer = UnificationListener { firstTerm, secondTerm, stateBefore, _ ->
+        println("${firstTerm.walk(stateBefore.substitution)} ${secondTerm.walk(stateBefore.substitution)}, ")
+    }
+
+    @Test
+    fun testMul3x3WithTracing() {
+        withEmptyContext {
+            val unificationCounter = UnificationCounter()
+
+            addUnificationListener(unificationCounter)
+            addUnificationListener(unificationsTracer)
+
+            val first = (3u).toOlegLogicNumber()
+            val second = (3u).toOlegLogicNumber()
+
+            val answer = run(1, { q: Term<OlegLogicNumber> -> mulᴼ(first, second, q) })
+
+            println(answer.singleReifiedTerm)
+            println("Unifications: ${unificationCounter.counter}")
+        }
+    }
+
+    @Test
+    fun testMul5x5WithTracing() {
+        withEmptyContext {
+            val unificationCounter = UnificationCounter()
+
+            addUnificationListener(unificationCounter)
+            addUnificationListener(unificationsTracer)
+
+            val first = (5u).toOlegLogicNumber()
+            val second = (5u).toOlegLogicNumber()
+
+            val answer = run(1, { q: Term<OlegLogicNumber> -> mulᴼ(first, second, q) })
+
+            println(answer.singleReifiedTerm)
+            println("Unifications: ${unificationCounter.counter}")
         }
     }
 
