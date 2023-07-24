@@ -96,7 +96,7 @@ fun adderᴼ(d: DigitTerm, n: OlegTerm, m: OlegTerm, r: OlegTerm): Goal = conde(
     (digitZero `===` d) and (m `===` numberZero) and (n `===` r),
     (digitZero `===` d) and (n `===` numberZero) and (m `===` r) and posᴼ(m),
     (digitOne `===` d) and (m `===` numberZero) and delay { adderᴼ(digitZero, n, numberOne, r) },
-    (digitOne `===` d) and (n `===` numberZero) and posᴼ(m) and delay { adderᴼ(digitZero, m, numberOne, r) },
+    (digitOne `===` d) and (n `===` numberZero) and posᴼ(m) and delay { adderᴼ(digitZero, numberOne, m, r) },
     and(
         (n `===` numberOne), (m `===` numberOne), freshTypedVars<Digit, Digit> { a, c ->
             (logicListOf(a, c).toOlegLogicNumber() `===` r) and fullAdderᴼ(d, digitOne, digitOne, a, c)
