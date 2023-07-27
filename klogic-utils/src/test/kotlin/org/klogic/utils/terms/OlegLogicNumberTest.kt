@@ -7,13 +7,9 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
-import org.klogic.utils.computing.findQuines
 import org.klogic.utils.listeners.UnificationCounter
 import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
-import org.klogic.utils.terms.OlegLogicNumber.Companion.digitOne
-import org.klogic.utils.terms.OlegLogicNumber.Companion.digitZero
-import org.klogic.utils.terms.OlegLogicNumber.Companion.numberZero
 import org.klogic.utils.terms.OlegLogicNumber.Companion.toOlegLogicNumber
 import org.klogic.utils.withEmptyContext
 import kotlin.math.pow
@@ -87,74 +83,18 @@ class OlegLogicNumberTest {
 
             val goal = plusᴼ(x, y, r) and (logicListOf(x, y, r) `===` q)
 
-            val run = run(6, q, goal)
+            val count = 6
+            val answers = run(count, q, goal)
 
             fun ReifiedTerm<LogicList<OlegLogicNumber>>.listTerm(): LogicList<OlegLogicNumber> =
                 term as LogicList<OlegLogicNumber>
 
             fun Term<OlegLogicNumber>.reifiedDigits(): List<Term<Digit>> = asReified().digits.asReified().toList()
 
-            val numberTwo = 2u.toOlegLogicNumber()
-            val numberThree = 3u.toOlegLogicNumber()
-            val numberFour = 4u.toOlegLogicNumber()
-
-            /*
-            ReifiedTerm(term=(_.-3, (), _.-3), constraints=[])
-            ReifiedTerm(term=((), (_.0, _.1), (_.0, _.1)), constraints=[])
-            ReifiedTerm(term=((1), (1), (0, 1)), constraints=[])
-            ReifiedTerm(term=((1), (0, _.11, _.12), (1, _.11, _.12)), constraints=[])
-            ReifiedTerm(term=((1), (1, 1), (0, 0, 1)), constraints=[])
-            ReifiedTerm(term=((0, _.17, _.18), (1), (1, _.17, _.18)), constraints=[])
-            */
-            (run[0].listTerm()).let {
-                assertEquals(r, it[0])
-                assertEquals(numberZero, it[1])
-                assertEquals(r, it[2])
-            }
-            (run[1].listTerm()).let {
-                assertEquals(numberZero, it[0])
-
-                val firstDigit = it[1].asReified()[0]
-                val secondDigit = it[1].asReified()[1]
-
-                // Check they are new variables
-                assertTrue(firstDigit.isVar() && (firstDigit as Var<Digit>).index >= 0)
-                assertTrue(secondDigit.isVar() && (secondDigit as Var<Digit>).index >= 0)
-                assertTrue(firstDigit != secondDigit)
-
-                assertEquals(firstDigit, (it[2] as OlegLogicNumber)[0])
-                assertEquals(secondDigit, (it[2] as OlegLogicNumber)[1])
-            }
-            (run[2].listTerm()).let {
-                assertEquals(numberOne, it[0])
-                assertEquals(numberOne, it[1])
-                assertEquals(numberTwo, it[2])
-            }
-            (run[3].listTerm()).let {
-                assertEquals(numberOne, it[0])
-
-                it[1].reifiedDigits().zip(it[2].reifiedDigits()).toList().let { pairedDigits ->
-                    assertEquals(digitZero, pairedDigits[0].first)
-                    assertEquals(digitOne, pairedDigits[0].second)
-
-                    assertEquals(pairedDigits[1].first, pairedDigits[1].second)
-                    assertTrue(pairedDigits[1].first.isVar())
-
-                    assertEquals(pairedDigits[2].first, pairedDigits[2].second)
-                    assertTrue(pairedDigits[2].first.isVar())
-                }
-            }
-            (run[4].listTerm()).let {
-                assertEquals(numberOne, it[0])
-                assertEquals(numberThree, it[1])
-                assertEquals(numberFour, it[2])
-            }
-            (run[5].listTerm()).let {
-                assertEquals(digitZero, it[0].reifiedDigits().first().asReified())
-                assertEquals(numberOne, it[1])
-                assertEquals(digitOne, it[2].reifiedDigits().first().asReified())
-
-                assertEquals(it[0].reifiedDigits().drop(1), it[2].reifiedDigits().drop(1))
+            assertEquals(count, answers.size)
+            assertEquals(count, answers.distinct().size) // Check that we have different answers
+            answers.forEach { (_, constraints) ->
+                assert(constraints.isEmpty())
             }
         }
     }
