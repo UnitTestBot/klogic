@@ -46,7 +46,7 @@ sealed interface Term<T : Term<T>> {
 
         stateAfter?.let {
             single(it)
-        } ?: nilStream()
+        } ?: NilStream(String.format("unification failed $this === $other"))
     }
 
     /**

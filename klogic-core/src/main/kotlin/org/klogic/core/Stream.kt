@@ -43,7 +43,7 @@ sealed class RecursiveStream<out T> {
         return when (this) {
             is NilStream -> {
                 if (System.getenv("SILENT_MPLUS_BIND") == null)
-                    println("  mplus 1: ys = ${HC(other)}")
+                    println("  mplus 1: Nil from ${this.msg}, ys = ${HC(other)}")
                 other.force()
             }
             is ThunkStream -> {
@@ -88,7 +88,7 @@ sealed class RecursiveStream<out T> {
         return when (this) {
             is NilStream -> {
                 if (System.getenv("SILENT_MPLUS_BIND") == null)
-                    println("  bind  1")
+                    println("  bind  1: Nil from ${this.msg}")
                 this
             }
             is ThunkStream -> {
@@ -161,7 +161,7 @@ sealed class RecursiveStream<out T> {
  * NOTE: it can not be instantiated directly and should be used only via [RelationalContext].
  */
 context(RelationalContext)
-internal class NilStream internal constructor(): RecursiveStream<Nothing>() {
+internal class NilStream(val msg: String = "") : RecursiveStream<Nothing>() {
     override infix fun mplusImpl(other: RecursiveStream<Nothing>): RecursiveStream<Nothing> {
         TODO("IT should fail")
 //        if (System.getenv("SILENT_MPLUS_BIND") == null)
