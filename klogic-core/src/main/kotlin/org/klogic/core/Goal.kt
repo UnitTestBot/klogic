@@ -74,11 +74,16 @@ inline infix fun Goal.condo2(crossinline second: Goal): Goal = { st: State ->
 }
 
 /**
- * Calculates g1 &&& (g2 &&& (g3 &&& ... gn)) for a sequence of goals.
+ * Calculates ((...((g1 &&& g2) &&& g3) &&& ... gn)) for a sequence of goals.
  *
- * NOTE: right association!
+ * NOTE: left association!
  */
-fun and(goal: Goal, vararg goals: Goal): Goal = goal and goals.reduceRight(Goal::and)
+fun and(goal: Goal, vararg goals: Goal): Goal {
+//    goal and goals.reduceRight(Goal::and)
+    val gs : List<Goal> =  listOf(goal) + goals.asList();
+    val f : (Goal, Goal) -> Goal = Goal::and
+    return gs.reduce(f)
+}
 
 /**
  * Creates a lazy [Goal] by passed goal generator [f].
