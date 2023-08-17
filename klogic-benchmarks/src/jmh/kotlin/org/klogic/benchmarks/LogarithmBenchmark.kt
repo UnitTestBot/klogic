@@ -10,12 +10,12 @@ import org.openjdk.jmh.annotations.Benchmark
 open class LogarithmBenchmark : AbstractKlogicBenchmark() {
     @Benchmark
     fun benchmarkLogarithm() {
-        val n = 14u.toOlegLogicNumber()
-        val b = 2u.toOlegLogicNumber()
-        val q = 3u.toOlegLogicNumber()
+        val n = 243u.toOlegLogicNumber()
+        val b = 3u.toOlegLogicNumber()
+        val r = 0u.toOlegLogicNumber()
 
         withEmptyContext {
-            run(1, { r: Term<OlegLogicNumber> ->
+            run(1, { q: Term<OlegLogicNumber> ->
                 logᴼ(n, b, q, r)
             })
         }

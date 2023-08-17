@@ -7,6 +7,6 @@ import org.openjdk.jmh.annotations.Benchmark
 open class ThrinesBenchmark : AbstractKlogicBenchmark() {
     @Benchmark
     fun benchmarkThrines() {
-        withEmptyContext { findThrines(3) }
+        withEmptyContext { findThrines(2) }
     }
 }
