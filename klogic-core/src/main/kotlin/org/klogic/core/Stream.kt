@@ -28,7 +28,7 @@ sealed class RecursiveStream<out T> {
             }
         }
     }
-    val HC = { it: Any -> System.identityHashCode(it) }
+
     /**
      * Concatenates two streams, the resulting stream contains elements of both input streams in an interleaved order.
      */
@@ -38,8 +38,8 @@ sealed class RecursiveStream<out T> {
         }
         mplusListeners.forEach { it.onMplus(this, other) }
 
-//        return this mplusImpl other
-
+       return this mplusImpl other
+/*
         return when (this) {
             is NilStream -> {
                 if (System.getenv("SILENT_MPLUS_BIND") == null)
@@ -72,6 +72,7 @@ sealed class RecursiveStream<out T> {
                 }
             }
         }
+        */
     }
 
     /**
@@ -88,7 +89,8 @@ sealed class RecursiveStream<out T> {
         bindListeners.forEach { it.onBind(this, f) }
 
 //        println("FUCK")
-//        return this bindImpl f
+        return this bindImpl f
+        /*
         return when (this) {
             is NilStream -> {
                 if (System.getenv("SILENT_MPLUS_BIND") == null)
@@ -120,6 +122,7 @@ sealed class RecursiveStream<out T> {
                 }
             }
         }
+         */
     }
 
     protected abstract infix fun mplusImpl(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T>
@@ -171,17 +174,17 @@ sealed class RecursiveStream<out T> {
 context(RelationalContext)
 internal class NilStream(val msg: String = "") : RecursiveStream<Nothing>() {
     override infix fun mplusImpl(other: RecursiveStream<Nothing>): RecursiveStream<Nothing> {
-        TODO("IT should fail")
+//        TODO("IT should fail")
 //        if (System.getenv("SILENT_MPLUS_BIND") == null)
 //            println("mplus 1")
-//        return other.force()
+        return other.force()
     }
 
     override infix fun <R> bindImpl(f: (Nothing) -> RecursiveStream<R>): RecursiveStream<R> {
-        TODO("IT should fail")
+//        TODO("IT should fail")
 //        if (System.getenv("SILENT_MPLUS_BIND") == null)
 //            println("bind 1")
-//        return this
+        return this
     }
 
     override fun force(): RecursiveStream<Nothing> = this
@@ -201,30 +204,30 @@ internal class NilStream(val msg: String = "") : RecursiveStream<Nothing>() {
 context(RelationalContext)
 class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveStream<T>() {
     override infix fun mplusImpl(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> {
-        TODO("IT should fail")
+//        TODO("IT should fail")
         // The special case for streams containing only one element from the Scheme implementation
-//        if (tail is NilStream) {
+        if (tail is NilStream) {
 //            if (System.getenv("SILENT_MPLUS_BIND") == null)
 //                println("mplus 3")
-//            return ConsStream(head, other)
-//        }
+            return ConsStream(head, other)
+        }
 //        if (System.getenv("SILENT_MPLUS_BIND") == null)
 //            println("mplus 4")
-//        return ConsStream(head, ThunkStream { other() mplus tail })
+        return ConsStream(head, ThunkStream { other() mplus tail })
     }
 
     override infix fun <R> bindImpl(f: (T) -> RecursiveStream<R>): RecursiveStream<R> {
-        TODO("IT should fail")
+//        TODO("IT should fail")
         // The special case for streams containing only one element from the Scheme implementation
-//        if (tail is NilStream) {
+        if (tail is NilStream) {
 //            if (System.getenv("SILENT_MPLUS_BIND") == null)
 //                println("bind 3")
-//            return f(head)
-//        }
+            return f(head)
+        }
 //        if (System.getenv("SILENT_MPLUS_BIND") == null)
 //            println("bind 4")
-//        val mappedHead = f(head)
-//        return mappedHead mplus ThunkStream { tail() bind f }
+        val mappedHead = f(head)
+        return mappedHead mplus ThunkStream { tail() bind f }
     }
 
     override fun force(): RecursiveStream<T> = this
@@ -254,18 +257,18 @@ class ConsStream<T>(val head: T, val tail: RecursiveStream<T>) : RecursiveStream
 context(RelationalContext)
 class ThunkStream<T>(val elements: () -> RecursiveStream<T>) : RecursiveStream<T>() {
     override infix fun mplusImpl(other: RecursiveStream<@UnsafeVariance T>): RecursiveStream<T> {
-        TODO("IT should fail")
+//        TODO("IT should fail")
 //        if (System.getenv("SILENT_MPLUS_BIND") == null)
 //            println("mplus 2")
-//        return ThunkStream { other() mplus this }
+        return ThunkStream { other() mplus this }
     }
 
 
     override infix fun <R> bindImpl(f: (T) -> RecursiveStream<R>): RecursiveStream<R> {
-        TODO("IT should fail")
+//        TODO("IT should fail")
 //        if (System.getenv("SILENT_MPLUS_BIND") == null)
 //            println("bind 2")
-//        return ThunkStream { elements() bind f }
+        return ThunkStream { elements() bind f }
     }
 
     override fun force(): RecursiveStream<T> = elements()
