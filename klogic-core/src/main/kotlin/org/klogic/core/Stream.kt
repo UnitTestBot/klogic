@@ -43,13 +43,15 @@ sealed class RecursiveStream<out T> {
         return when (this) {
             is NilStream -> {
                 if (System.getenv("SILENT_MPLUS_BIND") == null)
-                    println("  mplus 1: Nil from ${this.msg}, ys = ${HC(other)}")
+//                    println("  mplus 1: Nil from ${this.msg}, ys = ${HC(other)}")
+                    println("  mplus 1")
                 other.force()
             }
             is ThunkStream -> {
                 val rez = ThunkStream { other() mplus this }
                 if (System.getenv("SILENT_MPLUS_BIND") == null)
-                    println("  mplus 2: xs = ${HC(this)} ys = ${HC(other)} ~~> Thunk _ = ${HC(rez)}")
+//                    println("  mplus 2: xs = ${HC(this)} ys = ${HC(other)} ~~> Thunk _ = ${HC(rez)}")
+                    println("  mplus 2")
                 return rez
             }
             is ConsStream -> {
@@ -57,11 +59,13 @@ sealed class RecursiveStream<out T> {
                     is NilStream -> {
                         val rez = ConsStream(this.head, other)
                         if (System.getenv("SILENT_MPLUS_BIND") == null)
-                            println("  mplus 3: xs = ${HC(this)} ys = ${HC(other)} ~~> ${HC(rez)}")
+//                            println("  mplus 3: xs = ${HC(this)} ys = ${HC(other)} ~~> ${HC(rez)}")
+                            println("  mplus 3")
                         rez
                     }
                     else -> {
                         if (System.getenv("SILENT_MPLUS_BIND") == null)
+//                            println("  mplus 4")
                             println("  mplus 4")
                         ConsStream(this.head, ThunkStream { other() mplus this.tail })
                     }
@@ -88,24 +92,28 @@ sealed class RecursiveStream<out T> {
         return when (this) {
             is NilStream -> {
                 if (System.getenv("SILENT_MPLUS_BIND") == null)
-                    println("  bind  1: Nil from ${this.msg}")
+//                    println("  bind  1: Nil from ${this.msg}")
+                    println("  bind  1")
                 this
             }
             is ThunkStream -> {
                 if (System.getenv("SILENT_MPLUS_BIND") == null)
-                    println("  bind  2: xs = ${HC(this)}")
+//                    println("  bind  2: xs = ${HC(this)}")
+                    println("  bind  2")
                 ThunkStream { elements() bind f }
             }
             is ConsStream -> {
                 when (this.tail) {
                     is NilStream -> {
                         if (System.getenv("SILENT_MPLUS_BIND") == null)
-                            println("  bind  3: xs = ${HC(this)}")
+//                            println("  bind  3: xs = ${HC(this)}")
+                            println("  bind  3")
                         f(head)
                     }
                     else -> {
                         if (System.getenv("SILENT_MPLUS_BIND") == null)
-                            println("  bind  4: xs = ${HC(this)}")
+//                            println("  bind  4: xs = ${HC(this)}")
+                            println("  bind  4")
                         val mappedHead = f(head)
                         mappedHead mplus ThunkStream { tail() bind f }
                     }
