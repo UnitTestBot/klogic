@@ -8,11 +8,21 @@ import org.klogic.core.InequalityConstraint
 import org.klogic.core.Term
 import org.klogic.core.Var
 import org.klogic.core.and
+import org.klogic.core.conde
+import org.klogic.core.delay
+import org.klogic.core.freshTypedVars
+import org.klogic.utils.terms.Cons
+import org.klogic.utils.terms.LogicList
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
 import org.klogic.utils.terms.LogicPair
+import org.klogic.utils.terms.Nil.emptyLogicList
+import org.klogic.utils.terms.PeanoLogicNumber
 import org.klogic.utils.terms.Symbol
 import org.klogic.utils.terms.Symbol.Companion.toSymbol
+import org.klogic.utils.terms.ZeroNaturalNumber.Z
 import org.klogic.utils.terms.logicTo
+import org.klogic.utils.terms.toPeanoLogicNumber
+import org.klogic.utils.terms.unaryPlus
 import org.klogic.utils.withEmptyContext
 
 class WildcardsTest {
@@ -109,6 +119,51 @@ class WildcardsTest {
 
             assertEquals(variable, answerConstraint.unboundedValue)
             assertEquals(one, answerConstraint.term)
+        }
+    }
+
+    @Test
+    fun `x lt 4`() {
+        withEmptyContext {
+            fun allPeanoNumbers(x: Term<PeanoLogicNumber>): Goal = conde(
+                x `===` Z,
+                freshTypedVars<PeanoLogicNumber> { prev ->
+                    (x `===` +prev) and delay { allPeanoNumbers(prev) }
+                }
+            )
+
+            fun lessThan4(x: Term<PeanoLogicNumber>) = x `!==` +(+(+(+(freshTypedWildcard<PeanoLogicNumber>()))))
+
+            val goal = { x: Term<PeanoLogicNumber> -> lessThan4(x) and allPeanoNumbers(x) }
+
+            val run = run(10, goal)
+            assertEquals(4, run.size)
+            assertEquals(Z, run[0].term)
+            assertEquals(1.toPeanoLogicNumber(), run[1].term)
+            assertEquals(2.toPeanoLogicNumber(), run[2].term)
+            assertEquals(3.toPeanoLogicNumber(), run[3].term)
+        }
+    }
+
+    @Test
+    fun `x != Cons --- x == ()`() {
+        withEmptyContext {
+            val value = "42".toSymbol()
+
+            fun allLists(x: Term<LogicList<Symbol>>): Goal = conde(
+                x `===` emptyLogicList(),
+                freshTypedVars<LogicList<Symbol>> { prev ->
+                    (x `===` Cons(value, prev)) and delay { allLists(prev) }
+                }
+            )
+
+            fun isNotCons(x: Term<LogicList<Symbol>>) = x `!==` Cons(freshTypedWildcard(), freshTypedWildcard())
+
+            val goal = { x: Term<LogicList<Symbol>> -> isNotCons(x) and allLists(x) }
+
+            val run = run(10, goal)
+            val answer = run.single()
+            assertEquals(emptyLogicList(), answer.term)
         }
     }
 }
