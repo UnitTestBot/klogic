@@ -25,11 +25,6 @@ open class RelationalContext : AutoCloseable {
      */
     private var lastCreatedVariableIndex: Int = 0
 
-    /**
-     * The index of the last [Wildcard] created in this context.
-     */
-    private var lastCreatedWildcardIndex: Int = 0
-
     fun addUnificationListener(unificationListener: UnificationListener) {
         unificationListeners += unificationListener
     }
@@ -70,7 +65,8 @@ open class RelationalContext : AutoCloseable {
      *
      * NOTE: this method is not thread-safe and requires explicit outer synchronization in multithreading applications.
      */
-    fun <T : Term<T>> freshTypedWildcard(): Wildcard<T> = Wildcard(lastCreatedWildcardIndex++)
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Term<T>> freshTypedWildcard(): Term<T> = Wildcard as T
 
     /**
      * Returns a result of invoking [run] overloading with goals for the fresh variable created using the passed [state].

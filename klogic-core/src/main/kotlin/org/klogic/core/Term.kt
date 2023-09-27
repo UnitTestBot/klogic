@@ -172,13 +172,12 @@ value class Var<T : Term<T>> internal constructor(val index: Int) : UnboundedVal
  * Represents all logic values of the specific type (in consideration of [InequalityConstraint]s).
  * For more information [take a look at the paper](https://danyaberezun.github.io/publications/assets/mk-2022-wild.pdf).
  */
-@JvmInline
-value class Wildcard<T : Term<T>> internal constructor(val index: Int) : UnboundedValue<T> {
+object Wildcard : UnboundedValue<Nothing> {
     override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = false
 
-    override fun walk(substitution: Substitution): Wildcard<T> = this
+    override fun walk(substitution: Substitution): Wildcard = this
 
-    override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+    override fun unifyImpl(walkedOther: Term<Nothing>, unificationState: UnificationState): UnificationState? {
         if (walkedOther is Wildcard) {
             return unificationState
         }
@@ -187,11 +186,11 @@ value class Wildcard<T : Term<T>> internal constructor(val index: Int) : Unbound
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun <R : Term<R>> cast(): Wildcard<R> = this as Wildcard<R>
+    override fun <R : Term<R>> cast(): Term<R> = this as Term<R>
 
-    override fun asReified(): T = error("Wildcard $this cannot be reified")
+    override fun asReified(): Nothing = error("Wildcard $this cannot be reified")
 
-    override fun toString(): String = "*.$index"
+    override fun toString(): String = "__"
 }
 
 /**
@@ -225,10 +224,7 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
 
     override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
         if (walkedOther is Wildcard) {
-            val newAssociation = walkedOther to this
-            unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
-
-            return unificationState.copy(substitution = unificationState.substitution + newAssociation)
+            return unificationState
         }
 
         if (walkedOther !is CustomTerm) {
