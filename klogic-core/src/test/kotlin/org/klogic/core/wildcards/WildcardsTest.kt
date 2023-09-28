@@ -29,7 +29,7 @@ class WildcardsTest {
     @Test
     fun `x !== __ -- failure`() {
         withEmptyContext {
-            val goal = { x: Term<Symbol> -> x `!==` freshTypedWildcard() }
+            val goal = { x: Term<Symbol> -> x `!==` wildcard() }
 
             val run = run(10, goal)
             assertTrue(run.isEmpty())
@@ -42,7 +42,7 @@ class WildcardsTest {
             val one = "1".toSymbol()
 
             fun goal(x: Term<LogicPair<Symbol, Symbol>>, y: Term<Symbol>): Goal =
-                (x `!==` (freshTypedWildcard<Symbol>() logicTo one)) and (x `===` (one logicTo y))
+                (x `!==` (wildcard<Symbol>() logicTo one)) and (x `===` (one logicTo y))
 
             val y = freshTypedVar<Symbol>()
             val x = freshTypedVar<LogicPair<Symbol, Symbol>>()
@@ -66,7 +66,7 @@ class WildcardsTest {
         withEmptyContext {
             val one = "1".toSymbol()
 
-            val goal = { _: Term<*> -> (one logicTo freshTypedWildcard<Symbol>()) `!==` (freshTypedWildcard<Symbol>() logicTo one) }
+            val goal = { _: Term<*> -> (one logicTo wildcard<Symbol>()) `!==` (wildcard<Symbol>() logicTo one) }
 
             val run = run(10, goal)
             assertTrue(run.isEmpty())
@@ -80,7 +80,7 @@ class WildcardsTest {
             val two = "2".toSymbol()
 
             val goal = { x: Term<Symbol> ->
-                logicListOf(x, two, freshTypedWildcard()) `!==` logicListOf(one, freshTypedWildcard(), two)
+                logicListOf(x, two, wildcard()) `!==` logicListOf(one, wildcard(), two)
             }
 
             val run = run(10, goal)
@@ -105,7 +105,7 @@ class WildcardsTest {
             val x = freshTypedVar<Symbol>()
             val y = freshTypedVar<Symbol>()
             val goal = { symbol: Term<Symbol> ->
-                logicListOf(symbol, y) `!==` logicListOf(one, freshTypedWildcard())
+                logicListOf(symbol, y) `!==` logicListOf(one, wildcard())
             }
 
             val run = run(10, x, goal(x))
@@ -132,7 +132,7 @@ class WildcardsTest {
                 }
             )
 
-            fun lessThan4(x: Term<PeanoLogicNumber>) = x `!==` +(+(+(+(freshTypedWildcard<PeanoLogicNumber>()))))
+            fun lessThan4(x: Term<PeanoLogicNumber>) = x `!==` +(+(+(+(wildcard<PeanoLogicNumber>()))))
 
             val goal = { x: Term<PeanoLogicNumber> -> lessThan4(x) and allPeanoNumbers(x) }
 
@@ -157,7 +157,7 @@ class WildcardsTest {
                 }
             )
 
-            fun isNotCons(x: Term<LogicList<Symbol>>) = x `!==` Cons(freshTypedWildcard(), freshTypedWildcard())
+            fun isNotCons(x: Term<LogicList<Symbol>>) = x `!==` Cons(wildcard(), wildcard())
 
             val goal = { x: Term<LogicList<Symbol>> -> isNotCons(x) and allLists(x) }
 
