@@ -21,7 +21,7 @@ open class RelationalContext : AutoCloseable {
     val nilStream: RecursiveStream<Nothing> = NilStream()
 
     /**
-     * The index of the last variable created in this context.
+     * The index of the last [Var] created in this context.
      */
     private var lastCreatedVariableIndex: Int = 0
 
@@ -58,6 +58,12 @@ open class RelationalContext : AutoCloseable {
      * NOTE: this method is not thread-safe and requires explicit outer synchronization in multithreading applications.
      */
     fun <T : Term<T>> freshTypedVar(): Var<T> = (lastCreatedVariableIndex++).createTypedVar()
+
+    /**
+     * Returns a new [Wildcard] according to the specified type.
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Term<T>> wildcard(): Term<T> = Wildcard as T
 
     /**
      * Returns a result of invoking [run] overloading with goals for the fresh variable created using the passed [state].

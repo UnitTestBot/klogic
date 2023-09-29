@@ -10,8 +10,8 @@ import org.klogic.unify.toUnificationState
  * Represents an immutable association of [Var]s with arbitrary types and bounded [Term]s with corresponding types.
  */
 @JvmInline
-value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Term<*>> = persistentHashMapOf()) {
-    constructor(map: Map<Var<*>, Term<*>>) : this(map.toPersistentHashMap())
+value class Substitution(private val innerSubstitution: PersistentMap<UnboundedValue<*>, Term<*>> = persistentHashMapOf()) {
+    constructor(map: Map<UnboundedValue<*>, Term<*>>) : this(map.toPersistentHashMap())
 
     /**
      * Checks whether [InequalityConstraint] for [left] and [right] of the same type can be satisfied.
@@ -27,7 +27,8 @@ value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Te
      */
     fun <T : Term<T>> ineq(left: Term<T>, right: Term<T>): ConstraintVerificationResult<InequalityConstraint> {
         return toUnificationState().unify(left, right)?.let { unificationState ->
-            val delta = unificationState.substitutionDifference
+            // Filter out wildcards as they add no information
+            val delta = unificationState.substitutionDifference.filterNot { it.key is Wildcard || it.value is Wildcard }
             // If the substitution from unification does not differ from the current substitution,
             // it means that this constraint is violated.
             if (delta.isEmpty()) {
@@ -35,8 +36,8 @@ value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Te
             }
 
             // Otherwise, this constraint can be satisfied, and we can simplify it according to calculated substitution delta.
-            val simplifiedConstraints = delta.entries.map {
-                InequalityConstraint.SingleInequalityConstraint(it.key, it.value.cast())
+            val simplifiedConstraints = delta.map {
+                InequalityConstraint.SingleInequalityConstraint(it.key as Var<*>, it.value.cast())
             }
             val singleConstraint = InequalityConstraint(simplifiedConstraints)
 
@@ -55,7 +56,7 @@ value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Te
 
     fun isEmpty(): Boolean = innerSubstitution.isEmpty()
 
-    operator fun plus(pair: Pair<Var<*>, Term<*>>): Substitution =
+    operator fun plus(pair: Pair<UnboundedValue<*>, Term<*>>): Substitution =
         (innerSubstitution.put(pair.first, pair.second)).toSubstitution()
 
     operator fun minus(other: Substitution): Substitution =
@@ -74,4 +75,4 @@ value class Substitution(private val innerSubstitution: PersistentMap<Var<*>, Te
     }
 }
 
-fun Map<Var<*>, Term<*>>.toSubstitution(): Substitution = Substitution(this)
+fun Map<UnboundedValue<*>, Term<*>>.toSubstitution(): Substitution = Substitution(this)

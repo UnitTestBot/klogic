@@ -121,10 +121,16 @@ sealed interface Term<T : Term<T>> {
 }
 
 /**
+ * Represents a logic term of the specific type
+ * that does not have a particular value before unifications - either [Var] or [Wildcard].
+ */
+sealed interface UnboundedValue<T : Term<T>> : Term<T>
+
+/**
  * Represents a symbolic term with the specified term that can be equal to any other [Term] of the same type.
  */
 @JvmInline
-value class Var<T : Term<T>>(val index: Int) : Term<T> {
+value class Var<T : Term<T>> internal constructor(val index: Int) : UnboundedValue<T> {
     override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = this == variable
 
     override fun walk(substitution: Substitution): Term<T> = substitution[this]?.let {
@@ -136,11 +142,11 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
             return unificationState
         }
 
-        if (walkedOther !is Var<T> && walkedOther.occurs(this)) {
+        if (walkedOther is CustomTerm && walkedOther.occurs(this)) {
             return null
         }
 
-        val newAssociation = this to walkedOther
+        val newAssociation = if (walkedOther is Wildcard) walkedOther to this else this to walkedOther
         unificationState.substitutionDifference[newAssociation.first] = newAssociation.second
 
         return unificationState.copy(substitution = unificationState.substitution + newAssociation)
@@ -154,8 +160,37 @@ value class Var<T : Term<T>>(val index: Int) : Term<T> {
     override fun toString(): String = "_.$index"
 
     companion object {
+        /**
+         * Manually creates a variable with [this] index.
+         * WARNING: use it very carefully as this method does not care about [RelationalContext.lastCreatedVariableIndex].
+         */
         fun <T :Term<T>> Int.createTypedVar(): Var<T> = Var(this)
     }
+}
+
+/**
+ * Represents all logic values of the specific type (in consideration of [InequalityConstraint]s).
+ * For more information [take a look at the paper](https://danyaberezun.github.io/publications/assets/mk-2022-wild.pdf).
+ */
+object Wildcard : UnboundedValue<Nothing> {
+    override fun <R : Term<R>> occurs(variable: Var<R>): Boolean = false
+
+    override fun walk(substitution: Substitution): Wildcard = this
+
+    override fun unifyImpl(walkedOther: Term<Nothing>, unificationState: UnificationState): UnificationState? {
+        if (walkedOther is Wildcard) {
+            return unificationState
+        }
+
+        return walkedOther.unifyImpl(this, unificationState)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <R : Term<R>> cast(): Term<R> = this as Term<R>
+
+    override fun asReified(): Nothing = error("Wildcard $this cannot be reified")
+
+    override fun toString(): String = "__"
 }
 
 /**
@@ -188,6 +223,10 @@ interface CustomTerm<T : CustomTerm<T>> : Term<T> {
     }
 
     override fun unifyImpl(walkedOther: Term<T>, unificationState: UnificationState): UnificationState? {
+        if (walkedOther is Wildcard) {
+            return unificationState
+        }
+
         if (walkedOther !is CustomTerm) {
             // This branch means that walkedOther is Var
             return walkedOther.unifyImpl(this, unificationState)

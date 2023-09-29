@@ -22,6 +22,7 @@ sealed class PeanoLogicNumber : CustomTerm<PeanoLogicNumber> {
 }
 
 private typealias PeanoTerm = Term<PeanoLogicNumber>
+operator fun PeanoTerm.unaryPlus(): NextNaturalNumber = NextNaturalNumber(this)
 
 object ZeroNaturalNumber : PeanoLogicNumber() {
     val Z: ZeroNaturalNumber = ZeroNaturalNumber
