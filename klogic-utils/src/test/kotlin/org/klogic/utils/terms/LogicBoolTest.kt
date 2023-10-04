@@ -3,16 +3,24 @@
 package org.klogic.utils.terms
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.klogic.core.*
 import org.klogic.core.Var.Companion.createTypedVar
 import org.klogic.utils.singleReifiedTerm
+import org.klogic.utils.terms.LogicBool.Companion.toLogicBool
 import org.klogic.utils.terms.LogicFalsᴼ.falsᴼ
 import org.klogic.utils.terms.LogicTruᴼ.truᴼ
 import org.klogic.utils.withEmptyContext
 
 class LogicBoolTest {
+    @Test
+    fun testLogicBoolsCreation() {
+        assertSame(falsᴼ, false.toLogicBool())
+        assertSame(truᴼ, true.toLogicBool())
+    }
+
     @Test
     @DisplayName("Forward !false = true")
     fun testForwardNotᴼ1() {
