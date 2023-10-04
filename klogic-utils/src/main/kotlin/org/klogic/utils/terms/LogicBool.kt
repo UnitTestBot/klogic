@@ -12,7 +12,7 @@ sealed class LogicBool : EmptyTerm<LogicBool>() {
     override fun toString(): String = toBool().toString()
 
     companion object {
-        fun Boolean.toLogicBool(): LogicBool = if (this) LogicFalsᴼ else LogicTruᴼ
+        fun Boolean.toLogicBool(): LogicBool = if (this) LogicTruᴼ else LogicFalsᴼ
     }
 }
 
