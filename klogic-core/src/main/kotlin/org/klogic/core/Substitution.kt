@@ -5,6 +5,7 @@ import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.toPersistentHashMap
 import org.klogic.unify.UnificationState
 import org.klogic.unify.toUnificationState
+import org.klogic.utils.withoutWildcards
 
 /**
  * Represents an immutable association of [Var]s with arbitrary types and bounded [Term]s with corresponding types.
@@ -28,7 +29,7 @@ value class Substitution(private val innerSubstitution: PersistentMap<UnboundedV
     fun <T : Term<T>> ineq(left: Term<T>, right: Term<T>): ConstraintVerificationResult<InequalityConstraint> {
         return toUnificationState().unify(left, right)?.let { unificationState ->
             // Filter out wildcards as they add no information
-            val delta = unificationState.substitutionDifference.filterNot { it.key is Wildcard || it.value is Wildcard }
+            val delta = unificationState.substitutionDifference.withoutWildcards()
             // If the substitution from unification does not differ from the current substitution,
             // it means that this constraint is violated.
             if (delta.isEmpty()) {
