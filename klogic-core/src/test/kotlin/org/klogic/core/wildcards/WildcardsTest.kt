@@ -11,6 +11,7 @@ import org.klogic.core.and
 import org.klogic.core.conde
 import org.klogic.core.delay
 import org.klogic.core.freshTypedVars
+import org.klogic.utils.singleReifiedTerm
 import org.klogic.utils.terms.Cons
 import org.klogic.utils.terms.LogicList
 import org.klogic.utils.terms.LogicList.Companion.logicListOf
@@ -164,6 +165,31 @@ class WildcardsTest {
             val run = run(10, goal)
             val answer = run.single()
             assertEquals(emptyLogicList(), answer.term)
+        }
+    }
+
+    @Test
+    fun `test saving disequality constraints for wildcards`() {
+        withEmptyContext {
+            val innerGoal = { x: Term<LogicList<Symbol>> ->
+                conde(
+                    x `===` logicListOf("1".toSymbol()),
+                    freshTypedVars<Symbol, Symbol> { first, second ->
+                        x `===` logicListOf(first, second)
+                    }
+                )
+            }
+
+            val goal = { x: Term<LogicList<Symbol>> ->
+                and(
+                    x `!==` logicListOf(wildcard(), wildcard()),
+                    innerGoal(x),
+                )
+            }
+
+            val answers = run(10, goal)
+            val expectedTerm = logicListOf("1".toSymbol())
+            assertEquals(expectedTerm, answers.singleReifiedTerm)
         }
     }
 }

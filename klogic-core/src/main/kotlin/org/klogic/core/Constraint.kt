@@ -2,6 +2,7 @@ package org.klogic.core
 
 import org.klogic.unify.UnificationState
 import org.klogic.unify.toUnificationState
+import org.klogic.utils.withoutWildcards
 
 /**
  * Represents a result of invoking [Constraint.verify].
@@ -47,7 +48,8 @@ data class InequalityConstraint internal constructor(
         }
 
         return substitution.toUnificationState().verify(simplifiedConstraints)?.let { unificationResult ->
-            val delta = unificationResult.substitutionDifference
+            // Here we need to omit wildcards to see whether constraints about wildcards are violated
+            val delta = unificationResult.substitutionDifference.withoutWildcards()
             // If the substitution from unification does not differ from the current substitution,
             // it means that this constraint is violated.
             if (delta.isEmpty()) {
