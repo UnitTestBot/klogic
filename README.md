@@ -1,6 +1,6 @@
 # What is klogic?
 
-klogic is a strong-typed implementation of relational programming language [miniKanren](http://minikanren.org/) into Kotlin. 
+klogic is a strongly typed implementation of relational programming language [miniKanren](http://minikanren.org/) into Kotlin. 
 It is largely inspired by [OCanren](https://github.com/PLTools/OCanren) &ndash; a widely known embedding of miniKanren in 
 functional programming language OCaml.
 
@@ -12,8 +12,7 @@ puzzle-solving, etc.
 
 Also, relational languages in general and klogic in particular are well-suited for solving constraint 
 satisfaction problems. Constraint satisfaction problems involve finding a solution that satisfies a set 
-of constraints or conditions. These constraints can be mathematical equations, logical constraints, or 
-any other type of restrictions. The logical nature and backtracking capabilities of relational languages 
+of constraints or conditions (can be logical, or any other type of restrictions). The logical nature and backtracking capabilities of relational languages 
 make them particularly effective for expressing and solving constraint problems. 
 They can automatically search for solutions by exploring possible combinations 
 of values that satisfy the constraints, making them useful in areas like scheduling, planning, and optimization.
@@ -32,7 +31,7 @@ extending the expressive power of miniKanren with a limited form of universal qu
 
 # Examples
 
-Let's see how generating all permutations of some Peano number could be implemented.
+Let's see how generating a list with all permutations of some Peano numbers could be implemented.
 
 The following snippet of code introduces a logic type for Peano numbers:
 
