@@ -69,11 +69,16 @@ open class RelationalContext : AutoCloseable {
      * Returns a result of invoking [run] overloading with goals for the fresh variable created using the passed [state].
      * NOTE: [goals] must not be empty.
      */
-    fun <T : Term<T>> run(count: Int, goals: Array<(Term<T>) -> Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
+    fun <T : Term<T>> run(
+        count: Int,
+        goals: Array<(Term<T>) -> Goal>,
+        state: State = State.empty,
+        elementConsumer: State.() -> Unit = {}
+    ): List<ReifiedTerm<T>> {
         val term = freshTypedVar<T>()
         val goalsWithCreatedFreshVar = goals.map { it(term) }.toTypedArray()
 
-        return run(count, term, goalsWithCreatedFreshVar, state)
+        return run(count, term, goalsWithCreatedFreshVar, state, elementConsumer)
     }
 
     /**
@@ -83,19 +88,26 @@ open class RelationalContext : AutoCloseable {
         count: Int,
         goal: (Term<T>) -> Goal,
         vararg nextGoals: (Term<T>) -> Goal,
-        state: State = State.empty
-    ): List<ReifiedTerm<T>> = run(count, arrayOf(goal, *nextGoals), state)
+        state: State = State.empty,
+        elementConsumer: State.() -> Unit = {}
+    ): List<ReifiedTerm<T>> = run(count, arrayOf(goal, *nextGoals), state, elementConsumer)
 
     /**
      * Returns a result of invoking [run] overloading with first passed goal and the rest goals.
      * NOTE: [goals] must not be empty.
      */
-    fun <T : Term<T>> run(count: Int, term: Term<T>, goals: Array<Goal>, state: State = State.empty): List<ReifiedTerm<T>> {
+    fun <T : Term<T>> run(
+        count: Int,
+        term: Term<T>,
+        goals: Array<Goal>,
+        state: State = State.empty,
+        elementConsumer: State.() -> Unit = {}
+    ): List<ReifiedTerm<T>> {
         require(goals.isNotEmpty()) {
             "Could not `run` with empty goals"
         }
 
-        return run(count, term, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
+        return run(count, term, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state, elementConsumer)
     }
 
     /**
@@ -109,29 +121,47 @@ open class RelationalContext : AutoCloseable {
         term: Term<T>,
         goal: Goal,
         vararg nextGoals: Goal,
-        state: State = State.empty
-    ): List<ReifiedTerm<T>> = unreifiedRun(count, goal, nextGoals = nextGoals, state).reify(term)
+        state: State = State.empty,
+        elementConsumer: State.() -> Unit = {},
+    ): List<ReifiedTerm<T>> = unreifiedRun(count, goal, nextGoals = nextGoals, state, elementConsumer).reify(term)
 
     /**
      * Returns a result of invoking [unreifiedRun] overloading with first passed goal and the rest goals.
      * NOTE: [goals] must not be empty.
      */
-    fun unreifiedRun(count: Int, goals: Array<Goal>, state: State = State.empty): List<State> {
+    fun unreifiedRun(
+        count: Int,
+        goals: Array<Goal>,
+        state: State = State.empty,
+        elementConsumer: State.() -> Unit = {}
+    ): List<State> {
         require(goals.isNotEmpty()) {
             "Could not `unreifiedRun` with empty goals"
         }
 
-        return unreifiedRun(count, goals.first(), nextGoals = goals.drop(1).toTypedArray(), state)
+        return unreifiedRun(
+            count,
+            goals.first(),
+            nextGoals = goals.drop(1).toTypedArray(),
+            state,
+            elementConsumer,
+        )
     }
 
     /**
      * Collects all passed goals to one conjunction in the context of the passed [state] and producing one [RecursiveStream],
      * and returns at most [count] [State]s.
      */
-    fun unreifiedRun(count: Int, goal: Goal, vararg nextGoals: Goal, state: State = State.empty): List<State> =
+    fun unreifiedRun(
+        count: Int,
+        goal: Goal,
+        vararg nextGoals: Goal,
+        state: State = State.empty,
+        elementConsumer: State.() -> Unit = {}
+    ): List<State> =
         nextGoals
             .fold(goal) { acc, nextGoal -> acc `&&&` nextGoal }(state)
-            .take(count)
+            .take(count, elementConsumer)
 
     override fun close() {
         // Do nothing for now

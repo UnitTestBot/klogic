@@ -8,7 +8,7 @@ sealed class RecursiveStream<out T> {
     /**
      * Returns the list of first [n] elements of this stream.
      */
-    infix fun take(n: Int): List<T> {
+    inline fun take(n: Int, elementConsumer: T.() -> Unit = {}): List<T> {
         @Suppress("NAME_SHADOWING")
         var n = n
 
@@ -20,7 +20,10 @@ sealed class RecursiveStream<out T> {
                     is NilStream -> return@buildList
                     is ThunkStream -> curStream = curStream.elements()
                     is ConsStream -> {
-                        add(curStream.head)
+                        val newElement = curStream.head
+                        add(newElement)
+                        newElement.elementConsumer()
+
                         curStream = curStream.tail
                         --n
                     }
